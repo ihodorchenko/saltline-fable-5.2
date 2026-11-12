@@ -29,3 +29,7 @@ python3 -m http.server 8731
 Then open http://localhost:8731 and click the page to capture the mouse and start the sound.
 
 The whole game is one file, `index.html` (~1.4 MB). It bundles three.js and loads fonts from Google Fonts. There are no other outside assets.
+
+## Project notes
+
+Technical overview (in Russian): [`docs/OVERVIEW.md`](docs/OVERVIEW.md) — file anatomy, gameplay constants, rendering and audio pipelines, dev hooks, measured numbers, known gaps. This note is local to the fork and not part of the original artifact.
