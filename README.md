@@ -5,7 +5,7 @@ A small browser first-person shooter: one level in a rainy container port. Cut t
 
 
 ## Demo
-https://realcodebear.github.io/saltline-fable-5.2/ (upstream build; the local control remap is not deployed there)
+https://realcodebear.github.io/saltline-fable-5.2/ (upstream build; the local control remaps are not deployed there)
 
 ## Where it comes from
 
@@ -20,7 +20,7 @@ All credit for the game goes to its original author. This repo is a mirror of th
 
 The claude.ai frame-runtime scripts were removed from `<head>`, and a doctype, charset and viewport tag were added so the file runs as a plain web page.
 
-Local control remap in this fork: sprint moved from `Shift` to `X`, fire is on `LMB` or `Shift` (the keyboard binding used to be `Enter`), and aim is on `RMB` or `Q`. Mouse buttons still work as before.
+Local control remaps in this fork: sprint moved from `Shift` to `X`, fire is on `LMB` or `Shift` (the keyboard binding used to be `Enter`), aim is on `RMB` or `E`, and cut relay moved from `E` to `F`; `Q` is no longer bound. Mouse buttons still work as before.
 
 ## Run it
 
