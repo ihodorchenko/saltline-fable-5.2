@@ -53,6 +53,10 @@ npm run dev                   # http://127.0.0.1:5173, HMR
 
 В среде DSH есть собственный Node 24.21.0, но Rollup native (`.node`) не проходил проверку code signature при загрузке — Vite build падал. С Homebrew Node 22.23.5 Rollup загружается, Vite 7 работает. На другой машине/CI достаточно Node 22 LTS; код сборки от этого не зависит.
 
+## Сборка HTML
+
+У `src/index.html` должны быть явные `</head>` и `<body>`, а `<meta charset="utf-8">` — до встроенного скрипта. Vite + `vite-plugin-singlefile` вставляет бандл в `<head>`; если charset окажется после него, кириллица/типографика в строках может превратиться в mojibake.
+
 ## Что это меняет для игры
 
 Ничего в рантайме. Игра остаётся статическим `index.html`; Node, Vite и npm нужны только для разработки и сборки. Игроку достаточно `python3 -m http.server`.
