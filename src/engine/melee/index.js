@@ -10,6 +10,7 @@ export function createMelee(game) {
   const RANGE = 1.6;
   const DAMAGE = 40;
   const COOLDOWN = 0.8;
+  const SWING_TIME = 0.38;
   const COS_HALF_CONE = Math.cos(Math.PI / 6);
   const origin = new V();
   const dir = new V();
@@ -19,9 +20,11 @@ export function createMelee(game) {
   let cooldown = 0;
   let last = null;
   let wasDown = false;
+  let swing = 0;
 
   function update(dt) {
     cooldown = Math.max(0, cooldown - (dt || 0));
+    applySwing(dt);
 
     const player = game.player;
     const input = game.input;
@@ -37,6 +40,7 @@ export function createMelee(game) {
     if (cooldown > 0 || !tapped) return;
 
     cooldown = COOLDOWN;
+    swing = SWING_TIME;
     origin.copy(player.eye || player.pos);
 
     const camera = game.camera;
@@ -99,15 +103,36 @@ export function createMelee(game) {
     last = { hit: true, killed, distance: best, type: target.type || null };
   }
 
+  function applySwing(dt) {
+    swing = Math.max(0, swing - (dt || 0));
+    if (swing <= 0) return;
+
+    const root = game.weapon && game.weapon.root;
+    if (!root || !root.position || !root.rotation) return;
+
+    const t = 1 - swing / SWING_TIME;
+    const s = Math.sin(Math.PI * Math.min(1, Math.max(0, t)));
+    // Rifle-butt swing: pull the view-model left/up and roll it across the
+    // screen. The weapon module resets the base transform every frame, so the
+    // offsets are applied after that update and stay one-shot.
+    root.position.x -= 0.18 * s;
+    root.position.y += 0.08 * s;
+    root.position.z += 0.1 * s;
+    root.rotation.x -= 0.55 * s;
+    root.rotation.y += 0.28 * s;
+    root.rotation.z += 0.3 * s;
+  }
+
   return {
     update,
     reset() {
       cooldown = 0;
       last = null;
       wasDown = false;
+      swing = 0;
     },
     debug() {
-      return { cooldown, last };
+      return { cooldown, last, swing };
     },
   };
 }
