@@ -33,6 +33,7 @@ ESLint и Prettier работают по **рукописному** коду и 
 - [`package-lock.json`](../package-lock.json) — lock-файл npm с точными версиями.
 - [`.npmrc`](../.npmrc) — локальный кэш npm внутри репозитория (чтобы установка не зависела от прав на `~/.npm`).
 - [`vite.config.js`](../vite.config.js) — корень `src/`, сборка в один `dist/index.html`.
+- [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — минимальный CI: `npm ci`, `npm run check`, `npm run build`.
 - [`eslint.config.js`](../eslint.config.js) — flat config, scope рукописного JS.
 - [`prettier.config.js`](../prettier.config.js) и [`.prettierignore`](../.prettierignore) — форматирование.
 

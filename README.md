@@ -55,6 +55,8 @@ Node 22 LTS is pinned in `.nvmrc`; system packages are in `Brewfile`; npm versio
 
 ESLint/Prettier are scoped to handwritten JS and config; minified legacy modules, CSS and docs are excluded (see `eslint.config.js` and `.prettierignore`).
 
+GitHub Actions runs `npm ci`, `npm run check` and `npm run build` on pushes to `exp/foundation`/`dev` and on pull requests (`.github/workflows/ci.yml`).
+
 ## Project notes
 
 Technical overview (in Russian): [`docs/OVERVIEW.md`](docs/OVERVIEW.md) — file anatomy, gameplay constants, rendering and audio pipelines, dev hooks, measured numbers, known gaps. This note is local to the fork and not part of the original artifact.
