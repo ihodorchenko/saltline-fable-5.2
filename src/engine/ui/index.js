@@ -14,7 +14,7 @@ export function createHud(i){const W = i.THREE.Vector3;let e=document.getElement
     <div><dt>Jump</dt><dd><kbd>Space</kbd></dd></div>
     <div><dt>Sprint</dt><dd><kbd>X</kbd></dd></div>
     <div><dt>Crouch</dt><dd><kbd>C</kbd> or <kbd>Ctrl</kbd></dd></div>
-    <div><dt>Melee</dt><dd><kbd>V</kbd></dd></div>
+    <div><dt>Melee</dt><dd><kbd>Q</kbd></dd></div>
     <div><dt>Pause</dt><dd><kbd>Esc</kbd> or <kbd>P</kbd></dd></div>
   </dl>`,ZC=`
   <dl class="keys">

@@ -14,7 +14,7 @@ export const keyBindings = {
   KeyR: 'reload',
   KeyE: 'ads',
   KeyF: 'interact',
-  KeyV: 'melee',
+  KeyQ: 'melee',
   Escape: 'pause',
   KeyP: 'pause',
   ShiftLeft: 'fire',
