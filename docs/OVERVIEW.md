@@ -34,12 +34,12 @@ shasum -a 256 index.html
 
 | | |
 |---|---|
-| Файлы | `README.md`, `index.html` (legacy single file, 6 193 строки), `docs/OVERVIEW.md`; на `exp/foundation` — `src/`, `tools/`, `package.json` |
-| Ветки | `main` = `09c5177` (исходное зеркало); `dev` = `ddfbf83` (docs + ремапы); `exp/foundation` — Phase 1 |
+| Файлы | `README.md`, `index.html` (legacy single file, 6 193 строки), `docs/OVERVIEW.md`; в `dev` — `src/`, `tools/`, `package.json`, CI |
+| Ветки | `main` = `ddfbf83` (исходное зеркало + docs/remaps); `dev` = `eb6c9a0` (Phase 1 + Melee); `exp/foundation` и `feat/melee` слиты и удалены |
 | Remote | `git@github.com:ihodorchenko/saltline-fable-5.2.git` (форк от `realcodebear`) |
-| Коммиты | 7 на `dev`: импорт, три README, docs, два ремапа; `exp/foundation` добавляет Phase 1 |
+| Коммиты | 7 на `dev`: импорт, три README, docs, два ремапа; `dev` добавляет Phase 1 и Melee |
 | Лицензия | отсутствует |
-| CI / тесты / сорсмапы | CI нет; на `exp/foundation` есть Vite-сборка, `tools/smoke.sh` и baseline-скриншоты (в `artifacts/`, не коммитятся) |
+| CI / тесты / сорсмапы | CI нет; в `dev` есть Vite-сборка, CI, `tools/smoke.sh` и baseline-скриншоты (в `artifacts/`, не коммитятся) |
 | Демо | `https://realcodebear.github.io/saltline-fable-5.2/` — исходное зеркало (без локальных ремапов); на момент проверки отвечает `200` |
 | Внешние запросы страницы | только `fonts.googleapis.com` и `fonts.gstatic.com` (подтверждено сетевым логом) |
 
@@ -48,7 +48,7 @@ shasum -a 256 index.html
 - `docs/OVERVIEW.md` — этот обзор.
 - Управление: бег `X`, огонь `Shift`/ЛКМ, прицел `E`/ПКМ, взаимодействие `F` (подробнее — раздел 11).
 - `README.md` — ссылка на docs, раздел Development и обновлённый «What changed».
-- Phase 1 (`exp/foundation`): `src/` + Vite-сборка в `dist/index.html`; input — `src/engine/input/`, UI — `src/engine/ui/`, audio — `src/engine/audio/`, materials — `src/engine/materials/`, physics — `src/engine/physics/`, render — `src/engine/render/`, CSS — `src/ui/styles.css`; root `index.html` пока остаётся legacy-файлом.
+- Phase 1 (`dev`): `src/` + Vite-сборка в `dist/index.html`; input — `src/engine/input/`, UI — `src/engine/ui/`, audio — `src/engine/audio/`, materials — `src/engine/materials/`, physics — `src/engine/physics/`, render — `src/engine/render/`, CSS — `src/ui/styles.css`; root `index.html` пока остаётся legacy-файлом.
 
 Игровая логика, кроме ремапов управления и структурного выноса Phase 1, соответствует `09c5177`.
 
@@ -63,7 +63,7 @@ python3 -m http.server 8731
 
 ## 3. Анатомия одного файла
 
-> На `exp/foundation` тот же код вынесен в `src/game/main.js` (пока копия legacy) и собирается Vite в `dist/index.html`; dev-сервер с HMR — `npm run dev`. Таблица ниже описывает legacy-файл в корне.
+> В `dev` тот же код вынесен в `src/game/main.js` (пока копия legacy) и собирается Vite в `dist/index.html`; dev-сервер с HMR — `npm run dev`. Таблица ниже описывает legacy-файл в корне.
 
 | Блок | Границы | Размер | Доля |
 |---|---|---|---|
@@ -250,7 +250,7 @@ HUD (`hM`): компас-лента с шагом 5° (числа каждые 1
 
 Меню (`pM`): экраны `title`, `paused`, `dead`, `complete` (дебрифинг), карточка локации, панель настроек с табами `settings`/`controls`. Настройки: качество (`low/medium/high/ultra`, по умолчанию `auto`), чувствительность 0.2–3, инверсия Y, громкость 0–1, FOV 60–95, фуллскрин. Хранятся в `localStorage` под ключом `saltline.settings.v1` (`XC` — дефолты). Отдельная подпись объясняет, что качество выбрано под устройство.
 
-Ввод (`h_`): WASD, мышь; огонь — ЛКМ или `Shift`, прицел — ПКМ или `E`, бег — `X`, взаимодействие — `F`; R, Space, C/Ctrl, Q (melee, feat/melee), Esc/P; `V` не назначена; `Enter` на титуле запускает игру. Тач: левый стик, правый свайп, кнопки FIRE/AIM/RLD/JUMP/USE. Геймпад: RT/LT, A/B/X/Y, L3, Start. Если pointer lock недоступен — drag-to-look; есть полностью клавиатурный режим (стрелки или IJKL, огонь — `Shift`).
+Ввод (`h_`): WASD, мышь; огонь — ЛКМ или `Shift`, прицел — ПКМ или `E`, бег — `X`, взаимодействие — `F`; R, Space, C/Ctrl, Q (melee, dev), Esc/P; `V` не назначена; `Enter` на титуле запускает игру. Тач: левый стик, правый свайп, кнопки FIRE/AIM/RLD/JUMP/USE. Геймпад: RT/LT, A/B/X/Y, L3, Start. Если pointer lock недоступен — drag-to-look; есть полностью клавиатурный режим (стрелки или IJKL, огонь — `Shift`).
 
 Доступность: `aria-label`, `aria-live` для радио, focus trap в панели, `prefers-reduced-motion`, safe-area insets, `role=dialog/tablist`.
 
@@ -309,7 +309,7 @@ Showcase-режимы удобны для осмотра контента без
 
 ## 14. Известные особенности и риски
 
-1. **Melee (v1 на `feat/melee`).** Ранее `Melee` был объявлен в управлении и легенде без обработчика. Теперь Q → 1.8 м raycast, 40 урона, 0.8 с, state-machine rifle-butt swing 0.48 с с fire lockout, hitmarker/audio/camera kick; см. [MELEE.md](MELEE.md). Комбо, стелс-тейкдауны и отдельная модель ножа — вне v1.
+1. **Melee (v1 в `dev`).** Ранее `Melee` был объявлен в управлении и легенде без обработчика. Теперь Q → 1.8 м raycast, 40 урона, 0.8 с, state-machine rifle-butt swing 0.48 с с fire lockout, hitmarker/audio/camera kick; см. [MELEE.md](MELEE.md). Комбо, стелс-тейкдауны и отдельная модель ножа — вне v1.
 2. **След артефакта.** В `<head>` остался `meta name="claude:viewport-fit-sides"`.
 3. **«Nothing is downloaded» неточно:** шрифты тянутся с Google Fonts (офлайн — системные фолбэки). Остальное офлайн.
 4. **Лицензия, CI, тесты, source map.** MIT покрывает изменения форка, оригинальный код/арт остаётся у автора (`NOTICE.md`). Код минифицирован, один файл 1.4 МБ — сложно сопровождать и диффить. Внутренние self-test'ы есть, но не запускаются автоматически.
@@ -446,7 +446,7 @@ EOF
 
 ## Приложение C. Что проверено, а что нет
 
-**Проверено:** загрузка и рендер в headless Chromium/Edge (SwiftShader), отсутствие JS-ошибок, работа advanced pipeline и PCSS, HUD/меню/настройки (включая обновлённую легенду управления), showcase-режимы `level`/`enemies`/`weapon`/`mats`, 200 OK на GitHub Pages, сетевой профиль (только Google Fonts), статический разбор основных подсистем и констант. Ремап управления проверен в headless синтетическими `keydown` + `input.update()`: `Shift` → `fire`, `X` → `sprint`, `E` → `ads`, `F` → `interact`, `Q` → `melee` (v1 на `feat/melee`), `Enter` огонь больше не включает; prompt показывает `F`.
+**Проверено:** загрузка и рендер в headless Chromium/Edge (SwiftShader), отсутствие JS-ошибок, работа advanced pipeline и PCSS, HUD/меню/настройки (включая обновлённую легенду управления), showcase-режимы `level`/`enemies`/`weapon`/`mats`, 200 OK на GitHub Pages, сетевой профиль (только Google Fonts), статический разбор основных подсистем и констант. Ремап управления проверен в headless синтетическими `keydown` + `input.update()`: `Shift` → `fire`, `X` → `sprint`, `E` → `ads`, `F` → `interact`, `Q` → `melee` (v1 в `dev`), `Enter` огонь больше не включает; prompt показывает `F`.
 
 **Не проверено:** реальный FPS на GPU, поведение на мобильных устройствах и в Safari/Firefox, полный проход миссии от старта до финала, звук на слух (self-test в коде есть, но я его не запускал), ввод с геймпада, поведение при отказе отдельных модулей (stub-пути), pointer lock на реальном устройстве.
 

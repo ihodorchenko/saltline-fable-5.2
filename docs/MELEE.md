@@ -1,6 +1,6 @@
 # Melee — intermediate release
 
-Branch: `feat/melee`, based on `dev` after Phase 1 acceptance.
+Status: merged into `dev` from `feat/melee`; the feature branch is retired.
 
 ## Mechanics (v1)
 
