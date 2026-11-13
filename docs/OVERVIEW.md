@@ -35,7 +35,7 @@ shasum -a 256 index.html
 | | |
 |---|---|
 | Файлы | `README.md`, `index.html` (legacy single file, 6 193 строки), `docs/OVERVIEW.md`; в `dev` — `src/`, `tools/`, `package.json`, CI |
-| Ветки | `main` = `ddfbf83` (исходное зеркало + docs/remaps); `dev` = `eb6c9a0` (Phase 1 + Melee); `exp/foundation` и `feat/melee` слиты и удалены |
+| Ветки | `main` = `ddfbf83` (исходное зеркало + docs/remaps); `dev` — Phase 1 + Melee; `exp/foundation` и `feat/melee` слиты и удалены |
 | Remote | `git@github.com:ihodorchenko/saltline-fable-5.2.git` (форк от `realcodebear`) |
 | Коммиты | 7 на `dev`: импорт, три README, docs, два ремапа; `dev` добавляет Phase 1 и Melee |
 | Лицензия | отсутствует |
