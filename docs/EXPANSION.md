@@ -91,7 +91,7 @@
 - [x] **Physics:** AABB-коллайдеры, raycast, line-of-sight, nav grid и capsule movement вынесены в `src/engine/physics/` — `createPhysics(game, worldBounds)`; `W` и bounds передаются из игры.
 - [x] **Render:** HDR-пайплайн, sky, soft shadows, post-processing, adaptive resolution и качество вынесены в `src/engine/render/` — `installRender(game, deps)`; `sA`-showcase остаётся в игре, качество `Pr`/`zy` — тоже (нужны UI).
 - [x] **CSS:** 30.8 КБ inline-стилей вынесены в `src/ui/styles.css`; `src/index.html` ссылается на них, Vite + singlefile инлайнит CSS обратно в `dist/index.html`.
-- [ ] ESLint + Prettier, без массовых переписываний.
+- [x] **ESLint + Prettier:** flat config для рукописного JS/конфигов, `npm run lint`, `npm run format:check`, `npm run check`; минифицированные модули, CSS и docs явно исключены.
 - [x] **Паритет spike:** `npm run build` собирает игру; скриншоты title/level совпали с legacy (0.0% diff), управление идентично (проба `input`), `__errors` пуст.
 
 #### P1.2 — движок, игра, режимы (1–2 недели)
@@ -227,8 +227,8 @@ dist/            # собранный один файл
 
 1. P1.0: `.gitignore`, `.editorconfig`, `tools/smoke.sh`, baseline — **сделано**.
 2. P1.1: input-модуль в `src/engine/input/`, Vite single-file + HMR, паритет — **сделано**.
-3. P1.1 continue: CSS вынесен в `src/ui/styles.css`; следующий шаг — ESLint/Prettier, затем приёмка P1.1.
+3. P1.1: CSS вынесен в `src/ui/styles.css`, ESLint/Prettier добавлены; следующий шаг — приёмка P1.1.
 4. P1.2–P1.4, приёмка Фазы 1.
 5. Только после этого — отдельная ветка Фазы 2.
 
-**Ограничения текущего этапа:** root `index.html` — legacy-файл, `src/game/main.js` — его копия на 1.17 МБ с извлечёнными input-, UI-, audio-, materials-, physics- и render-модулями; CSS — в `src/ui/styles.css`. HMR настроен, но правки самого игрового модуля могут перезагружать страницу целиком. Это проверка схемы, а не завершённый P1.1.
+**Ограничения текущего этапа:** root `index.html` — legacy-файл, `src/game/main.js` — его копия на 1.17 МБ с извлечёнными input-, UI-, audio-, materials-, physics- и render-модулями; CSS — в `src/ui/styles.css`. HMR настроен, но правки самого игрового модуля могут перезагружать страницу целиком. ESLint/Prettier покрывают рукописный слой, а не минифицированные извлечённые тела. Это проверка схемы, а не завершённый P1.1.

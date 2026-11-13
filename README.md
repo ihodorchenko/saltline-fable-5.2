@@ -3,8 +3,8 @@
 A small browser first-person shooter: one level in a rainy container port. Cut three uplink relays while drones ("Gulls") and robot dogs ("Hounds") hunt you.
 <img width="1685" height="906" alt="image" src="https://github.com/user-attachments/assets/8dd32149-90f4-4d69-a573-4411a49a9ba9" />
 
-
 ## Demo
+
 https://realcodebear.github.io/saltline-fable-5.2/ (upstream build; the local control remaps are not deployed there)
 
 ## Where it comes from
@@ -45,11 +45,15 @@ npm ci
 npm run dev      # Vite dev server + HMR, http://127.0.0.1:5173
 npm run build    # dist/index.html (Vite + single-file plugin)
 npm run smoke    # headless boot check (needs Edge/Chrome)
+npm run lint     # ESLint for handwritten JS/config
+npm run check    # lint + prettier --check
 ```
 
 `SERVE_DIR=dist SMOKE_NAME=dist npm run smoke` checks the built single file; `SMOKE_QUERY` overrides the URL query.
 
 Node 22 LTS is pinned in `.nvmrc`; system packages are in `Brewfile`; npm versions are in `package.json` and `package-lock.json` (see [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md)). `src/` is the source of truth; do not edit the legacy root `index.html`. Vite handles the dev server and HMR; changes to the large game module may trigger a full reload.
+
+ESLint/Prettier are scoped to handwritten JS and config; minified legacy modules, CSS and docs are excluded (see `eslint.config.js` and `.prettierignore`).
 
 ## Project notes
 

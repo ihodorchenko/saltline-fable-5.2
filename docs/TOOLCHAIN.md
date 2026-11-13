@@ -14,10 +14,16 @@
 | vite-plugin-singlefile | 2.3.4 | `npm install` | инлайн JS/CSS в один `dist/index.html` |
 | Rollup | 4.68.3 | транзитивно через Vite/плагин | сборка |
 | esbuild | 0.28.2 | транзитивно через Vite | трансформация и минификация |
+| ESLint | 10.14.0 | `npm install` | lint рукописного JS и конфигов |
+| @eslint/js | 10.0.1 | транзитивно с ESLint | recommended-правила |
+| globals | 17.14.0 | `npm install` | browser/node-глобалы для ESLint |
+| Prettier | 3.10.1 | `npm install` | форматирование рукописных JS/MD/JSON |
 | Python | 3.15.2 | система | `npm run preview` и headless smoke-сервер |
 | Microsoft Edge | 157.0.4341.46 | система | headless smoke по умолчанию; Chrome/Chromium — fallback |
 
-Не установлены (пока не нужны): Playwright, Vitest, ESLint/Prettier. Это следующий шаг P1.3.
+Не установлены (пока не нужны): Playwright, Vitest.
+
+ESLint и Prettier работают по **рукописному** коду и конфигам: `vite.config.js`, `eslint.config.js`, `prettier.config.js`, `src/engine/input/bindings.js`, README. Минифицированные legacy-модули (`src/game/main.js`, `src/engine/*/index.js`), CSS и docs исключены — их форматирование/линтинг дал бы большой шум без пользы. См. [`eslint.config.js`](../eslint.config.js) и [`.prettierignore`](../.prettierignore).
 
 ## Файлы-манифесты
 
@@ -27,6 +33,8 @@
 - [`package-lock.json`](../package-lock.json) — lock-файл npm с точными версиями.
 - [`.npmrc`](../.npmrc) — локальный кэш npm внутри репозитория (чтобы установка не зависела от прав на `~/.npm`).
 - [`vite.config.js`](../vite.config.js) — корень `src/`, сборка в один `dist/index.html`.
+- [`eslint.config.js`](../eslint.config.js) — flat config, scope рукописного JS.
+- [`prettier.config.js`](../prettier.config.js) и [`.prettierignore`](../.prettierignore) — форматирование.
 
 ## Установка с нуля
 

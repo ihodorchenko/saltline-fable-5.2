@@ -1,0 +1,19 @@
+# Generated / third-party
+dist/
+node_modules/
+artifacts/
+.npm-cache/
+.omni-workstation/
+
+# Legacy single-file baseline
+index.html
+
+# Phase 1 shell, long-form styles and minified runtime modules are kept as-is
+src/index.html
+src/ui/styles.css
+src/game/
+src/engine/*/index.js
+docs/
+
+# Large generated lockfile
+package-lock.json
