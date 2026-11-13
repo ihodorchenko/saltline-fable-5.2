@@ -84,13 +84,13 @@
 
 - [x] `package.json`, `package-lock.json`, Node 22 LTS через `Brewfile`/`.nvmrc`, npm 10.9.9. Подробности — [TOOLCHAIN.md](TOOLCHAIN.md).
 - [x] Vite 7.3.8 + `vite-plugin-singlefile`: dev-сервер с HMR (`npm run dev`) и сборка в один `dist/index.html`. Node 22.23.5 (Homebrew) загружает Rollup native; bundled Node 24 из DSH — нет, поэтому зависимость вынесена в манифест.
-- [x] **Input:** полностью вынесен в `src/engine/input/` — `createInput`/`createStubInput`, биндинги и input-tuning. `src/game/main.js` импортирует модуль. Остальной код пока в `src/game/main.js` (копия legacy без изменения поведения); CSS пока inline в `src/index.html`.
+- [x] **Input:** полностью вынесен в `src/engine/input/` — `createInput`/`createStubInput`, биндинги и input-tuning. `src/game/main.js` импортирует модуль. Остальной код пока в `src/game/main.js` (копия legacy без изменения поведения).
 - [x] **UI:** HUD, меню, настройки и справка по управлению вынесены в `src/engine/ui/` — `createHud`/`createMenu`; настройки (`YC`/`Wf`), профили качества передаются из игры. `src/game/main.js` импортирует модуль.
 - [x] **Audio:** синтез, шины, свёрточные реверберации, музыкальные слои и self-test вынесены в `src/engine/audio/` — `createAudio`/`createSilentAudio`; `src/game/main.js` импортирует модуль.
 - [x] **Materials:** процедурные материалы, shader chunks, текстуры, декали, лейблы и галерея вынесены в `src/engine/materials/` — `installMaterials` возвращает `create`/`showcase`/`applyPatch`; игра передаёт `THREE` через контекст.
 - [x] **Physics:** AABB-коллайдеры, raycast, line-of-sight, nav grid и capsule movement вынесены в `src/engine/physics/` — `createPhysics(game, worldBounds)`; `W` и bounds передаются из игры.
 - [x] **Render:** HDR-пайплайн, sky, soft shadows, post-processing, adaptive resolution и качество вынесены в `src/engine/render/` — `installRender(game, deps)`; `sA`-showcase остаётся в игре, качество `Pr`/`zy` — тоже (нужны UI).
-- [ ] Вынести CSS из `src/index.html` в `src/ui/`; крупные runtime-модули уже в `src/engine/*`.
+- [x] **CSS:** 30.8 КБ inline-стилей вынесены в `src/ui/styles.css`; `src/index.html` ссылается на них, Vite + singlefile инлайнит CSS обратно в `dist/index.html`.
 - [ ] ESLint + Prettier, без массовых переписываний.
 - [x] **Паритет spike:** `npm run build` собирает игру; скриншоты title/level совпали с legacy (0.0% diff), управление идентично (проба `input`), `__errors` пуст.
 
@@ -227,8 +227,8 @@ dist/            # собранный один файл
 
 1. P1.0: `.gitignore`, `.editorconfig`, `tools/smoke.sh`, baseline — **сделано**.
 2. P1.1: input-модуль в `src/engine/input/`, Vite single-file + HMR, паритет — **сделано**.
-3. P1.1 continue: остальные модули из `src/game/main.js` по одному, CSS в `src/ui/`, ESLint/Prettier.
+3. P1.1 continue: CSS вынесен в `src/ui/styles.css`; следующий шаг — ESLint/Prettier, затем приёмка P1.1.
 4. P1.2–P1.4, приёмка Фазы 1.
 5. Только после этого — отдельная ветка Фазы 2.
 
-**Ограничения текущего этапа:** root `index.html` — legacy-файл, `src/game/main.js` — его копия на 1.17 МБ с извлечёнными input-, UI-, audio-, materials-, physics- и render-модулями. HMR настроен, но правки самого игрового модуля могут перезагружать страницу целиком. Это проверка схемы, а не завершённый P1.1.
+**Ограничения текущего этапа:** root `index.html` — legacy-файл, `src/game/main.js` — его копия на 1.17 МБ с извлечёнными input-, UI-, audio-, materials-, physics- и render-модулями; CSS — в `src/ui/styles.css`. HMR настроен, но правки самого игрового модуля могут перезагружать страницу целиком. Это проверка схемы, а не завершённый P1.1.
