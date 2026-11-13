@@ -23,7 +23,7 @@ Phase 1 — build and module extraction — was accepted on 2026-11-13. `dev` is
 
 The original root `index.html` is kept as the legacy baseline for parity checks. It is still playable, but it is not the primary entry point and will be retired or moved once automated golden tests cover the source build. `exp/foundation` is archived.
 
-**Melee** is implemented on `feat/melee` as an intermediate release before Phase 2: **Q**, 1.6 m range, 60° cone, 40 damage, 0.8 s cooldown, with a rifle-butt view-model swing. See [docs/MELEE.md](docs/MELEE.md).
+**Melee** is implemented on `feat/melee` as an intermediate release before Phase 2: **Q**, 1.8 m raycast, 40 damage, 0.8 s cooldown, with a wind-up/strike/recovery rifle-butt animation and fire lockout. See [docs/MELEE.md](docs/MELEE.md).
 
 ## Controls
 
@@ -98,7 +98,7 @@ ESLint/Prettier cover handwritten JS and config; minified legacy modules, CSS an
 - The claude.ai frame-runtime scripts were removed from `<head>`, and a doctype, charset and viewport tag were added so the file runs as a plain web page.
 - Local control remaps: sprint moved from `Shift` to `X`, fire is on `LMB` or `Shift`, aim is on `RMB` or `E`, and cut relay moved from `E` to `F`; `Q` is no longer bound.
 - Phase 1: Vite single-file build, extracted engine modules, split CSS, parity checks, ESLint/Prettier and minimal CI. Title, gameplay and level screenshots match the legacy file at 0.0% diff.
-- Melee v1 on `feat/melee`: Q, 1.6 m, 60° cone, 40 damage, 0.8 s cooldown, rifle-butt view-model swing, hitmarker/audio/camera kick; no combos yet.
+- Melee v1 on `feat/melee`: Q, 1.8 m center raycast, 40 damage, 0.8 s cooldown, 0.45 s rifle-butt state-machine animation, fire lockout, hitmarker/audio/camera kick; no combos yet.
 
 ## License
 

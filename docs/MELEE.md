@@ -5,20 +5,31 @@ Branch: `feat/melee`, based on `dev` after Phase 1 acceptance.
 ## Mechanics (v1)
 
 - Key: **Q** (`KeyQ` → `melee`; `V` is unbound).
-- Range: 1.6 m from the player's eye.
-- Cone: 60° total (30° half-angle), checked horizontally (vertical tolerance 1.2 m), plus a physics line-of-sight check.
-- Damage: 40, one target per swing (nearest valid target).
+- Range: 1.8 m center raycast from the camera.
+- Damage: 40, one target per swing.
 - Cooldown: 0.8 s.
+- Fire lockout: the weapon cannot fire while the melee state machine is running.
 - No ammo use, combos or stealth takedowns in v1.
+
+## Animation state machine
+
+Total duration: 0.45 s, updated after the weapon update so the swing is not
+overwritten by the normal view-model sway.
+
+1. **Wind-up** (0–0.12 s): weapon pulls right/back, muzzle up; easeOutQuad.
+2. **Strike** (0.12–0.20 s): weapon drives forward/left to the strike pose;
+   easeInExpo. At 0.20 s the center raycast fires, damage is applied once, and
+   the camera gets a shake/recoil punch.
+3. **Recovery** (0.20–0.45 s): weapon returns to the captured base transform
+   with easeOutBack; fire unlocks at the end.
 
 ## Feedback
 
-- Rifle-butt view-model swing (0.38 s, applied after the weapon update).
-
-- `weapon:melee` audio event: short whoosh; metallic impact on hit.
-- `player:hitEnemy` → HUD hitmarker (kill/weak variants still supported).
+- Rifle-butt view-model swing.
+- `weapon:melee` audio event: whoosh on trigger, metallic impact on hit.
+- `player:hitEnemy` → HUD hitmarker.
 - `impact` event for existing impact effects.
-- Small camera shake and recoil kick.
+- Camera shake/recoil at the strike, not at key press.
 
 ## Files
 
@@ -30,8 +41,8 @@ Branch: `feat/melee`, based on `dev` after Phase 1 acceptance.
 
 ## Verification
 
-- Unit-level test (Node): first swing damages once, cooldown blocks the next swing, swing after cooldown damages again, enemy behind the player is ignored, and a ground-level hound at 1.2 m is hit (the cone is horizontal, not eye-to-feet 3D); the weapon root receives the swing offsets and returns to base after the animation.
-- Browser probe: synthetic `KeyQ` reaches `input.pressed('melee')`; module update runs on the game loop and reports cooldown/last-hit via `__G.melee.debug()`.
+- Unit-level test (Node): wind-up has no damage, damage lands once at the 0.20 s strike point, attacking/cooldown block retriggering, the weapon root reaches the wind-up/strike poses and returns to base at 0.45 s. Center-raycast hit/miss is covered by the same test.
+- Browser probe: synthetic `KeyQ` triggers the state machine immediately, `__G.melee.debug()` exposes attacking/cooldown/last-hit, and the weapon root receives the swing offsets.
 - Build + smoke + gameplay/level screenshots unchanged apart from the intended Q legend.
 
 ## Out of scope for v1

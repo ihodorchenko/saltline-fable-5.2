@@ -1,138 +1,240 @@
-// Close-range melee: V is bound to the melee action; the first version is a
-// single short-range strike with a cooldown, hitmarker, sound and camera kick.
+// Close-range melee: Q triggers a rifle-butt bash with a small state machine.
+// The animation runs in the game loop after the weapon update, so it can
+// override the view-model for the swing while the weapon update continues to
+// handle the rest of the gun state.
 
 /**
- * @param {object} game game context (player, input, camera, enemies, events)
- * @returns {{update: Function, reset: Function, debug: Function}}
+ * @param {object} game game context (player, input, camera, weapon, enemies, events, physics)
+ * @returns {{trigger: Function, update: Function, reset: Function, cancel: Function, attacking: boolean, debug: Function}}
  */
 export function createMelee(game) {
   const V = game.THREE.Vector3;
-  const RANGE = 1.6;
+  const RANGE = 1.8;
   const DAMAGE = 40;
   const COOLDOWN = 0.8;
-  const SWING_TIME = 0.38;
-  const COS_HALF_CONE = Math.cos(Math.PI / 6);
+
+  const WINDUP = 0.12;
+  const STRIKE = 0.08;
+  const RECOVERY = 0.25;
+  const TOTAL = WINDUP + STRIKE + RECOVERY;
+
+  // Offsets relative to the captured weapon base transform (camera space).
+  const WINDUP_POS = [0.34, 0.06, 0.18];
+  const WINDUP_ROT = [0.32, 1.05, -0.4];
+  const STRIKE_POS = [-0.28, 0.02, -0.32];
+  const STRIKE_ROT = [-0.12, 1.28, -0.18];
+
   const origin = new V();
   const dir = new V();
-  const toTarget = new V();
-  const point = new V();
   const fallbackDir = new V(0, 0, -1);
+  const basePos = new V();
+  const windupPos = new V();
+  const strikePos = new V();
+  const baseRot = { x: 0, y: 0, z: 0 };
+  const windupRot = { x: 0, y: 0, z: 0 };
+  const strikeRot = { x: 0, y: 0, z: 0 };
+
+  let attacking = false;
+  let elapsed = 0;
+  let hitDone = false;
   let cooldown = 0;
   let last = null;
-  let wasDown = false;
-  let swing = 0;
 
-  function update(dt) {
-    cooldown = Math.max(0, cooldown - (dt || 0));
-    applySwing(dt);
+  function root() {
+    return game.weapon && game.weapon.root;
+  }
 
+  function captureBase() {
+    const weapon = root();
+    if (!weapon) return false;
+    basePos.copy(weapon.position);
+    baseRot.x = weapon.rotation.x;
+    baseRot.y = weapon.rotation.y;
+    baseRot.z = weapon.rotation.z;
+
+    windupPos.set(basePos.x + WINDUP_POS[0], basePos.y + WINDUP_POS[1], basePos.z + WINDUP_POS[2]);
+    strikePos.set(basePos.x + STRIKE_POS[0], basePos.y + STRIKE_POS[1], basePos.z + STRIKE_POS[2]);
+    windupRot.x = baseRot.x + WINDUP_ROT[0];
+    windupRot.y = baseRot.y + WINDUP_ROT[1];
+    windupRot.z = baseRot.z + WINDUP_ROT[2];
+    strikeRot.x = baseRot.x + STRIKE_ROT[0];
+    strikeRot.y = baseRot.y + STRIKE_ROT[1];
+    strikeRot.z = baseRot.z + STRIKE_ROT[2];
+    return true;
+  }
+
+  function applyPose(fromPos, toPos, fromRot, toRot, alpha) {
+    const weapon = root();
+    if (!weapon) return;
+    weapon.position.set(
+      fromPos.x + (toPos.x - fromPos.x) * alpha,
+      fromPos.y + (toPos.y - fromPos.y) * alpha,
+      fromPos.z + (toPos.z - fromPos.z) * alpha,
+    );
+    weapon.rotation.x = fromRot.x + (toRot.x - fromRot.x) * alpha;
+    weapon.rotation.y = fromRot.y + (toRot.y - fromRot.y) * alpha;
+    weapon.rotation.z = fromRot.z + (toRot.z - fromRot.z) * alpha;
+  }
+
+  function easeOutQuad(t) {
+    return 1 - (1 - t) * (1 - t);
+  }
+
+  function easeInExpo(t) {
+    return t <= 0 ? 0 : t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);
+  }
+
+  function easeOutBack(t) {
+    const c1 = 1.70158;
+    const c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  }
+
+  function resolveHit() {
     const player = game.player;
-    const input = game.input;
-    const enemies = game.enemies;
-    if (!player || !player.alive || !player.enabled || !input || !enemies || !enemies.list) {
-      wasDown = false;
-      return;
-    }
-
-    const down = typeof input.down === 'function' ? input.down('melee') : false;
-    const tapped = (typeof input.pressed === 'function' && input.pressed('melee')) || (down && !wasDown);
-    wasDown = down;
-    if (cooldown > 0 || !tapped) return;
-
-    cooldown = COOLDOWN;
-    swing = SWING_TIME;
-    origin.copy(player.eye || player.pos);
-
     const camera = game.camera;
+    if (!player) return;
+
+    origin.copy(player.eye || player.pos);
     if (camera && camera.getWorldDirection) camera.getWorldDirection(dir);
     else dir.copy(player.forward || fallbackDir);
 
-    let target = null;
-    let targetPoint = null;
-    let best = RANGE;
+    let limit = RANGE;
+    const wall = game.physics && game.physics.raycast ? game.physics.raycast(origin, dir, limit) : null;
+    if (wall && typeof wall.dist === 'number' && wall.dist < limit) limit = wall.dist;
 
-    for (const enemy of enemies.list) {
-      if (!enemy || !enemy.alive || !enemy.pos) continue;
-      point.copy(enemy.pos);
-      point.y += 0.85;
-      if (Math.abs(point.y - origin.y) > 1.2) continue;
+    const hit = game.enemies && game.enemies.raycast ? game.enemies.raycast(origin, dir, limit) : null;
+    player.addShake?.(0.18);
+    player.addRecoil?.(0.035, 0);
 
-      // Use a horizontal cone: eye height vs. a hound's body should not make a
-      // point-blank target look like it is outside a 3D cone.
-      const dx = point.x - origin.x;
-      const dz = point.z - origin.z;
-      const horizontal = Math.hypot(dx, dz);
-      if (horizontal < 0.05 || horizontal > RANGE) continue;
-      if ((dx * dir.x + dz * dir.z) / horizontal < COS_HALF_CONE) continue;
-      if (game.physics?.lineOfSight && !game.physics.lineOfSight(origin, point)) continue;
-
-      const distance = toTarget.copy(point).sub(origin).length();
-      if (distance <= best) {
-        best = distance;
-        target = enemy;
-        targetPoint = point.clone();
-      }
-    }
-
-    game.events.emit('weapon:melee', { origin: origin.clone(), hit: !!target });
-    player.addShake?.(0.12);
-    player.addRecoil?.(0.03, 0);
-
-    if (!target) {
-      last = { hit: false, cooldown: COOLDOWN };
+    if (!hit || !hit.enemy) {
+      last = { hit: false };
       return;
     }
 
-    const killed = target.damage(DAMAGE, targetPoint, dir.clone(), 'body') === true;
+    const point = hit.point ? hit.point.clone() : origin.clone().addScaledVector(dir, limit);
+    const part = hit.part || 'body';
+    const killed = hit.enemy.damage(DAMAGE, point, dir.clone(), part) === true;
+
+    game.events.emit('weapon:melee', { origin: origin.clone(), hit: true, phase: 'hit' });
     game.events.emit('player:hitEnemy', {
-      enemy: target,
-      part: 'body',
+      enemy: hit.enemy,
+      part,
       killed,
-      weak: false,
+      weak: part === 'weak',
     });
     game.events.emit('impact', {
-      point: targetPoint,
-      normal: dir.clone().negate(),
-      dist: best,
+      point,
+      normal: hit.normal ? hit.normal.clone() : dir.clone().negate(),
+      dist: limit,
       surface: 'enemy',
-      enemy: target,
+      enemy: hit.enemy,
       dir: dir.clone(),
       from: 'player',
       killed,
     });
-    last = { hit: true, killed, distance: best, type: target.type || null };
+    last = { hit: true, killed, part, distance: limit };
   }
 
-  function applySwing(dt) {
-    swing = Math.max(0, swing - (dt || 0));
-    if (swing <= 0) return;
+  function trigger() {
+    const player = game.player;
+    const state = game.game && game.game.state;
+    if (state && state !== 'playing') return false;
+    if (attacking || cooldown > 0 || !player || !player.alive || !player.enabled) return false;
+    if (!captureBase()) return false;
 
-    const root = game.weapon && game.weapon.root;
-    if (!root || !root.position || !root.rotation) return;
+    attacking = true;
+    elapsed = 0;
+    hitDone = false;
+    cooldown = COOLDOWN;
+    origin.copy(player.eye || player.pos);
+    game.events.emit('weapon:melee', { origin: origin.clone(), hit: false, phase: 'swing' });
+    return true;
+  }
 
-    const t = 1 - swing / SWING_TIME;
-    const s = Math.sin(Math.PI * Math.min(1, Math.max(0, t)));
-    // Rifle-butt swing: pull the view-model left/up and roll it across the
-    // screen. The weapon module resets the base transform every frame, so the
-    // offsets are applied after that update and stay one-shot.
-    root.position.x -= 0.18 * s;
-    root.position.y += 0.08 * s;
-    root.position.z += 0.1 * s;
-    root.rotation.x -= 0.55 * s;
-    root.rotation.y += 0.28 * s;
-    root.rotation.z += 0.3 * s;
+  function cancel() {
+    const weapon = root();
+    if (weapon) {
+      weapon.position.copy(basePos);
+      weapon.rotation.x = baseRot.x;
+      weapon.rotation.y = baseRot.y;
+      weapon.rotation.z = baseRot.z;
+    }
+    attacking = false;
+    elapsed = 0;
+    hitDone = false;
+  }
+
+  function update(dt) {
+    dt = dt || 0;
+    cooldown = Math.max(0, cooldown - dt);
+    if (!attacking) return;
+
+    const player = game.player;
+    if (!root() || !player || !player.alive || !player.enabled) {
+      cancel();
+      return;
+    }
+
+    elapsed += dt;
+
+    if (!hitDone && elapsed >= WINDUP + STRIKE) {
+      hitDone = true;
+      resolveHit();
+    }
+
+    if (elapsed < WINDUP) {
+      const t = Math.max(0, Math.min(1, elapsed / WINDUP));
+      applyPose(basePos, windupPos, baseRot, windupRot, easeOutQuad(t));
+    } else if (elapsed < WINDUP + STRIKE) {
+      const t = Math.max(0, Math.min(1, (elapsed - WINDUP) / STRIKE));
+      applyPose(windupPos, strikePos, windupRot, strikeRot, easeInExpo(t));
+    } else if (elapsed < TOTAL) {
+      const t = Math.max(0, Math.min(1, (elapsed - WINDUP - STRIKE) / RECOVERY));
+      applyPose(strikePos, basePos, strikeRot, baseRot, easeOutBack(t));
+    } else {
+      const weapon = root();
+      if (weapon) {
+        weapon.position.copy(basePos);
+        weapon.rotation.x = baseRot.x;
+        weapon.rotation.y = baseRot.y;
+        weapon.rotation.z = baseRot.z;
+      }
+      attacking = false;
+    }
+  }
+
+  function onKeyDown(event) {
+    if (event.code !== 'KeyQ' || event.repeat) return;
+    const target = event.target;
+    if (
+      target &&
+      (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA')
+    )
+      return;
+    const player = game.player;
+    if (!player || !player.alive || !player.enabled) return;
+    trigger();
+  }
+
+  if (typeof window !== 'undefined' && window.addEventListener) {
+    window.addEventListener('keydown', onKeyDown);
   }
 
   return {
+    trigger,
     update,
+    cancel,
     reset() {
       cooldown = 0;
       last = null;
-      wasDown = false;
-      swing = 0;
+      cancel();
+    },
+    get attacking() {
+      return attacking;
     },
     debug() {
-      return { cooldown, last, swing };
+      return { cooldown, attacking, elapsed, swing: Math.max(0, TOTAL - elapsed), last };
     },
   };
 }
