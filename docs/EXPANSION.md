@@ -80,7 +80,9 @@
 - [x] Зафиксировать baseline: fingerprint, скриншоты титула/старта, `__stats()`. Скриншоты — в `artifacts/` (не коммитятся).
 - [x] **CI-скелет:** `.github/workflows/ci.yml` — на push в `exp/foundation`/`dev` и PR запускает `npm ci`, `npm run check`, `npm run build` на Ubuntu + Node 22 из `.nvmrc`.
 
-#### P1.1 — сборка и модули (1–2 недели)
+#### P1.1 — сборка и модули (1–2 недели) — принято
+
+> **Статус: принято (2026-11-13).** Владелец вручную проверил игру — визуальной и поведенческой разницы с оригиналом нет. CI на `4307e34` прошёл: install → lint/format → build. Все пункты P1.1 закрыты; известные ограничения ниже не блокируют приёмку.
 
 - [x] `package.json`, `package-lock.json`, Node 22 LTS через `Brewfile`/`.nvmrc`, npm 10.9.9. Подробности — [TOOLCHAIN.md](TOOLCHAIN.md).
 - [x] Vite 7.3.8 + `vite-plugin-singlefile`: dev-сервер с HMR (`npm run dev`) и сборка в один `dist/index.html`. Node 22.23.5 (Homebrew) загружает Rollup native; bundled Node 24 из DSH — нет, поэтому зависимость вынесена в манифест.
@@ -92,7 +94,7 @@
 - [x] **Render:** HDR-пайплайн, sky, soft shadows, post-processing, adaptive resolution и качество вынесены в `src/engine/render/` — `installRender(game, deps)`; `sA`-showcase остаётся в игре, качество `Pr`/`zy` — тоже (нужны UI).
 - [x] **CSS:** 30.8 КБ inline-стилей вынесены в `src/ui/styles.css`; `src/index.html` ссылается на них, Vite + singlefile инлайнит CSS обратно в `dist/index.html`.
 - [x] **ESLint + Prettier:** flat config для рукописного JS/конфигов, `npm run lint`, `npm run format:check`, `npm run check`; минифицированные модули, CSS и docs явно исключены.
-- [x] **Паритет spike:** `npm run build` собирает игру; скриншоты title/level совпали с legacy (0.0% diff), управление идентично (проба `input`), `__errors` пуст.
+- [x] **Паритет P1.1:** `npm run build` собирает игру; title, gameplay и `?show=level` совпали с legacy (0.0% diff); управление идентично (проба `input`); physics-проба совпала по 557 коллайдерам и raycast-ам; renderer-проба — по fov/layers/размерам/post; `__errors` пуст. Владелец подтвердил отсутствие разницы с оригиналом вручную.
 
 #### P1.2 — движок, игра, режимы (1–2 недели)
 
@@ -214,7 +216,7 @@ dist/            # собранный один файл
 | Этап | Результат | Оценка |
 |---|---|---|
 | P1.0 | гигиена, smoke, baseline | 1–2 дня |
-| P1.1 | сборка, `src/`, паритет | 1–2 недели |
+| P1.1 | сборка, `src/`, паритет — **принят** | 1–2 недели |
 | P1.2 | engine/game/modes, биндинги | 1–2 недели |
 | P1.3 | тесты, CI, perf | ~1 неделя |
 | P1.4 | документация, референс | 2–3 дня |
@@ -226,9 +228,8 @@ dist/            # собранный один файл
 ## 10. Первые шаги на этой ветке
 
 1. P1.0: `.gitignore`, `.editorconfig`, `tools/smoke.sh`, baseline — **сделано**.
-2. P1.1: input-модуль в `src/engine/input/`, Vite single-file + HMR, паритет — **сделано**.
-3. P1.1: CSS вынесен в `src/ui/styles.css`, ESLint/Prettier добавлены; следующий шаг — приёмка P1.1.
-4. P1.2–P1.4, приёмка Фазы 1.
-5. Только после этого — отдельная ветка Фазы 2.
+2. P1.1: модули, Vite single-file + HMR, CSS, ESLint/Prettier, CI — **принято (2026-11-13)**.
+3. P1.2–P1.4, приёмка Фазы 1.
+4. Только после этого — отдельная ветка Фазы 2.
 
-**Ограничения текущего этапа:** root `index.html` — legacy-файл, `src/game/main.js` — его копия на 1.17 МБ с извлечёнными input-, UI-, audio-, materials-, physics- и render-модулями; CSS — в `src/ui/styles.css`. HMR настроен, но правки самого игрового модуля могут перезагружать страницу целиком. ESLint/Prettier покрывают рукописный слой, а не минифицированные извлечённые тела. Это проверка схемы, а не завершённый P1.1.
+**Ограничения P1.1 (приняты как известные):** root `index.html` — legacy-файл, `src/game/main.js` — его копия на 1.17 МБ с извлечёнными input-, UI-, audio-, materials-, physics- и render-модулями; CSS — в `src/ui/styles.css`. HMR настроен, но правки самого игрового модуля могут перезагружать страницу целиком. ESLint/Prettier покрывают рукописный слой, а не минифицированные извлечённые тела. Это осознанная граница P1.1; P1.2–P1.4 ещё впереди.
