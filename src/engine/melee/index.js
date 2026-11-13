@@ -51,13 +51,18 @@ export function createMelee(game) {
       if (!enemy || !enemy.alive || !enemy.pos) continue;
       point.copy(enemy.pos);
       point.y += 0.85;
-      toTarget.copy(point).sub(origin);
-      const distance = toTarget.length();
-      if (distance < 0.05 || distance > RANGE) continue;
+      if (Math.abs(point.y - origin.y) > 1.2) continue;
 
-      toTarget.multiplyScalar(1 / distance);
-      if (toTarget.dot(dir) < COS_HALF_CONE) continue;
+      // Use a horizontal cone: eye height vs. a hound's body should not make a
+      // point-blank target look like it is outside a 3D cone.
+      const dx = point.x - origin.x;
+      const dz = point.z - origin.z;
+      const horizontal = Math.hypot(dx, dz);
+      if (horizontal < 0.05 || horizontal > RANGE) continue;
+      if ((dx * dir.x + dz * dir.z) / horizontal < COS_HALF_CONE) continue;
       if (game.physics?.lineOfSight && !game.physics.lineOfSight(origin, point)) continue;
+
+      const distance = toTarget.copy(point).sub(origin).length();
       if (distance <= best) {
         best = distance;
         target = enemy;
