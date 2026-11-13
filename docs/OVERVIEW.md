@@ -48,7 +48,7 @@ shasum -a 256 index.html
 - `docs/OVERVIEW.md` — этот обзор.
 - Управление: бег `X`, огонь `Shift`/ЛКМ, прицел `E`/ПКМ, взаимодействие `F` (подробнее — раздел 11).
 - `README.md` — ссылка на docs, раздел Development и обновлённый «What changed».
-- Phase 1 (`exp/foundation`): `src/` + Vite-сборка в `dist/index.html`; input вынесен в `src/engine/input/`, UI — в `src/engine/ui/`; root `index.html` пока остаётся legacy-файлом.
+- Phase 1 (`exp/foundation`): `src/` + Vite-сборка в `dist/index.html`; input — `src/engine/input/`, UI — `src/engine/ui/`, audio — `src/engine/audio/`; root `index.html` пока остаётся legacy-файлом.
 
 Игровая логика, кроме ремапов управления и структурного выноса Phase 1, соответствует `09c5177`.
 
