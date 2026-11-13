@@ -1,10 +1,9 @@
-// Close-range melee: Q triggers a rifle-butt bash with a small state machine.
-// The animation runs in the game loop after the weapon update, so it can
-// override the view-model for the swing while the weapon update continues to
-// handle the rest of the gun state.
+// Close-range melee: Q triggers a rifle-butt bash with a four-phase state
+// machine. The animation is applied after the weapon update so it can override
+// the normal view-model sway while the weapon handles the rest of its state.
 
 /**
- * @param {object} game game context (player, input, camera, weapon, enemies, events, physics)
+ * @param {object} game game context (player, camera, weapon, enemies, events, physics, game)
  * @returns {{trigger: Function, update: Function, reset: Function, cancel: Function, attacking: boolean, debug: Function}}
  */
 export function createMelee(game) {
@@ -13,16 +12,17 @@ export function createMelee(game) {
   const DAMAGE = 40;
   const COOLDOWN = 0.8;
 
-  const WINDUP = 0.12;
-  const STRIKE = 0.08;
-  const RECOVERY = 0.25;
-  const TOTAL = WINDUP + STRIKE + RECOVERY;
+  const WINDUP = 0.13;
+  const STRIKE = 0.065;
+  const HOLD = 0.045;
+  const RECOVERY = 0.24;
+  const TOTAL = WINDUP + STRIKE + HOLD + RECOVERY;
 
   // Offsets relative to the captured weapon base transform (camera space).
-  const WINDUP_POS = [0.34, 0.06, 0.18];
-  const WINDUP_ROT = [0.32, 1.05, -0.4];
-  const STRIKE_POS = [-0.28, 0.02, -0.32];
-  const STRIKE_ROT = [-0.12, 1.28, -0.18];
+  const WINDUP_POS = [0.3, 0.08, 0.18];
+  const WINDUP_ROT = [0.35, 0.85, -0.45];
+  const STRIKE_POS = [-0.42, 0.06, -0.36];
+  const STRIKE_ROT = [-0.15, 1.95, -0.15];
 
   const origin = new V();
   const dir = new V();
@@ -33,6 +33,8 @@ export function createMelee(game) {
   const baseRot = { x: 0, y: 0, z: 0 };
   const windupRot = { x: 0, y: 0, z: 0 };
   const strikeRot = { x: 0, y: 0, z: 0 };
+  const camOffset = { x: 0, y: 0, z: 0 };
+  const camVelocity = { x: 0, y: 0, z: 0 };
 
   let attacking = false;
   let elapsed = 0;
@@ -80,14 +82,12 @@ export function createMelee(game) {
     return 1 - (1 - t) * (1 - t);
   }
 
-  function easeInExpo(t) {
-    return t <= 0 ? 0 : t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);
+  function easeInCubic(t) {
+    return t * t * t;
   }
 
-  function easeOutBack(t) {
-    const c1 = 1.70158;
-    const c3 = c1 + 1;
-    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
   }
 
   function resolveHit() {
@@ -104,8 +104,7 @@ export function createMelee(game) {
     if (wall && typeof wall.dist === 'number' && wall.dist < limit) limit = wall.dist;
 
     const hit = game.enemies && game.enemies.raycast ? game.enemies.raycast(origin, dir, limit) : null;
-    player.addShake?.(0.18);
-    player.addRecoil?.(0.035, 0);
+    applyCameraPunch(-0.07, 0.045, 0.1);
 
     if (!hit || !hit.enemy) {
       last = { hit: false };
@@ -136,6 +135,42 @@ export function createMelee(game) {
     last = { hit: true, killed, part, distance: limit };
   }
 
+  function applyCameraPunch(pitch = -0.07, yaw = 0.045, roll = 0.1) {
+    camVelocity.x += pitch * 25;
+    camVelocity.y += yaw * 25;
+    camVelocity.z += roll * 25;
+  }
+
+  function updateCameraSpring(dt) {
+    const camera = game.camera;
+    if (!camera || !camera.rotation) return;
+
+    const stiffness = 180;
+    const damping = 14;
+
+    for (const axis of ['x', 'y', 'z']) {
+      const force = -stiffness * camOffset[axis] - damping * camVelocity[axis];
+      camVelocity[axis] += force * dt;
+      camOffset[axis] += camVelocity[axis] * dt;
+      // The player update resets the camera rotation every frame, so this is
+      // an additive visual offset rather than a persistent mutation.
+      camera.rotation[axis] += camOffset[axis];
+    }
+  }
+
+  function cancel() {
+    const weapon = root();
+    if (weapon) {
+      weapon.position.copy(basePos);
+      weapon.rotation.x = baseRot.x;
+      weapon.rotation.y = baseRot.y;
+      weapon.rotation.z = baseRot.z;
+    }
+    attacking = false;
+    elapsed = 0;
+    hitDone = false;
+  }
+
   function trigger() {
     const player = game.player;
     const state = game.game && game.game.state;
@@ -152,56 +187,58 @@ export function createMelee(game) {
     return true;
   }
 
-  function cancel() {
-    const weapon = root();
-    if (weapon) {
-      weapon.position.copy(basePos);
-      weapon.rotation.x = baseRot.x;
-      weapon.rotation.y = baseRot.y;
-      weapon.rotation.z = baseRot.z;
-    }
-    attacking = false;
-    elapsed = 0;
-    hitDone = false;
-  }
-
   function update(dt) {
-    dt = dt || 0;
+    dt = Math.min(Math.max(dt || 0, 0), 0.05);
     cooldown = Math.max(0, cooldown - dt);
-    if (!attacking) return;
 
-    const player = game.player;
-    if (!root() || !player || !player.alive || !player.enabled) {
-      cancel();
-      return;
-    }
+    if (attacking) {
+      const player = game.player;
+      if (!root() || !player || !player.alive || !player.enabled) {
+        cancel();
+      } else {
+        elapsed += dt;
 
-    elapsed += dt;
+        const tWindupEnd = WINDUP;
+        const tStrikeEnd = WINDUP + STRIKE;
+        const tHoldEnd = tStrikeEnd + HOLD;
 
-    if (!hitDone && elapsed >= WINDUP + STRIKE) {
-      hitDone = true;
-      resolveHit();
-    }
+        if (!hitDone && elapsed >= tStrikeEnd) {
+          hitDone = true;
+          resolveHit();
+        }
 
-    if (elapsed < WINDUP) {
-      const t = Math.max(0, Math.min(1, elapsed / WINDUP));
-      applyPose(basePos, windupPos, baseRot, windupRot, easeOutQuad(t));
-    } else if (elapsed < WINDUP + STRIKE) {
-      const t = Math.max(0, Math.min(1, (elapsed - WINDUP) / STRIKE));
-      applyPose(windupPos, strikePos, windupRot, strikeRot, easeInExpo(t));
-    } else if (elapsed < TOTAL) {
-      const t = Math.max(0, Math.min(1, (elapsed - WINDUP - STRIKE) / RECOVERY));
-      applyPose(strikePos, basePos, strikeRot, baseRot, easeOutBack(t));
-    } else {
-      const weapon = root();
-      if (weapon) {
-        weapon.position.copy(basePos);
-        weapon.rotation.x = baseRot.x;
-        weapon.rotation.y = baseRot.y;
-        weapon.rotation.z = baseRot.z;
+        if (elapsed <= tWindupEnd) {
+          const t = Math.max(0, Math.min(1, elapsed / WINDUP));
+          applyPose(basePos, windupPos, baseRot, windupRot, easeOutQuad(t));
+        } else if (elapsed <= tStrikeEnd) {
+          const t = Math.max(0, Math.min(1, (elapsed - WINDUP) / STRIKE));
+          applyPose(windupPos, strikePos, windupRot, strikeRot, easeInCubic(t));
+        } else if (elapsed <= tHoldEnd) {
+          const weapon = root();
+          if (weapon) {
+            weapon.position.copy(strikePos);
+            weapon.position.z += Math.sin(elapsed * 120) * 0.005;
+            weapon.rotation.x = strikeRot.x;
+            weapon.rotation.y = strikeRot.y;
+            weapon.rotation.z = strikeRot.z;
+          }
+        } else if (elapsed <= TOTAL) {
+          const t = Math.max(0, Math.min(1, (elapsed - tHoldEnd) / RECOVERY));
+          applyPose(strikePos, basePos, strikeRot, baseRot, easeOutCubic(t));
+        } else {
+          const weapon = root();
+          if (weapon) {
+            weapon.position.copy(basePos);
+            weapon.rotation.x = baseRot.x;
+            weapon.rotation.y = baseRot.y;
+            weapon.rotation.z = baseRot.z;
+          }
+          attacking = false;
+        }
       }
-      attacking = false;
     }
+
+    updateCameraSpring(dt);
   }
 
   function onKeyDown(event) {
@@ -228,13 +265,22 @@ export function createMelee(game) {
     reset() {
       cooldown = 0;
       last = null;
+      camOffset.x = camOffset.y = camOffset.z = 0;
+      camVelocity.x = camVelocity.y = camVelocity.z = 0;
       cancel();
     },
     get attacking() {
       return attacking;
     },
     debug() {
-      return { cooldown, attacking, elapsed, swing: Math.max(0, TOTAL - elapsed), last };
+      return {
+        cooldown,
+        attacking,
+        elapsed,
+        swing: Math.max(0, TOTAL - elapsed),
+        last,
+        cam: { ...camOffset },
+      };
     },
   };
 }

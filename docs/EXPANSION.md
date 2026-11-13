@@ -229,7 +229,7 @@ dist/            # собранный один файл
 
 1. P1.0: `.gitignore`, `.editorconfig`, `tools/smoke.sh`, baseline — **сделано**.
 2. P1.1: модули, Vite single-file + HMR, CSS, ESLint/Prettier, CI — **принято (2026-11-13)**.
-3. Промежуточный релиз **Melee** на `feat/melee`: Q, 1.8 м raycast, 40 урона, 0.8 с, state-machine анимация приклада 0.45 с с блокировкой огня; без комбо в v1 (см. [MELEE.md](MELEE.md)).
+3. Промежуточный релиз **Melee** на `feat/melee`: Q, 1.8 м raycast, 40 урона, 0.8 с, state-machine анимация приклада 0.48 с с блокировкой огня; без комбо в v1 (см. [MELEE.md](MELEE.md)).
 4. P1.2–P1.4, приёмка Фазы 1.
 5. Только после этого — отдельная ветка Фазы 2.
 

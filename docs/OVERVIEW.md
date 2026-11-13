@@ -309,7 +309,7 @@ Showcase-режимы удобны для осмотра контента без
 
 ## 14. Известные особенности и риски
 
-1. **Melee (v1 на `feat/melee`).** Ранее `Melee` был объявлен в управлении и легенде без обработчика. Теперь Q → 1.8 м raycast, 40 урона, 0.8 с, state-machine rifle-butt swing 0.45 с с fire lockout, hitmarker/audio/camera kick; см. [MELEE.md](MELEE.md). Комбо, стелс-тейкдауны и отдельная модель ножа — вне v1.
+1. **Melee (v1 на `feat/melee`).** Ранее `Melee` был объявлен в управлении и легенде без обработчика. Теперь Q → 1.8 м raycast, 40 урона, 0.8 с, state-machine rifle-butt swing 0.48 с с fire lockout, hitmarker/audio/camera kick; см. [MELEE.md](MELEE.md). Комбо, стелс-тейкдауны и отдельная модель ножа — вне v1.
 2. **След артефакта.** В `<head>` остался `meta name="claude:viewport-fit-sides"`.
 3. **«Nothing is downloaded» неточно:** шрифты тянутся с Google Fonts (офлайн — системные фолбэки). Остальное офлайн.
 4. **Лицензия, CI, тесты, source map.** MIT покрывает изменения форка, оригинальный код/арт остаётся у автора (`NOTICE.md`). Код минифицирован, один файл 1.4 МБ — сложно сопровождать и диффить. Внутренние self-test'ы есть, но не запускаются автоматически.

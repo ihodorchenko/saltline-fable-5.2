@@ -98,7 +98,7 @@ ESLint/Prettier cover handwritten JS and config; minified legacy modules, CSS an
 - The claude.ai frame-runtime scripts were removed from `<head>`, and a doctype, charset and viewport tag were added so the file runs as a plain web page.
 - Local control remaps: sprint moved from `Shift` to `X`, fire is on `LMB` or `Shift`, aim is on `RMB` or `E`, and cut relay moved from `E` to `F`; `Q` is no longer bound.
 - Phase 1: Vite single-file build, extracted engine modules, split CSS, parity checks, ESLint/Prettier and minimal CI. Title, gameplay and level screenshots match the legacy file at 0.0% diff.
-- Melee v1 on `feat/melee`: Q, 1.8 m center raycast, 40 damage, 0.8 s cooldown, 0.45 s rifle-butt state-machine animation, fire lockout, hitmarker/audio/camera kick; no combos yet.
+- Melee v1 on `feat/melee`: Q, 1.8 m center raycast, 40 damage, 0.8 s cooldown, 0.48 s rifle-butt state-machine animation, fire lockout, hitmarker/audio/camera kick; no combos yet.
 
 ## License
 
