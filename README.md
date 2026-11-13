@@ -1,7 +1,8 @@
 # Saltline — Fable 5.2 FPS
 
 A small browser first-person shooter: one level in a rainy container port. Cut three uplink relays while drones ("Gulls") and robot dogs ("Hounds") hunt you.
-<img width="1685" height="906" alt="image" src="https://github.com/user-attachments/assets/8dd32149-90f4-4d69-a573-4411a49a9ba9" />
+
+<img width="1685" height="906" alt="Saltline" src="https://github.com/user-attachments/assets/8dd32149-90f4-4d69-a573-4411a49a9ba9" />
 
 ## Demo
 
@@ -16,47 +17,94 @@ https://realcodebear.github.io/saltline-fable-5.2/ (upstream build; the local co
 
 All credit for the game goes to its original author. This repo is a mirror of the artifact so people can run it locally; local changes are listed below. If you are the author and want it taken down, open an issue.
 
-## What changed from the artifact
+## Fork status
 
-The claude.ai frame-runtime scripts were removed from `<head>`, and a doctype, charset and viewport tag were added so the file runs as a plain web page.
+Phase 1 — build and module extraction — was accepted on 2026-11-13. `dev` is the integration branch; `src/` is the source of truth.
 
-Local control remaps in this fork: sprint moved from `Shift` to `X`, fire is on `LMB` or `Shift` (the keyboard binding used to be `Enter`), aim is on `RMB` or `E`, and cut relay moved from `E` to `F`; `Q` is no longer bound. Mouse buttons still work as before.
+The original root `index.html` is kept as the legacy baseline for parity checks. It is still playable, but it is not the primary entry point and will be retired or moved once automated golden tests cover the source build. `exp/foundation` is archived.
 
-Phase 1 (branch `exp/foundation`): the source moved to `src/` with a Vite single-file build (`dist/index.html`); the legacy root `index.html` remains playable and is the baseline for parity checks.
+The next planned feature is **melee** on `feat/melee`: a close-range strike using the existing `V` binding, as an intermediate release before Phase 2.
 
-## Run it
+## Controls
+
+| Action          | Binding                        |
+| --------------- | ------------------------------ |
+| Move            | `W` `A` `S` `D`                |
+| Look            | Mouse                          |
+| Fire            | Left mouse button or `Shift`   |
+| Aim             | Right mouse button or `E`      |
+| Reload          | `R`                            |
+| Cut relay / use | `F`                            |
+| Jump            | `Space`                        |
+| Sprint          | `X`                            |
+| Crouch          | `C` or `Ctrl`                  |
+| Pause           | `Esc` or `P`                   |
+| Melee           | `V` (planned, not implemented) |
+
+Mouse buttons still work as before. Touch controls are shown on touch devices.
+
+## Quick start (source)
+
+Requires Node 22 (see [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md)).
+
+```sh
+npm ci
+npm run build
+python3 -m http.server 8731 --directory dist
+```
+
+Then open http://localhost:8731 and click the page to capture the mouse and start the sound.
+
+For development with HMR:
+
+```sh
+npm run dev
+```
+
+The legacy original is still runnable from the repository root:
 
 ```sh
 python3 -m http.server 8731
 ```
 
-Then open http://localhost:8731 and click the page to capture the mouse and start the sound.
+It is kept for comparison with the source build, not as the development entry point.
 
-The whole game is one file, `index.html` (~1.4 MB). It bundles three.js and loads fonts from Google Fonts. There are no other outside assets.
-
-## Development (Phase 1)
-
-The legacy single-file game is still `index.html`. The Phase 1 source tree lives in `src/`:
+## Development
 
 ```sh
-brew bundle                          # Node 22 on macOS (see docs/TOOLCHAIN.md)
-brew link --overwrite --force node@22  # keg-only
-npm ci
-npm run dev      # Vite dev server + HMR, http://127.0.0.1:5173
-npm run build    # dist/index.html (Vite + single-file plugin)
-npm run smoke    # headless boot check (needs Edge/Chrome)
-npm run lint     # ESLint for handwritten JS/config
-npm run check    # lint + prettier --check
+npm ci                              # dependencies from package-lock.json
+npm run dev                        # Vite dev server + HMR, http://127.0.0.1:5173
+npm run build                      # dist/index.html (Vite single-file)
+SERVE_DIR=dist npm run smoke       # headless boot check (needs Edge/Chrome)
+npm run lint                       # ESLint for handwritten JS/config
+npm run check                      # lint + prettier --check
 ```
 
-`SERVE_DIR=dist SMOKE_NAME=dist npm run smoke` checks the built single file; `SMOKE_QUERY` overrides the URL query.
+Node 22 LTS is pinned in `.nvmrc`; system packages are in `Brewfile`; npm versions are in `package.json` and `package-lock.json`.
 
-Node 22 LTS is pinned in `.nvmrc`; system packages are in `Brewfile`; npm versions are in `package.json` and `package-lock.json` (see [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md)). `src/` is the source of truth; do not edit the legacy root `index.html`. Vite handles the dev server and HMR; changes to the large game module may trigger a full reload.
+Source layout:
 
-ESLint/Prettier are scoped to handwritten JS and config; minified legacy modules, CSS and docs are excluded (see `eslint.config.js` and `.prettierignore`).
+- `src/index.html` — HTML shell;
+- `src/game/main.js` — game entry that remains the legacy minified core;
+- `src/engine/input/`, `ui/`, `audio/`, `materials/`, `physics/`, `render/` — extracted runtime modules;
+- `src/ui/styles.css` — all UI styles;
+- `docs/` — expansion plan, architecture notes and toolchain;
+- `.github/workflows/ci.yml` — CI: `npm ci`, `npm run check`, `npm run build` on `exp/foundation`/`dev` and PRs.
 
-GitHub Actions runs `npm ci`, `npm run check` and `npm run build` on pushes to `exp/foundation`/`dev` and on pull requests (`.github/workflows/ci.yml`).
+ESLint/Prettier cover handwritten JS and config; minified legacy modules, CSS and docs are excluded (see `eslint.config.js` and `.prettierignore`).
+
+## What changed from the artifact
+
+- The claude.ai frame-runtime scripts were removed from `<head>`, and a doctype, charset and viewport tag were added so the file runs as a plain web page.
+- Local control remaps: sprint moved from `Shift` to `X`, fire is on `LMB` or `Shift`, aim is on `RMB` or `E`, and cut relay moved from `E` to `F`; `Q` is no longer bound.
+- Phase 1: Vite single-file build, extracted engine modules, split CSS, parity checks, ESLint/Prettier and minimal CI. Title, gameplay and level screenshots match the legacy file at 0.0% diff.
+
+## License
+
+The Phase 1 refactor, module boundaries, build tooling and documentation added in this fork are MIT-licensed; see [LICENSE](LICENSE).
+
+The original Saltline game code, art and audio are mirrored from the original artifact and remain the property of their original author. The MIT license does not apply to that original material; see [NOTICE.md](NOTICE.md).
 
 ## Project notes
 
-Technical overview (in Russian): [`docs/OVERVIEW.md`](docs/OVERVIEW.md) — file anatomy, gameplay constants, rendering and audio pipelines, dev hooks, measured numbers, known gaps. This note is local to the fork and not part of the original artifact.
+Technical overview (in Russian): [`docs/OVERVIEW.md`](docs/OVERVIEW.md) — file anatomy, gameplay constants, rendering and audio pipelines, dev hooks, measured numbers, known gaps.
