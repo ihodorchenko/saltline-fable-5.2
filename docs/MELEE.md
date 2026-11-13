@@ -17,7 +17,7 @@ Total duration: 0.48 s, updated after the weapon update so the swing is not
 overwritten by the normal view-model sway.
 
 1. **Wind-up** (0–0.13 s): weapon pulls right/back, muzzle up; easeOutQuad.
-2. **Strike** (0.13–0.195 s): weapon drives forward/left to the strike pose; easeInCubic.
+2. **Strike** (0.13–0.195 s): weapon drives forward/left to the strike pose; easeInCubic. The stock lands at roughly 2.44 rad total yaw, with the butt pushed to the crosshair center.
 3. **Impact hold** (0.195–0.24 s): pose is held with a tiny vibration; the center
    raycast fires once at 0.195 s and the camera gets a damped pitch/yaw/roll punch.
 4. **Recovery** (0.24–0.48 s): weapon returns to the captured base transform with

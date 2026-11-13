@@ -21,8 +21,8 @@ export function createMelee(game) {
   // Offsets relative to the captured weapon base transform (camera space).
   const WINDUP_POS = [0.3, 0.08, 0.18];
   const WINDUP_ROT = [0.35, 0.85, -0.45];
-  const STRIKE_POS = [-0.42, 0.06, -0.36];
-  const STRIKE_ROT = [-0.15, 1.95, -0.15];
+  const STRIKE_POS = [-0.34, 0.06, -0.36];
+  const STRIKE_ROT = [-0.15, 2.35, -0.15];
 
   const origin = new V();
   const dir = new V();
