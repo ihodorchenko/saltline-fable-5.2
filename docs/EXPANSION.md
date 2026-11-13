@@ -87,7 +87,8 @@
 - [x] **Input:** полностью вынесен в `src/engine/input/` — `createInput`/`createStubInput`, биндинги и input-tuning. `src/game/main.js` импортирует модуль. Остальной код пока в `src/game/main.js` (копия legacy без изменения поведения); CSS пока inline в `src/index.html`.
 - [x] **UI:** HUD, меню, настройки и справка по управлению вынесены в `src/engine/ui/` — `createHud`/`createMenu`; настройки (`YC`/`Wf`), профили качества передаются из игры. `src/game/main.js` импортирует модуль.
 - [x] **Audio:** синтез, шины, свёрточные реверберации, музыкальные слои и self-test вынесены в `src/engine/audio/` — `createAudio`/`createSilentAudio`; `src/game/main.js` импортирует модуль.
-- [ ] Вынести остальные модули из `src/game/main.js` в `src/engine/*` и `src/game/saltline/*` (следующие: materials, render, physics); CSS — в `src/ui/`.
+- [x] **Materials:** процедурные материалы, shader chunks, текстуры, декали, лейблы и галерея вынесены в `src/engine/materials/` — `installMaterials` возвращает `create`/`showcase`/`applyPatch`; игра передаёт `THREE` через контекст.
+- [ ] Вынести остальные модули из `src/game/main.js` в `src/engine/*` и `src/game/saltline/*` (следующие: render, physics); CSS — в `src/ui/`.
 - [ ] ESLint + Prettier, без массовых переписываний.
 - [x] **Паритет spike:** `npm run build` собирает игру; скриншоты title/level совпали с legacy (0.0% diff), управление идентично (проба `input`), `__errors` пуст.
 
@@ -228,4 +229,4 @@ dist/            # собранный один файл
 4. P1.2–P1.4, приёмка Фазы 1.
 5. Только после этого — отдельная ветка Фазы 2.
 
-**Ограничения текущего этапа:** root `index.html` — legacy-файл, `src/game/main.js` — его копия на 1.30 МБ с извлечёнными input-, UI- и audio-модулями. HMR настроен, но правки самого игрового модуля могут перезагружать страницу целиком. Это проверка схемы, а не завершённый P1.1.
+**Ограничения текущего этапа:** root `index.html` — legacy-файл, `src/game/main.js` — его копия на 1.23 МБ с извлечёнными input-, UI-, audio- и materials-модулями. HMR настроен, но правки самого игрового модуля могут перезагружать страницу целиком. Это проверка схемы, а не завершённый P1.1.

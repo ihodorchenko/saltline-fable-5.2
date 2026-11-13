@@ -7,6 +7,7 @@
 #   PORT=8733 tools/smoke.sh
 #   BROWSER="/path/to/chrome" tools/smoke.sh
 #   SMOKE_QUERY="?show=level&q=low" SMOKE_NAME=level tools/smoke.sh
+#   SMOKE_BUDGET=45000 SMOKE_QUERY="?show=mats&q=low" SMOKE_NAME=mats tools/smoke.sh
 #
 # Artifacts go to artifacts/ and are gitignored.
 
@@ -18,6 +19,7 @@ SERVE_DIR="${SERVE_DIR:-$ROOT}"
 SMOKE_NAME="${SMOKE_NAME:-smoke}"
 SMOKE_QUERY="${SMOKE_QUERY:-?q=low}"
 SMOKE_REQUIRE_MENU="${SMOKE_REQUIRE_MENU:-1}"
+SMOKE_BUDGET="${SMOKE_BUDGET:-25000}"
 ART="$ROOT/artifacts"
 PROFILE="$(mktemp -d)"
 SERVER_PID=""
@@ -86,7 +88,7 @@ set +e
   --use-angle=swiftshader \
   --hide-scrollbars \
   --window-size=1280,720 \
-  --virtual-time-budget=25000 \
+  --virtual-time-budget="$SMOKE_BUDGET" \
   --screenshot="$ART/$SMOKE_NAME.png" \
   --dump-dom \
   "http://127.0.0.1:$PORT/${SMOKE_QUERY}" \
