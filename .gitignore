@@ -5,6 +5,8 @@ node_modules/
 dist/
 
 # local artifacts and reports
+.npm-cache/
+.omni-workstation/
 artifacts/
 coverage/
 .vite/

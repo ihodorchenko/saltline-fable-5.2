@@ -82,11 +82,12 @@
 
 #### P1.1 — сборка и модули (1–2 недели)
 
-- [ ] `package.json`, lock-файл, Node LTS, npm или pnpm.
-- [ ] Vite (dev + HMR) и сборка в один `dist/index.html` (`vite-plugin-singlefile` или esbuild-fallback).
-- [ ] Вынести JS/CSS из `index.html` в `src/` по модулям; `index.html` — только оболочка.
+- [x] `package.json`, lock-файл, Node >= 20.19, npm.
+- [x] esbuild: сборка в один `dist/index.html`, watch-сервер `npm run dev`. Vite проверен и отклонён: Rollup native не загружается в bundled Node из-за code signature; на другой машине/CI к Vite можно вернуться.
+- [x] **Spike:** биндинги ввода вынесены в `src/engine/input/bindings.js`; остальной код пока в `src/game/main.js` (копия legacy без изменения поведения). CSS пока inline в `src/index.html`.
+- [ ] Вынести остальные модули из `src/game/main.js` в `src/engine/*` и `src/game/saltline/*`; CSS — в `src/ui/`.
 - [ ] ESLint + Prettier, без массовых переписываний.
-- [ ] **Паритет:** `npm run build` даёт игру, визуально и поведенчески равную текущей; golden-скриншоты.
+- [x] **Паритет spike:** `npm run build` собирает игру; скриншоты title/level совпали с legacy (0.0% diff), управление идентично (проба `input`), `__errors` пуст.
 
 #### P1.2 — движок, игра, режимы (1–2 недели)
 
@@ -169,7 +170,8 @@ dist/            # собранный один файл
 
 - **Node LTS** (в этой среде есть bundled Node 24; для CI — LTS).
 - **npm** по умолчанию, pnpm — если команда захочет; lock-файл обязателен.
-- **Vite** для dev/HMR + single-file сборка; esbuild-fallback, если плагин не подойдёт.
+- **esbuild** для сборки в один файл и watch-сервера. Vite был проверен: Rollup native не загружается в bundled Node из-за code signature; на CI/другой машине можно вернуться, но текущий build — esbuild.
+- **Hot reload** пока нет: `npm run dev` пересобирает, браузер обновляется вручную. HMR — отдельная задача.
 - **JavaScript + JSDoc + ESLint**; TypeScript — только для новых модулей, если команда решит. Полная миграция минифицированного кода не имеет смысла.
 - **Vitest** (unit), **Playwright** (headless, скриншоты).
 - **GitHub Actions** (если владелец разрешит).
@@ -194,7 +196,7 @@ dist/            # собранный один файл
 ## 8. Решения, которые нужны от владельца
 
 1. **Пакетный менеджер:** npm или pnpm.
-2. **Сборка:** Vite или esbuild.
+2. **Сборка:** esbuild выбран (Vite/Rollup не загрузился в этой среде). Подтверждаете?
 3. **Язык:** JS + JSDoc или TS для новых модулей.
 4. **Лицензия/NOTICE:** что пишем про исходный код; лицензируем ли свои модули.
 5. **CI:** можно ли включить GitHub Actions.
@@ -219,8 +221,10 @@ dist/            # собранный один файл
 
 ## 10. Первые шаги на этой ветке
 
-1. P1.0: `.gitignore`, `.editorconfig`, `tools/smoke.sh`, `NOTICE` (после решения), baseline.
-2. P1.1-spike: вынести **один** модуль (например, биндинги ввода) в `src/`, собрать single-file, доказать паритет.
-3. Если паритет есть — дальше `input → ui → audio → materials → render → physics`.
+1. P1.0: `.gitignore`, `.editorconfig`, `tools/smoke.sh`, baseline — **сделано**.
+2. P1.1-spike: биндинги ввода в `src/`, esbuild single-file, паритет — **сделано**.
+3. P1.1 continue: остальные модули из `src/game/main.js` по одному, CSS в `src/ui/`, ESLint/Prettier.
 4. P1.2–P1.4, приёмка Фазы 1.
 5. Только после этого — отдельная ветка Фазы 2.
+
+**Ограничения текущего spike:** root `index.html` — legacy-файл, `src/game/main.js` — его копия на 1.39 МБ с одним извлечённым модулем; HMR нет. Это проверка схемы, а не завершённый P1.1.

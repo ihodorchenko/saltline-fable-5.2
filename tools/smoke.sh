@@ -6,6 +6,7 @@
 #   tools/smoke.sh
 #   PORT=8733 tools/smoke.sh
 #   BROWSER="/path/to/chrome" tools/smoke.sh
+#   SMOKE_QUERY="?show=level&q=low" SMOKE_NAME=level tools/smoke.sh
 #
 # Artifacts go to artifacts/ and are gitignored.
 
@@ -13,6 +14,10 @@ set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PORT="${PORT:-8731}"
+SERVE_DIR="${SERVE_DIR:-$ROOT}"
+SMOKE_NAME="${SMOKE_NAME:-smoke}"
+SMOKE_QUERY="${SMOKE_QUERY:-?q=low}"
+SMOKE_REQUIRE_MENU="${SMOKE_REQUIRE_MENU:-1}"
 ART="$ROOT/artifacts"
 PROFILE="$(mktemp -d)"
 SERVER_PID=""
@@ -43,6 +48,10 @@ if [[ -z "${BROWSER:-}" ]]; then
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
     "/Applications/Chromium.app/Contents/MacOS/Chromium"
   )
+  for command in google-chrome google-chrome-stable chromium chromium-browser microsoft-edge; do
+    resolved="$(command -v "$command" 2>/dev/null || true)"
+    [[ -n "$resolved" ]] && candidates+=("$resolved")
+  done
   for candidate in "${candidates[@]}"; do
     if [[ -x "$candidate" ]]; then
       BROWSER="$candidate"
@@ -52,7 +61,8 @@ if [[ -z "${BROWSER:-}" ]]; then
 fi
 [[ -n "${BROWSER:-}" ]] || die "no Chromium browser found; set BROWSER=/path/to/browser"
 
-python3 -m http.server "$PORT" --directory "$ROOT" >"$ART/server.log" 2>&1 &
+[[ -d "$SERVE_DIR" ]] || die "SERVE_DIR does not exist: $SERVE_DIR"
+python3 -m http.server "$PORT" --directory "$SERVE_DIR" >"$ART/server-$SMOKE_NAME.log" 2>&1 &
 SERVER_PID=$!
 disown "$SERVER_PID" 2>/dev/null || true
 
@@ -77,28 +87,28 @@ set +e
   --hide-scrollbars \
   --window-size=1280,720 \
   --virtual-time-budget=25000 \
-  --screenshot="$ART/smoke.png" \
+  --screenshot="$ART/$SMOKE_NAME.png" \
   --dump-dom \
-  "http://127.0.0.1:$PORT/?q=low" \
-  >"$ART/smoke.html" 2>"$ART/smoke.log"
+  "http://127.0.0.1:$PORT/${SMOKE_QUERY}" \
+  >"$ART/$SMOKE_NAME.html" 2>"$ART/$SMOKE_NAME.log"
 STATUS=$?
 set -e
 
 # Edge/SwiftShader can segfault on exit (139) after writing valid artifacts.
 if [[ $STATUS -ne 0 && $STATUS -ne 139 ]]; then
-  die "browser exited with $STATUS; see artifacts/smoke.log"
+  die "browser exited with $STATUS; see artifacts/$SMOKE_NAME.log"
 fi
 
-[[ -s "$ART/smoke.png" ]] || die "no screenshot; see artifacts/smoke.log"
-PNG_BYTES="$(wc -c <"$ART/smoke.png" | tr -d ' ')"
+[[ -s "$ART/$SMOKE_NAME.png" ]] || die "no screenshot; see artifacts/$SMOKE_NAME.log"
+PNG_BYTES="$(wc -c <"$ART/$SMOKE_NAME.png" | tr -d ' ')"
 [[ "$PNG_BYTES" -gt 50000 ]] || die "screenshot is too small (${PNG_BYTES} bytes)"
 
-if grep -q '<div id="fatal">' "$ART/smoke.html"; then
-  die "fatal boot screen; see artifacts/smoke.html"
+if grep -q '<div id="fatal">' "$ART/$SMOKE_NAME.html"; then
+  die "fatal boot screen; see artifacts/$SMOKE_NAME.html"
 fi
 
-if [[ -s "$ART/smoke.html" ]]; then
-  grep -q '<div class="menu' "$ART/smoke.html" || die "menu markup missing; see artifacts/smoke.html"
+if [[ -s "$ART/$SMOKE_NAME.html" && "$SMOKE_REQUIRE_MENU" = "1" ]]; then
+  grep -q '<div class="menu' "$ART/$SMOKE_NAME.html" || die "menu markup missing; see artifacts/$SMOKE_NAME.html"
 else
   echo "WARN: DOM dump is empty; only the screenshot was checked" >&2
 fi
@@ -107,4 +117,4 @@ if [[ $STATUS -eq 139 ]]; then
   echo "WARN: browser segfaulted on exit (139); artifacts are valid" >&2
 fi
 
-echo "OK: $ART/smoke.png (${PNG_BYTES} bytes)"
+echo "OK: $ART/$SMOKE_NAME.png (${PNG_BYTES} bytes)"

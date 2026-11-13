@@ -1,0 +1,19 @@
+{
+  "name": "saltline",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Saltline — single-file browser FPS. Phase 1 build setup.",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev": "node tools/dev.mjs",
+    "build": "node tools/build.mjs",
+    "preview": "python3 -m http.server 5173 --directory dist",
+    "smoke": "tools/smoke.sh"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

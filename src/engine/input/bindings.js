@@ -1,0 +1,30 @@
+// KeyboardEvent.code -> action. Defaults for the Saltline game mode.
+// Phase 1: extracted from the single-file build; values are unchanged.
+
+export const keyBindings = {
+  KeyW: 'forward',
+  KeyS: 'back',
+  KeyA: 'left',
+  KeyD: 'right',
+  Space: 'jump',
+  KeyX: 'sprint',
+  KeyC: 'crouch',
+  ControlLeft: 'crouch',
+  ControlRight: 'crouch',
+  KeyR: 'reload',
+  KeyE: 'ads',
+  KeyF: 'interact',
+  KeyV: 'melee',
+  Escape: 'pause',
+  KeyP: 'pause',
+  ShiftLeft: 'fire',
+  ShiftRight: 'fire',
+  ArrowLeft: 'turnL',
+  ArrowRight: 'turnR',
+  ArrowUp: 'turnU',
+  ArrowDown: 'turnD',
+  KeyJ: 'turnL',
+  KeyL: 'turnR',
+  KeyI: 'turnU',
+  KeyK: 'turnD',
+};

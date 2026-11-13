@@ -22,6 +22,8 @@ The claude.ai frame-runtime scripts were removed from `<head>`, and a doctype, c
 
 Local control remaps in this fork: sprint moved from `Shift` to `X`, fire is on `LMB` or `Shift` (the keyboard binding used to be `Enter`), aim is on `RMB` or `E`, and cut relay moved from `E` to `F`; `Q` is no longer bound. Mouse buttons still work as before.
 
+Phase 1 (branch `exp/foundation`): the source moved to `src/` with an esbuild single-file build (`dist/index.html`); the legacy root `index.html` remains playable and is the baseline for parity checks.
+
 ## Run it
 
 ```sh
@@ -31,6 +33,21 @@ python3 -m http.server 8731
 Then open http://localhost:8731 and click the page to capture the mouse and start the sound.
 
 The whole game is one file, `index.html` (~1.4 MB). It bundles three.js and loads fonts from Google Fonts. There are no other outside assets.
+
+## Development (Phase 1)
+
+The legacy single-file game is still `index.html`. The Phase 1 source tree lives in `src/`:
+
+```sh
+npm install
+npm run dev      # esbuild watch + http://127.0.0.1:5173
+npm run build    # dist/index.html
+npm run smoke    # headless boot check (needs Edge/Chrome)
+```
+
+`SERVE_DIR=dist SMOKE_NAME=dist npm run smoke` checks the built single file; `SMOKE_QUERY` overrides the URL query.
+
+Requires Node >= 20.19. `src/` is the source of truth; do not edit the legacy root `index.html`. The dev server rebuilds on change but does not hot-reload — reload the browser. Vite was evaluated first, but Rollup's native module fails under the signing policy of the bundled Node in this environment, so the build uses esbuild.
 
 ## Project notes
 

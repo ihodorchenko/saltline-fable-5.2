@@ -34,12 +34,12 @@ shasum -a 256 index.html
 
 | | |
 |---|---|
-| Файлы | `README.md`, `index.html` (6 193 строки), `docs/OVERVIEW.md` |
-| Ветки | `main` = `09c5177` (исходное зеркало); `dev` — рабочая ветка (docs + ремапы управления) |
+| Файлы | `README.md`, `index.html` (legacy single file, 6 193 строки), `docs/OVERVIEW.md`; на `exp/foundation` — `src/`, `tools/`, `package.json` |
+| Ветки | `main` = `09c5177` (исходное зеркало); `dev` = `ddfbf83` (docs + ремапы); `exp/foundation` — Phase 1 |
 | Remote | `git@github.com:ihodorchenko/saltline-fable-5.2.git` (форк от `realcodebear`) |
-| Коммиты | 7: импорт игры, три правки README, docs, два ремапа управления |
+| Коммиты | 7 на `dev`: импорт, три README, docs, два ремапа; `exp/foundation` добавляет Phase 1 |
 | Лицензия | отсутствует |
-| CI / тесты / сорсмапы | отсутствуют; есть встроенные self-test'ы рендера и звука |
+| CI / тесты / сорсмапы | CI нет; на `exp/foundation` есть esbuild-сборка, `tools/smoke.sh` и baseline-скриншоты (в `artifacts/`, не коммитятся) |
 | Демо | `https://realcodebear.github.io/saltline-fable-5.2/` — исходное зеркало (без локальных ремапов); на момент проверки отвечает `200` |
 | Внешние запросы страницы | только `fonts.googleapis.com` и `fonts.gstatic.com` (подтверждено сетевым логом) |
 
@@ -47,9 +47,10 @@ shasum -a 256 index.html
 
 - `docs/OVERVIEW.md` — этот обзор.
 - Управление: бег `X`, огонь `Shift`/ЛКМ, прицел `E`/ПКМ, взаимодействие `F` (подробнее — раздел 11).
-- `README.md` — ссылка на docs и обновлённый раздел «What changed».
+- `README.md` — ссылка на docs, раздел Development и обновлённый «What changed».
+- Phase 1 (`exp/foundation`): `src/` + esbuild-сборка в `dist/index.html`; root `index.html` пока остаётся legacy-файлом.
 
-Остальной код игры соответствует `09c5177`.
+Игровая логика, кроме ремапов управления и структурного выноса Phase 1, соответствует `09c5177`.
 
 Запуск локально:
 
@@ -61,6 +62,8 @@ python3 -m http.server 8731
 ---
 
 ## 3. Анатомия одного файла
+
+> На `exp/foundation` тот же код вынесен в `src/game/main.js` (пока копия legacy) и собирается в `dist/index.html`. Таблица ниже описывает legacy-файл в корне.
 
 | Блок | Границы | Размер | Доля |
 |---|---|---|---|
@@ -355,7 +358,7 @@ Showcase-режимы удобны для осмотра контента без
 ## 16. Как поддерживать этот документ
 
 - **Изменился `index.html`** — обновите sha256 и размер в шапке, затем разделы, которых коснулась правка (константы, качество, метрики).
-- **Smoke-тест** — Приложение A; быстрый признак здоровья: `window.__errors` пуст, `render.stats.advanced === true`, `softShadows === true`.
+- **Smoke-тест** — `npm run smoke` (`tools/smoke.sh`, под капотом — Приложение A); быстрый признак здоровья: `window.__errors` пуст, `render.stats.advanced === true`, `softShadows === true`.
 - **Новые замеры** — Приложение B; в разделе 13 укажите условия (GPU/софт-рендер, `q`, окно), иначе цифры несопоставимы.
 - **Новые якоря** — добавляйте в шпаргалку только строки, которые реально встречаются в файле; проверяйте `grep` перед коммитом.
 - **Скриншоты** в репозиторий не кладём (вес); при необходимости — во внешнее хранилище или в `docs/img/` с осознанным решением по размеру.
@@ -363,6 +366,8 @@ Showcase-режимы удобны для осмотра контента без
 ---
 
 ## Приложение A. Быстрая проверка в headless (macOS)
+
+Этот сценарий реализован в `tools/smoke.sh`: `npm run smoke` или `SERVE_DIR=dist SMOKE_NAME=dist npm run smoke`.
 
 ```sh
 cd <repo>
