@@ -84,7 +84,7 @@
 
 - [x] `package.json`, `package-lock.json`, Node 22 LTS через `Brewfile`/`.nvmrc`, npm 10.9.9. Подробности — [TOOLCHAIN.md](TOOLCHAIN.md).
 - [x] Vite 7.3.8 + `vite-plugin-singlefile`: dev-сервер с HMR (`npm run dev`) и сборка в один `dist/index.html`. Node 22.23.5 (Homebrew) загружает Rollup native; bundled Node 24 из DSH — нет, поэтому зависимость вынесена в манифест.
-- [x] **Spike:** биндинги ввода вынесены в `src/engine/input/bindings.js`; остальной код пока в `src/game/main.js` (копия legacy без изменения поведения). CSS пока inline в `src/index.html`.
+- [x] **Input:** полностью вынесен в `src/engine/input/` — `createInput`/`createStubInput`, биндинги и input-tuning. `src/game/main.js` импортирует модуль. Остальной код пока в `src/game/main.js` (копия legacy без изменения поведения); CSS пока inline в `src/index.html`.
 - [ ] Вынести остальные модули из `src/game/main.js` в `src/engine/*` и `src/game/saltline/*`; CSS — в `src/ui/`.
 - [ ] ESLint + Prettier, без массовых переписываний.
 - [x] **Паритет spike:** `npm run build` собирает игру; скриншоты title/level совпали с legacy (0.0% diff), управление идентично (проба `input`), `__errors` пуст.
@@ -221,9 +221,9 @@ dist/            # собранный один файл
 ## 10. Первые шаги на этой ветке
 
 1. P1.0: `.gitignore`, `.editorconfig`, `tools/smoke.sh`, baseline — **сделано**.
-2. P1.1-spike: биндинги ввода в `src/`, Vite single-file + HMR, паритет — **сделано**.
+2. P1.1: input-модуль в `src/engine/input/`, Vite single-file + HMR, паритет — **сделано**.
 3. P1.1 continue: остальные модули из `src/game/main.js` по одному, CSS в `src/ui/`, ESLint/Prettier.
 4. P1.2–P1.4, приёмка Фазы 1.
 5. Только после этого — отдельная ветка Фазы 2.
 
-**Ограничения текущего spike:** root `index.html` — legacy-файл, `src/game/main.js` — его копия на 1.39 МБ с одним извлечённым модулем. HMR настроен, но правки самого игрового модуля могут перезагружать страницу целиком. Это проверка схемы, а не завершённый P1.1.
+**Ограничения текущего этапа:** root `index.html` — legacy-файл, `src/game/main.js` — его копия на 1.38 МБ с извлечённым input-модулем. HMR настроен, но правки самого игрового модуля могут перезагружать страницу целиком. Это проверка схемы, а не завершённый P1.1.
