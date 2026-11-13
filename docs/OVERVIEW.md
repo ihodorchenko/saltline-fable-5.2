@@ -39,7 +39,7 @@ shasum -a 256 index.html
 | Remote | `git@github.com:ihodorchenko/saltline-fable-5.2.git` (форк от `realcodebear`) |
 | Коммиты | 7 на `dev`: импорт, три README, docs, два ремапа; `exp/foundation` добавляет Phase 1 |
 | Лицензия | отсутствует |
-| CI / тесты / сорсмапы | CI нет; на `exp/foundation` есть esbuild-сборка, `tools/smoke.sh` и baseline-скриншоты (в `artifacts/`, не коммитятся) |
+| CI / тесты / сорсмапы | CI нет; на `exp/foundation` есть Vite-сборка, `tools/smoke.sh` и baseline-скриншоты (в `artifacts/`, не коммитятся) |
 | Демо | `https://realcodebear.github.io/saltline-fable-5.2/` — исходное зеркало (без локальных ремапов); на момент проверки отвечает `200` |
 | Внешние запросы страницы | только `fonts.googleapis.com` и `fonts.gstatic.com` (подтверждено сетевым логом) |
 
@@ -48,7 +48,7 @@ shasum -a 256 index.html
 - `docs/OVERVIEW.md` — этот обзор.
 - Управление: бег `X`, огонь `Shift`/ЛКМ, прицел `E`/ПКМ, взаимодействие `F` (подробнее — раздел 11).
 - `README.md` — ссылка на docs, раздел Development и обновлённый «What changed».
-- Phase 1 (`exp/foundation`): `src/` + esbuild-сборка в `dist/index.html`; root `index.html` пока остаётся legacy-файлом.
+- Phase 1 (`exp/foundation`): `src/` + Vite-сборка в `dist/index.html`; root `index.html` пока остаётся legacy-файлом.
 
 Игровая логика, кроме ремапов управления и структурного выноса Phase 1, соответствует `09c5177`.
 
@@ -63,7 +63,7 @@ python3 -m http.server 8731
 
 ## 3. Анатомия одного файла
 
-> На `exp/foundation` тот же код вынесен в `src/game/main.js` (пока копия legacy) и собирается в `dist/index.html`. Таблица ниже описывает legacy-файл в корне.
+> На `exp/foundation` тот же код вынесен в `src/game/main.js` (пока копия legacy) и собирается Vite в `dist/index.html`; dev-сервер с HMR — `npm run dev`. Таблица ниже описывает legacy-файл в корне.
 
 | Блок | Границы | Размер | Доля |
 |---|---|---|---|

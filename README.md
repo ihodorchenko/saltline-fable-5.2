@@ -22,7 +22,7 @@ The claude.ai frame-runtime scripts were removed from `<head>`, and a doctype, c
 
 Local control remaps in this fork: sprint moved from `Shift` to `X`, fire is on `LMB` or `Shift` (the keyboard binding used to be `Enter`), aim is on `RMB` or `E`, and cut relay moved from `E` to `F`; `Q` is no longer bound. Mouse buttons still work as before.
 
-Phase 1 (branch `exp/foundation`): the source moved to `src/` with an esbuild single-file build (`dist/index.html`); the legacy root `index.html` remains playable and is the baseline for parity checks.
+Phase 1 (branch `exp/foundation`): the source moved to `src/` with a Vite single-file build (`dist/index.html`); the legacy root `index.html` remains playable and is the baseline for parity checks.
 
 ## Run it
 
@@ -39,15 +39,17 @@ The whole game is one file, `index.html` (~1.4 MB). It bundles three.js and load
 The legacy single-file game is still `index.html`. The Phase 1 source tree lives in `src/`:
 
 ```sh
-npm install
-npm run dev      # esbuild watch + http://127.0.0.1:5173
-npm run build    # dist/index.html
+brew bundle                          # Node 22 on macOS (see docs/TOOLCHAIN.md)
+brew link --overwrite --force node@22  # keg-only
+npm ci
+npm run dev      # Vite dev server + HMR, http://127.0.0.1:5173
+npm run build    # dist/index.html (Vite + single-file plugin)
 npm run smoke    # headless boot check (needs Edge/Chrome)
 ```
 
 `SERVE_DIR=dist SMOKE_NAME=dist npm run smoke` checks the built single file; `SMOKE_QUERY` overrides the URL query.
 
-Requires Node >= 20.19. `src/` is the source of truth; do not edit the legacy root `index.html`. The dev server rebuilds on change but does not hot-reload — reload the browser. Vite was evaluated first, but Rollup's native module fails under the signing policy of the bundled Node in this environment, so the build uses esbuild.
+Node 22 LTS is pinned in `.nvmrc`; system packages are in `Brewfile`; npm versions are in `package.json` and `package-lock.json` (see [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md)). `src/` is the source of truth; do not edit the legacy root `index.html`. Vite handles the dev server and HMR; changes to the large game module may trigger a full reload.
 
 ## Project notes
 

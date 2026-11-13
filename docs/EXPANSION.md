@@ -82,8 +82,8 @@
 
 #### P1.1 — сборка и модули (1–2 недели)
 
-- [x] `package.json`, lock-файл, Node >= 20.19, npm.
-- [x] esbuild: сборка в один `dist/index.html`, watch-сервер `npm run dev`. Vite проверен и отклонён: Rollup native не загружается в bundled Node из-за code signature; на другой машине/CI к Vite можно вернуться.
+- [x] `package.json`, `package-lock.json`, Node 22 LTS через `Brewfile`/`.nvmrc`, npm 10.9.9. Подробности — [TOOLCHAIN.md](TOOLCHAIN.md).
+- [x] Vite 7.3.8 + `vite-plugin-singlefile`: dev-сервер с HMR (`npm run dev`) и сборка в один `dist/index.html`. Node 22.23.5 (Homebrew) загружает Rollup native; bundled Node 24 из DSH — нет, поэтому зависимость вынесена в манифест.
 - [x] **Spike:** биндинги ввода вынесены в `src/engine/input/bindings.js`; остальной код пока в `src/game/main.js` (копия legacy без изменения поведения). CSS пока inline в `src/index.html`.
 - [ ] Вынести остальные модули из `src/game/main.js` в `src/engine/*` и `src/game/saltline/*`; CSS — в `src/ui/`.
 - [ ] ESLint + Prettier, без массовых переписываний.
@@ -168,10 +168,9 @@ dist/            # собранный один файл
 
 ## 5. Инструменты — рекомендация
 
-- **Node LTS** (в этой среде есть bundled Node 24; для CI — LTS).
-- **npm** по умолчанию, pnpm — если команда захочет; lock-файл обязателен.
-- **esbuild** для сборки в один файл и watch-сервера. Vite был проверен: Rollup native не загружается в bundled Node из-за code signature; на CI/другой машине можно вернуться, но текущий build — esbuild.
-- **Hot reload** пока нет: `npm run dev` пересобирает, браузер обновляется вручную. HMR — отдельная задача.
+- **Node 22 LTS** (22.23.5) через `Brewfile`/`.nvmrc`; npm 10.9.9; npm-манифест — `package.json` + `package-lock.json`.
+- **Vite 7.3.8** + `vite-plugin-singlefile` для dev/HMR и сборки в один файл; esbuild и Rollup идут транзитивно.
+- **HMR** работает через Vite; изменения огромного `src/game/main.js` могут вызывать полную перезагрузку, это нормально для spike.
 - **JavaScript + JSDoc + ESLint**; TypeScript — только для новых модулей, если команда решит. Полная миграция минифицированного кода не имеет смысла.
 - **Vitest** (unit), **Playwright** (headless, скриншоты).
 - **GitHub Actions** (если владелец разрешит).
@@ -190,13 +189,13 @@ dist/            # собранный один файл
 - **Расползание Фазы 2 в Фазу 1** → явный запрет на новую физику/геймплей.
 - **Инструменты съедают время** → сначала маленький spike: один модуль, сборка, паритет.
 - **Лицензия** → `NOTICE`, без лицензии на чужой код.
-- **Node/CI** → bundled Node для локально, LTS для CI; кэш браузера.
+- **Node/CI** → Node 22 LTS локально и в CI; версии фиксированы `Brewfile`/`.nvmrc`/lock-файлом; кэш браузера.
 - **Не делаем:** переезд на UE5/Godot, полную миграцию на TS, копирование ассетов, «большой рефакторинг одним коммитом».
 
 ## 8. Решения, которые нужны от владельца
 
-1. **Пакетный менеджер:** npm или pnpm.
-2. **Сборка:** esbuild выбран (Vite/Rollup не загрузился в этой среде). Подтверждаете?
+1. **Пакетный менеджер:** npm 10.9.9 зафиксирован (`packageManager`), pnpm не нужен.
+2. **Сборка:** Vite 7.3.8 выбран и работает на Node 22.23.5; fallback-сборка на esbuild удалена.
 3. **Язык:** JS + JSDoc или TS для новых модулей.
 4. **Лицензия/NOTICE:** что пишем про исходный код; лицензируем ли свои модули.
 5. **CI:** можно ли включить GitHub Actions.
@@ -222,9 +221,9 @@ dist/            # собранный один файл
 ## 10. Первые шаги на этой ветке
 
 1. P1.0: `.gitignore`, `.editorconfig`, `tools/smoke.sh`, baseline — **сделано**.
-2. P1.1-spike: биндинги ввода в `src/`, esbuild single-file, паритет — **сделано**.
+2. P1.1-spike: биндинги ввода в `src/`, Vite single-file + HMR, паритет — **сделано**.
 3. P1.1 continue: остальные модули из `src/game/main.js` по одному, CSS в `src/ui/`, ESLint/Prettier.
 4. P1.2–P1.4, приёмка Фазы 1.
 5. Только после этого — отдельная ветка Фазы 2.
 
-**Ограничения текущего spike:** root `index.html` — legacy-файл, `src/game/main.js` — его копия на 1.39 МБ с одним извлечённым модулем; HMR нет. Это проверка схемы, а не завершённый P1.1.
+**Ограничения текущего spike:** root `index.html` — legacy-файл, `src/game/main.js` — его копия на 1.39 МБ с одним извлечённым модулем. HMR настроен, но правки самого игрового модуля могут перезагружать страницу целиком. Это проверка схемы, а не завершённый P1.1.

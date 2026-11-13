@@ -5,15 +5,17 @@
   "type": "module",
   "description": "Saltline — single-file browser FPS. Phase 1 build setup.",
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "node tools/dev.mjs",
-    "build": "node tools/build.mjs",
-    "preview": "python3 -m http.server 5173 --directory dist",
+    "dev": "vite --config vite.config.js",
+    "build": "vite build --config vite.config.js",
+    "preview": "vite preview --config vite.config.js",
     "smoke": "tools/smoke.sh"
   },
   "devDependencies": {
-    "esbuild": "^0.28.2"
-  }
+    "vite": "^7.3.8",
+    "vite-plugin-singlefile": "^2.3.4"
+  },
+  "packageManager": "npm@10.9.9"
 }
