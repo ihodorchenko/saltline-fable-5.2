@@ -183,7 +183,8 @@ dev (Saltline, Phase 1 complete)
 - Never merge `project/glassline` into `dev`.
 - Engine fixes: `fix/engine-*` from `dev`, merged by command; then rebase or
   cherry-pick into GLASSLINE.
-- Delete merged feature branches after integration.
+- **Delete every merged feature branch immediately after integration — local and
+  origin.** This is mandatory; do not leave merged branches behind.
 
 ## 7. Definition of done
 

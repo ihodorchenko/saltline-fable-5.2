@@ -34,6 +34,8 @@ owner command. The reference video is local/untracked and must not be committed.
 - `project/glassline` never merges into `dev` or `main`.
 - Feature branches start from `project/glassline`: `feat/glassline-*`.
 - Merge into `project/glassline` only after an explicit owner command.
+- **After every merge, delete the merged feature branch immediately — locally and
+  on origin.** Do not leave merged branches around.
 - Engine fixes are separate `fix/engine-*` branches from `dev`; merge them into
   `dev` only by owner command, then rebase/cherry-pick into GLASSLINE.
 - Do not import `src/game/saltline/` into engine modules.

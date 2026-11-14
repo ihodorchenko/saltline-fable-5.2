@@ -33,7 +33,9 @@ PLAYWRIGHT_CHANNEL=msedge npm run test:e2e
   owner command.
 - Work in a short-lived branch from `dev`: `feat/…`, `fix/…`, `test/…`,
   `docs/…`.
-- Delete a merged short-lived branch locally and on origin after the merge.
+- **Always delete a merged short-lived branch immediately after the merge —
+  locally and on origin.** This applies to `dev` and `project/*`; do not leave
+  merged branches behind.
 - Phase 2 lives in its own long-lived `project/…` branch and does not merge back
   into `dev`.
 - Shared engine bugfixes go to a separate `fix/engine-…` branch and reach `dev`
