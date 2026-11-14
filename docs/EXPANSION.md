@@ -104,6 +104,7 @@
 - [x] **Game state machine (P1.2):** `createSaltlineGame` вынесен в `src/game/saltline/game.js`; flow/radio/compass — в `content.js`. Уровни, оружие и враги пока в `src/game/main.js`.
 - [ ] **Game content (P1.2, отдельный узел):** вынос уровней, оружия, врагов и HUD-геймплея в `src/game/saltline/` — следующий крупный узел после modes; пока остаётся в `src/game/main.js`.
 - [x] **Enemies (P1.2):** `createEnemySystem` вынесен в `src/game/saltline/enemies.js`; Three.js-классы и Saltline-хелперы передаются через `deps`, showcase enemies остаётся в игре. Уровни, оружие и HUD-геймплей ещё в `src/game/main.js`.
+- [x] **Weapon (P1.2):** `createWeapon` вынесен в `src/game/saltline/weapon.js`; Three.js-классы берутся из контекста, модель/тюнинг и анимационные хелперы — через `deps`; weapon showcase остаётся в игре. Уровень и HUD-геймплей ещё в `src/game/main.js`.
 - [x] **Modes (P1.2):** `createModes` в `src/modes/index.js` — реестр showcase-модулей и разрешение `campaign` / `showcase` / `bench` по query/hash; query-алиасы сохранены. Title/campaign по-прежнему реализуются state machine игры.
 - [ ] Event bus, время, детерминированный RNG.
 - [ ] Биндинги действий в одном месте; HUD-подсказки берут клавишу оттуда.
