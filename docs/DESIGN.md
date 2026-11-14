@@ -151,8 +151,10 @@ avoid mirrored copy.
 
 ## Motion / feedback
 
-- landing dip and speed-based FOV;
-- slide camera drop; wallrun roll;
+- spring landing dip with a short head nod, driven by fall speed;
+- sway into A/D strafes, weight transfer in vault/slide, wallrun roll;
+- speed-based FOV: 75° base, 84° sprint, 88° slide;
+- slide camera drop;
 - checkpoint ring color progression (red current, green passed, grey upcoming);
 - floating next-checkpoint diamond;
 - brief checkpoint/respawn toast;

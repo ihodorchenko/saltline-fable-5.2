@@ -182,6 +182,8 @@ removed from `src/`; the original artifact remains at the repository root.
       accents, without a duplicate EffectComposer;
 - [x] polish pass: side-mounted bent-arm idle/run pose, FrontSide wayfinding
       signs, high-quality 1.1 supersampling with final FXAA;
+- [x] camera polish: sprint/slide FOV, procedural strafe/vault/wallrun roll,
+      damped landing spring and head nod;
 - [x] generated city district around the route: terraced blocks, windows,
       skybridges, transit, roof gardens and signage; instanced draw calls;
 - [x] procedural first-person courier rig and mentor character using capsule

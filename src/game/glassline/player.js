@@ -109,6 +109,8 @@ export function createPlayerController(game, options = {}) {
     locked: false,
     jumps: 0,
     landDip: 0,
+    landingOffset: 0,
+    landingVelocity: 0,
     airTime: 0,
     coyote: 0,
     walkable: true,
@@ -705,7 +707,18 @@ export function createPlayerController(game, options = {}) {
    * @param {number} step
    */
   function applyCamera(step) {
-    state.landDip *= Math.exp(-8 * step);
+    // Damped spring for landing: negative offset dips the camera/arms down.
+    state.landingVelocity +=
+      (-140 * state.landingOffset - 14 * state.landingVelocity) * step;
+    state.landingOffset += state.landingVelocity * step;
+    state.landingOffset = Math.max(-0.32, Math.min(0.08, state.landingOffset));
+    if (
+      Math.abs(state.landingOffset) < 0.0005 &&
+      Math.abs(state.landingVelocity) < 0.01
+    ) {
+      state.landingOffset = 0;
+      state.landingVelocity = 0;
+    }
     const targetEye = state.sliding || state.rolling
       ? SLIDE_EYE
       : state.crouched
@@ -724,14 +737,19 @@ export function createPlayerController(game, options = {}) {
     }
     game.camera.position.set(
       pos.x,
-      pos.y + state.eyeHeight - state.landDip,
+      pos.y + state.eyeHeight + state.landingOffset,
       pos.z,
     );
     state.rollPhase += step;
     const targetRoll = cameraRollTarget(state, state.rollPhase);
     state.roll += (targetRoll - state.roll) * (1 - Math.exp(-10 * step));
     game.camera.rotation.order = 'YXZ';
-    game.camera.rotation.set(state.pitch, state.yaw, state.roll, 'YXZ');
+    game.camera.rotation.set(
+      state.pitch + state.landingOffset * 0.45,
+      state.yaw,
+      state.roll,
+      'YXZ',
+    );
   }
 
   /**
@@ -877,7 +895,9 @@ export function createPlayerController(game, options = {}) {
     if (result.onGround) {
       const justLanded = !state.onGround;
       if (justLanded && fallSpeed < -2) {
-        state.landDip = Math.min(0.12, -fallSpeed * 0.012);
+        const impact = Math.min(0.3, Math.abs(fallSpeed) * 0.04);
+        state.landingVelocity = -impact * 20;
+        state.landingOffset = Math.min(0, state.landingOffset);
       }
       if (justLanded) {
         emit('land', {
