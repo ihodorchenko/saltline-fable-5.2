@@ -100,6 +100,7 @@
 
 - [ ] `src/engine/*`: render, materials, audio, fx, ui, input, physics, core.
 - [ ] `src/game/saltline`: уровни, правила, враги, оружие, HUD-геймплей.
+- [x] **Game state machine (P1.2):** `createSaltlineGame` вынесен в `src/game/saltline/game.js`; flow/radio/compass — в `content.js`. Уровни, оружие и враги пока в `src/game/main.js`.
 - [ ] `src/modes/*`: title / campaign / showcase / bench; query-параметры остаются алиасами.
 - [ ] Event bus, время, детерминированный RNG.
 - [ ] Биндинги действий в одном месте; HUD-подсказки берут клавишу оттуда.
