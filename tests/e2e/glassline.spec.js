@@ -18,6 +18,7 @@ test('glassline step 0 prototype boots', async ({ page }) => {
       ramp: !!root?.getObjectByName('glassline-ramp'),
       platform: !!root?.getObjectByName('glassline-moving-platform'),
       ceiling: !!root?.getObjectByName('glassline-low-ceiling'),
+      vaultLedge: !!root?.getObjectByName('glassline-vault-ledge'),
     };
   });
   expect(scene).toEqual({
@@ -28,6 +29,7 @@ test('glassline step 0 prototype boots', async ({ page }) => {
     ramp: true,
     platform: true,
     ceiling: true,
+    vaultLedge: true,
   });
   const platformY = await page.evaluate(() => window.__G.glassline.platform.position.y);
   await page.waitForTimeout(600);
@@ -89,4 +91,20 @@ test('glassline slide starts from a run and recovers', async ({ page }) => {
   await page.keyboard.up('w');
   expect(recovered.sliding).toBe(false);
   expect(recovered.eyeHeight).toBeGreaterThan(1.3);
+});
+
+test('glassline vault crosses the low ledge', async ({ page }) => {
+  await boot(page, '?show=glassline&q=low');
+  const before = await page.evaluate(() => {
+    window.__G.glassline.controller.teleport(3, 4.2, 0, 5.4);
+    return window.__G.glassline.controller.getState();
+  });
+  const started = await page.evaluate(() => window.__G.glassline.controller.tryVault());
+  expect(started).toBe(true);
+  await page.waitForFunction(() => window.__G.glassline.controller.getState().vaulting === false, null, {
+    timeout: 5_000,
+  });
+  const after = await page.evaluate(() => window.__G.glassline.controller.getState());
+  expect(after.vaults).toBeGreaterThan(before.vaults);
+  expect(after.pos.z).toBeLessThan(before.pos.z - 1);
 });

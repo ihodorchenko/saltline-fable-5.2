@@ -37,6 +37,7 @@ import {
   slideEntrySpeed,
   slideSpeed,
 } from './slide.js';
+import { VAULT_DURATION, VAULT_MAX_DISTANCE, canVault } from './vault.js';
 
 /**
  * @param {GameContext} game
@@ -69,6 +70,13 @@ export function createPlayerController(game) {
     bodyHeight: HEIGHT,
     eyeHeight: EYE,
     ceilingClearance: Infinity,
+    vaulting: false,
+    vaultTime: 0,
+    vaults: 0,
+    vaultFrom: new THREE.Vector3(),
+    vaultTo: new THREE.Vector3(),
+    vaultDir: new THREE.Vector3(),
+    vaultArc: 0,
   };
 
   /** @type {any} */
@@ -141,6 +149,81 @@ export function createPlayerController(game) {
     tryStand();
   }
 
+  function forwardVector() {
+    return new THREE.Vector3(
+      -Math.sin(state.yaw),
+      0,
+      -Math.cos(state.yaw),
+    );
+  }
+
+  function findVault() {
+    if (!physics || !physics.raycast) return null;
+    const dir = forwardVector();
+    const origin = new THREE.Vector3(pos.x, pos.y + 0.55, pos.z);
+    const wall = physics.raycast(origin, dir, VAULT_MAX_DISTANCE);
+    if (!wall) return null;
+    const topOrigin = new THREE.Vector3(
+      wall.point.x,
+      wall.point.y + 2,
+      wall.point.z,
+    );
+    const top = physics.raycast(
+      topOrigin,
+      new THREE.Vector3(0, -1, 0),
+      3,
+    );
+    if (!top) return null;
+    const height = top.point.y - pos.y;
+    const distance = Math.hypot(
+      wall.point.x - pos.x,
+      wall.point.z - pos.z,
+    );
+    if (!canVault({ onGround: state.onGround, speed: Math.hypot(vel.x, vel.z), height, distance })) {
+      return null;
+    }
+    return { dir, height, distance };
+  }
+
+  function startVault(obstacle = null) {
+    if (state.vaulting || state.sliding) return false;
+    const found = obstacle || findVault();
+    if (!found) return false;
+    state.vaultFrom.copy(pos);
+    state.vaultTo
+      .copy(pos)
+      .addScaledVector(found.dir, found.distance + 1.0);
+    state.vaultDir.copy(found.dir);
+    state.vaultArc = Math.max(0.45, found.height + 0.2);
+    state.vaultTime = 0;
+    state.vaulting = true;
+    state.crouched = false;
+    state.bodyHeight = HEIGHT;
+    vel.set(0, 0, 0);
+    state.vaults += 1;
+    return true;
+  }
+
+  function tryVault() {
+    return startVault();
+  }
+
+  function teleport(x, z, yaw = 0, speed = 0) {
+    pos.set(x, 0.05, z);
+    vel.set(-Math.sin(yaw) * speed, 0, -Math.cos(yaw) * speed);
+    state.yaw = yaw;
+    state.vaulting = false;
+    state.sliding = false;
+    state.crouched = false;
+    state.bodyHeight = HEIGHT;
+    state.eyeHeight = EYE;
+    state.onGround = true;
+    state.speed = speed;
+    state.sprinting = false;
+    applyCamera(0.016);
+    return true;
+  }
+
   function onKeyDown(event) {
     if (
       event.code === 'Space' ||
@@ -161,6 +244,15 @@ export function createPlayerController(game) {
         state.crouched = true;
         state.bodyHeight = SLIDE_HEIGHT;
       }
+    }
+    if (
+      event.code === 'Space' &&
+      !event.repeat &&
+      state.onGround &&
+      !state.sliding &&
+      tryVault()
+    ) {
+      return;
     }
     if (
       event.code === 'Space' &&
@@ -226,10 +318,54 @@ export function createPlayerController(game) {
   document.addEventListener('pointerlockchange', onLockChange);
 
   /**
+   * @param {number} step
+   */
+  function applyCamera(step) {
+    state.landDip *= Math.exp(-8 * step);
+    const targetEye = state.sliding
+      ? SLIDE_EYE
+      : state.crouched
+        ? CROUCH_EYE
+        : EYE;
+    state.eyeHeight +=
+      (targetEye - state.eyeHeight) * (1 - Math.exp(-14 * step));
+    const targetFov =
+      BASE_FOV + (state.sliding ? 4 : 0) + (state.sprinting ? 2 : 0);
+    if (game.camera && typeof game.camera.fov === 'number') {
+      game.camera.fov +=
+        (targetFov - game.camera.fov) * (1 - Math.exp(-8 * step));
+      if (Math.abs(game.camera.fov - targetFov) > 0.01) {
+        game.camera.updateProjectionMatrix();
+      }
+    }
+    game.camera.position.set(
+      pos.x,
+      pos.y + state.eyeHeight - state.landDip,
+      pos.z,
+    );
+    game.camera.rotation.set(state.pitch, state.yaw, 0, 'YXZ');
+  }
+
+  /**
    * @param {number} dt
    */
   function update(dt) {
     const step = Math.min(Math.max(dt || 0, 0), MAX_DT);
+    if (state.vaulting) {
+      state.vaultTime += step;
+      const t = Math.min(1, state.vaultTime / VAULT_DURATION);
+      pos.lerpVectors(state.vaultFrom, state.vaultTo, t);
+      pos.y += Math.sin(Math.PI * t) * state.vaultArc;
+      if (t >= 1) {
+        state.vaulting = false;
+        state.onGround = false;
+        vel.copy(state.vaultDir).multiplyScalar(RUN);
+      }
+      state.speed = Math.hypot(vel.x, vel.z);
+      state.sprinting = false;
+      applyCamera(step);
+      return state;
+    }
     const forwardInput =
       (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) -
       (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
@@ -342,31 +478,9 @@ export function createPlayerController(game) {
       state.ledge = topHit ? ledgeInfo(topHit, pos.y) : null;
     }
 
-    state.landDip *= Math.exp(-8 * step);
     state.sprinting = sprinting && length > 0 && !state.sliding;
     state.speed = Math.hypot(vel.x, vel.z);
-    const targetEye = state.sliding
-      ? SLIDE_EYE
-      : state.crouched
-        ? CROUCH_EYE
-        : EYE;
-    state.eyeHeight +=
-      (targetEye - state.eyeHeight) * (1 - Math.exp(-14 * step));
-    const targetFov =
-      BASE_FOV + (state.sliding ? 4 : 0) + (state.sprinting ? 2 : 0);
-    if (game.camera && typeof game.camera.fov === 'number') {
-      game.camera.fov +=
-        (targetFov - game.camera.fov) * (1 - Math.exp(-8 * step));
-      if (Math.abs(game.camera.fov - targetFov) > 0.01) {
-        game.camera.updateProjectionMatrix();
-      }
-    }
-    game.camera.position.set(
-      pos.x,
-      pos.y + state.eyeHeight - state.landDip,
-      pos.z,
-    );
-    game.camera.rotation.set(state.pitch, state.yaw, 0, 'YXZ');
+    applyCamera(step);
     return state;
   }
 
@@ -392,5 +506,5 @@ export function createPlayerController(game) {
   // otherwise boot would override the controller every frame.
   game.camera.position.set(pos.x, pos.y + EYE, pos.z);
   game.camera.rotation.set(state.pitch, state.yaw, 0, 'YXZ');
-  return { update, getState, dispose };
+  return { update, getState, dispose, teleport, tryVault };
 }

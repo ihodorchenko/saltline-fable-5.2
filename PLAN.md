@@ -107,12 +107,13 @@ smooth slope solver is future work.
 
 ### Step 2 — Core parkour moves
 
-One branch per mechanic. Current status: slide implemented on
-`feat/glassline-slide`; the remaining moves are not started.
+One branch per mechanic. Current status: slide is merged; vault is implemented on
+`feat/glassline-vault` (not merged); the remaining moves are not started.
 
-1. `feat/glassline-slide` — **implemented, not merged**: run-to-slide, friction,
+1. `feat/glassline-slide` — **implemented and merged**: run-to-slide, friction,
    recovery, low-ceiling block, camera/FOV dip, unit + Playwright tests.
-2. `feat/glassline-vault` — vault over waist-height obstacles.
+2. `feat/glassline-vault` — **implemented, not merged**: Space auto-vault over a
+   low ledge, short arc, speed retention, unit + Playwright tests.
 3. `feat/glassline-mantle` — climb a ledge and stand up.
 4. `feat/glassline-wallrun` — wall-run, exit jump, camera roll.
 5. `feat/glassline-wallclimb` — short wall climb with stamina/timing.
