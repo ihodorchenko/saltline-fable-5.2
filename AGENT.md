@@ -12,9 +12,9 @@ and must not be merged back into `dev`.
 
 Phase 1 is complete and stabilized on `dev`. Step 0, Step 1 and all Step 2 parkour
 mechanics are merged into `project/glassline`; their feature branches are deleted.
-Step 3 is in progress on `feat/glassline-tutorial-route`: expanded data-driven
-route, 10 checkpoints, respawn/finish and a stage HUD. It is **not merged**; merge
-only on command.
+Step 3 is in progress on `feat/glassline-tutorial-polish`: expanded data-driven
+route with 10 checkpoints, respawn/finish, HUD, route readability and saved
+checkpoint progress. It is **not merged**; merge only on command.
 
 The theme, language and platform are confirmed: **parkour in the spirit of
 Mirror's Edge with original IP**, **JS + JSDoc**, **desktop Chrome**, **60 FPS**.
@@ -94,16 +94,16 @@ map and regression tests for stuck/duplicate states.
 
 ### Step 3 — Tutorial level
 
-Branch `feat/glassline-tutorial-route` (expanded route in progress).
+Branch `feat/glassline-tutorial-polish` (polish in progress).
 
 - [x] data-driven layout and validator;
 - [x] complete mechanic route with 10 checkpoints;
 - [x] checkpoints, respawn, finish and stage HUD;
 - [x] separate `?show=glassline-tutorial` mode;
 - [x] route-order audit and browser coverage;
-- [ ] readable art pass and pacing;
-- [ ] complete 10–20 minute slice;
-- [ ] checkpoint persistence;
+- [x] route strips, palette, silhouettes, fog and next-checkpoint diamond;
+- [x] R retry, Backspace restart and localStorage checkpoint persistence;
+- [ ] final art pass and 10–20 minute pacing;
 - [ ] optional level editor/preview.
 
 ### Step 4 — Theme, art, audio, UI

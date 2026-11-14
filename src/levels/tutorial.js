@@ -8,6 +8,16 @@ export const tutorialLevel = {
   name: 'ROOFTOP INDUCTION',
   spawn: { x: 0, y: 0.05, z: 10, yaw: 0 },
   fallY: -6,
+  palette: [0xd7d2c6, 0xc3cbca, 0xb3bdc2],
+  scenery: [
+    { pos: [-14, 5, 8], size: [6, 10, 8], color: 0x77838a },
+    { pos: [15, 4, 5], size: [5, 8, 9], color: 0x89949a },
+    { pos: [-16, 7, -8], size: [7, 14, 7], color: 0x6f7c83 },
+    { pos: [17, 5, -18], size: [6, 10, 10], color: 0x7d888e },
+    { pos: [-15, 8, -34], size: [7, 16, 8], color: 0x69767d },
+    { pos: [16, 6, -45], size: [6, 12, 9], color: 0x7a858b },
+    { pos: [-13, 4, -58], size: [5, 8, 7], color: 0x879197 },
+  ],
   platforms: [
     // 01 — start roof, jump across the first gap.
     {

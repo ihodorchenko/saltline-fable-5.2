@@ -20,19 +20,29 @@ export function buildLevel(game, level) {
   const standard = (color, rough = 0.8) =>
     new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: 0.03 });
 
-  const roofMat = game.mats && game.mats.get ? game.mats.get('concrete') : standard(0xb9c0c6);
+  const palette = level.palette || [0xd7d2c6, 0xc3cbca, 0xb3bdc2];
+  const routeMat = new THREE.MeshBasicMaterial({ color: 0xb51f2a });
 
-  for (const platform of level.platforms) {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...platform.size), roofMat);
+  for (const [index, platform] of level.platforms.entries()) {
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(...platform.size),
+      standard(platform.color || palette[index % palette.length], 0.86),
+    );
     mesh.name = `platform-${platform.id}`;
     mesh.position.fromArray(platform.pos);
     mesh.receiveShadow = true;
     mesh.castShadow = true;
     root.add(mesh);
+
+    const [px, py, pz] = platform.pos;
+    const [pw, ph, pd] = platform.size;
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.025, Math.min(1.5, pd * 0.35)), routeMat);
+    strip.name = `route-strip-${platform.id}`;
+    strip.position.set(px, py + ph / 2 + 0.012, pz);
+    root.add(strip);
+
     if (game.physics) {
-      const [x, y, z] = platform.pos;
-      const [w, h, d] = platform.size;
-      game.physics.addBox([x - w / 2, y - h / 2, z - d / 2], [x + w / 2, y + h / 2, z + d / 2], {
+      game.physics.addBox([px - pw / 2, py - ph / 2, pz - pd / 2], [px + pw / 2, py + ph / 2, pz + pd / 2], {
         surface: platform.material || 'concrete',
         tag: platform.tag || '',
       });
@@ -59,6 +69,16 @@ export function buildLevel(game, level) {
     }
   }
 
+  for (const scenery of level.scenery || []) {
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(...scenery.size),
+      standard(scenery.color || 0x7a858b, 0.95),
+    );
+    mesh.name = 'scenery';
+    mesh.position.fromArray(scenery.pos);
+    root.add(mesh);
+  }
+
   const checkpointMeshes = [];
   for (const checkpoint of level.checkpoints) {
     const mesh = new THREE.Mesh(
@@ -81,6 +101,7 @@ export function buildLevel(game, level) {
   finishMesh.position.set(level.finish.pos[0], level.finish.pos[1] + 0.08, level.finish.pos[2]);
   root.add(finishMesh);
 
+  scene.fog = new THREE.Fog(0x9aa4ad, 34, 125);
   const hemisphere = new THREE.HemisphereLight(0xcfe6ff, 0x30343a, 2.0);
   const key = new THREE.DirectionalLight(0xffe2b8, 3.0);
   key.position.set(-8, 12, 6);

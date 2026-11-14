@@ -93,3 +93,36 @@ test('glassline tutorial advances every checkpoint in route order', async ({ pag
   }));
   expect(last.checkpoint).toBe(last.total - 1);
 });
+
+test('glassline tutorial restores the last checkpoint after reload', async ({ page }) => {
+  await boot(page, '?show=glassline-tutorial&q=low');
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.waitForFunction(() => window.__ready === true, null, {
+    timeout: 60_000,
+  });
+  await page.evaluate(() => {
+    const game = window.__G;
+    const checkpoint = game.glassline.level.checkpoints.find((item) => item.id === 'mantle');
+    game.glassline.controller.teleport(
+      checkpoint.pos[0],
+      checkpoint.pos[2],
+      checkpoint.yaw,
+      0,
+      false,
+      checkpoint.pos[1] + 0.05,
+    );
+  });
+  await page.waitForFunction(() => window.__G.glassline.tutorial.checkpoint >= 4, null, { timeout: 3_000 });
+  await page.reload();
+  await page.waitForFunction(() => window.__ready === true, null, {
+    timeout: 60_000,
+  });
+  const restored = await page.evaluate(() => ({
+    checkpoint: window.__G.glassline.tutorial.checkpoint,
+    saved: JSON.parse(localStorage.getItem(window.__G.glassline.storageKey)),
+  }));
+  expect(restored.checkpoint).toBeGreaterThanOrEqual(4);
+  expect(restored.saved.checkpoint).toBe(restored.checkpoint);
+  await page.evaluate(() => localStorage.clear());
+});

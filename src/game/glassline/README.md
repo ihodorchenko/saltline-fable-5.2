@@ -27,8 +27,9 @@ rig yet.
 
 The tutorial uses `src/levels/tutorial.js` data and the shared builder in
 `src/levels/build.js`. It is a 70 m multi-level route with 10 checkpoints and a
-station for each parkour mechanic. Checkpoints, fall respawn, finish and the stage
-HUD live in `src/game/glassline/tutorial.js`.
+station for each parkour mechanic. Checkpoints, fall respawn, finish, stage HUD,
+R retry, Backspace restart and localStorage progress live in
+`src/game/glassline/tutorial.js`.
 
 ## Commands
 

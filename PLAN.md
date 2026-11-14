@@ -132,7 +132,7 @@ match reference targets within tolerance.
 
 ### Step 3 — Tutorial level and content pipeline
 
-Branch: `feat/glassline-tutorial-route` — **expanded route in progress, not merged**.
+Branch: `feat/glassline-tutorial-polish` — **polish in progress, not merged**.
 
 Delivered:
 
@@ -144,13 +144,15 @@ Delivered:
 - [x] complete 70 m multi-level mechanic route with 10 checkpoints:
       jump, slide, vault, mantle, wallrun, wallclimb/landing, balance, drop/roll,
       finish;
-- [x] route-order audit and browser tests for every checkpoint, respawn and finish.
+- [x] route-order audit and browser tests for every checkpoint, respawn and finish;
+- [x] palette, route strips, city silhouettes, fog and a floating next-checkpoint diamond;
+- [x] HUD progress bar, R retry and Backspace restart;
+- [x] localStorage checkpoint persistence across reloads (tested).
 
 Still needed for Step 3 acceptance:
 
 - [ ] pacing/fail-safe retries to reach the 10–20 minute target;
-- [ ] route readability/art pass (colour, lighting, silhouettes);
-- [ ] checkpoint persistence across reloads;
+- [ ] full art/readability pass (final materials, signage, lighting);
 - [ ] optional editor/level-preview tooling.
 
 Acceptance remains: a new player can finish without developer guidance;

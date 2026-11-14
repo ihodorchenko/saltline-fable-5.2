@@ -1,10 +1,12 @@
 // @ts-check
-// GLASSLINE tutorial mode: data-driven blockout plus checkpoint/respawn/finish
-// flow and a minimal stage HUD.
+// GLASSLINE tutorial mode: data-driven route, checkpoint/respawn/finish flow,
+// saved progress, route readability and a minimal stage HUD.
 
 import { tutorialLevel } from '../../levels/tutorial.js';
 import { buildLevel } from '../../levels/build.js';
 import { createPlayerController } from './player.js';
+
+export const TUTORIAL_STORAGE_KEY = 'glassline.tutorial.progress.v1';
 
 /**
  * @param {import('../../../types/engine').GameContext} game
@@ -13,15 +15,59 @@ function createHud() {
   const hud = document.createElement('div');
   hud.id = 'glassline-tutorial';
   hud.style.cssText =
-    'position:fixed;left:22px;top:22px;z-index:40;max-width:330px;padding:14px 16px;' +
-    'background:rgba(8,12,16,.76);border:1px solid rgba(255,255,255,.36);color:#eef1ef;' +
+    'position:fixed;left:22px;top:22px;z-index:40;width:330px;padding:14px 16px;' +
+    'background:rgba(8,12,16,.8);border:1px solid rgba(255,255,255,.36);color:#eef1ef;' +
     'font:12px/1.5 "IBM Plex Mono",monospace;letter-spacing:.05em;';
   hud.innerHTML =
     '<div id="gl-stage" style="color:#d23a39;font-weight:700;letter-spacing:.12em"></div>' +
-    '<div id="gl-prompt" style="margin-top:6px"></div>' +
-    '<div id="gl-count" style="margin-top:9px;color:#9aa4a8"></div>';
+    '<div id="gl-prompt" style="margin-top:6px;min-height:36px"></div>' +
+    '<div id="gl-progress" style="height:3px;margin-top:10px;background:#30383c">' +
+    '<div id="gl-progress-fill" style="height:100%;width:0;background:#d23a39"></div></div>' +
+    '<div id="gl-count" style="margin-top:9px;color:#9aa4a8"></div>' +
+    '<div id="gl-help" style="margin-top:4px;color:#707b80">R retry · Backspace restart</div>';
   document.body.appendChild(hud);
   return hud;
+}
+
+/**
+ * @param {any} level
+ * @returns {{checkpoint: number, respawns: number, finished: boolean}}
+ */
+function loadSavedProgress(level) {
+  const empty = { checkpoint: 0, respawns: 0, finished: false };
+  try {
+    const raw = localStorage.getItem(TUTORIAL_STORAGE_KEY);
+    if (!raw) return empty;
+    const data = JSON.parse(raw);
+    const checkpoint = Number.isInteger(data.checkpoint)
+      ? Math.max(0, Math.min(data.checkpoint, level.checkpoints.length - 1))
+      : 0;
+    return {
+      checkpoint,
+      respawns: Number.isInteger(data.respawns) ? Math.max(0, data.respawns) : 0,
+      finished: data.finished === true,
+    };
+  } catch {
+    return empty;
+  }
+}
+
+/**
+ * @param {{checkpoint: number, respawns: number, finished: boolean}} progress
+ */
+function saveProgress(progress) {
+  try {
+    localStorage.setItem(
+      TUTORIAL_STORAGE_KEY,
+      JSON.stringify({
+        checkpoint: progress.checkpoint,
+        respawns: progress.respawns,
+        finished: progress.finished,
+      }),
+    );
+  } catch {
+    /* storage is optional */
+  }
 }
 
 /**
@@ -30,31 +76,98 @@ function createHud() {
 export async function showcaseTutorial(game) {
   const level = tutorialLevel;
   const built = buildLevel(game, level);
+  // The showcase bootstrap adds a flat 80×80 ground plane. The tutorial has its
+  // own platforms, so hide that plane to avoid coplanar z-fighting and let the
+  // gaps read as real falls.
+  for (const child of game.scene.children) {
+    if (
+      child.isMesh &&
+      child.geometry &&
+      child.geometry.type === 'PlaneGeometry' &&
+      child.geometry.parameters &&
+      child.geometry.parameters.width === 80 &&
+      child.geometry.parameters.height === 80
+    ) {
+      child.visible = false;
+    }
+  }
   const controller = createPlayerController(game);
   const hud = createHud();
   const stageEl = hud.querySelector('#gl-stage');
   const promptEl = hud.querySelector('#gl-prompt');
   const countEl = hud.querySelector('#gl-count');
+  const fillEl = hud.querySelector('#gl-progress-fill');
 
+  const saved = loadSavedProgress(level);
   const progress = {
-    checkpoint: 0,
-    respawns: 0,
-    finished: false,
-    message: '',
+    checkpoint: saved.checkpoint,
+    respawns: saved.respawns,
+    finished: saved.finished,
+    message: saved.checkpoint > 0 ? 'Resumed from checkpoint.' : '',
   };
+
+  const beaconGeometry = new game.THREE.OctahedronGeometry(0.28);
+  const beaconMaterial = new game.THREE.MeshBasicMaterial({
+    color: 0xd23a39,
+    transparent: true,
+    opacity: 0.9,
+  });
+  const beacon = new game.THREE.Mesh(beaconGeometry, beaconMaterial);
+  beacon.name = 'glassline-next-checkpoint';
+  built.root.add(beacon);
+
+  function updateRings() {
+    built.checkpointMeshes.forEach((mesh, index) => {
+      const color = progress.finished
+        ? 0x5f7f6d
+        : index < progress.checkpoint
+          ? 0x5f7f6d
+          : index === progress.checkpoint
+            ? 0xd23a39
+            : 0x5a6266;
+      mesh.material.color.setHex(color);
+    });
+    if (progress.finished || progress.checkpoint >= level.checkpoints.length - 1) {
+      beacon.visible = false;
+      return;
+    }
+    const next = level.checkpoints[progress.checkpoint + 1];
+    beacon.visible = true;
+    beacon.position.set(next.pos[0], next.pos[1] + 2.3, next.pos[2]);
+    beacon.rotation.y += 0.015;
+  }
 
   function setHud() {
     const checkpoint = level.checkpoints[progress.checkpoint];
-    if (stageEl) stageEl.textContent = progress.finished ? 'COURSE COMPLETE' : checkpoint.stage;
-    if (promptEl) promptEl.textContent = progress.finished
-      ? 'Rooftop induction complete.'
-      : progress.message || checkpoint.prompt;
-    if (countEl) {
-      countEl.textContent = `${progress.checkpoint}/${level.checkpoints.length - 1} CHECKPOINTS · ${progress.respawns} RESPAWNS`;
+    if (stageEl) {
+      stageEl.textContent = progress.finished
+        ? 'COURSE COMPLETE'
+        : `${String(progress.checkpoint + 1).padStart(2, '0')} · ${checkpoint.stage}`;
     }
+    if (promptEl) {
+      promptEl.textContent = progress.finished
+        ? 'Rooftop induction complete. Backspace restarts.'
+        : progress.message || checkpoint.prompt;
+    }
+    if (countEl) {
+      countEl.textContent =
+        `${progress.checkpoint}/${level.checkpoints.length - 1} CHECKPOINTS · ` +
+        `${progress.respawns} RESPAWNS`;
+    }
+    if (fillEl) {
+      fillEl.style.width = `${
+        progress.finished
+          ? 100
+          : Math.round(
+              (progress.checkpoint / (level.checkpoints.length - 1)) * 100,
+            )
+      }%`;
+    }
+    updateRings();
   }
 
   function respawn() {
+    if (progress.finished) return;
     const checkpoint = level.checkpoints[progress.checkpoint];
     controller.teleport(
       checkpoint.pos[0],
@@ -66,28 +179,79 @@ export async function showcaseTutorial(game) {
     );
     progress.respawns += 1;
     progress.message = 'Respawned at last checkpoint.';
+    saveProgress(progress);
     setHud();
   }
 
-  controller.teleport(
-    level.spawn.x,
-    level.spawn.z,
-    level.spawn.yaw,
-    0,
-    false,
-    level.spawn.y,
-  );
+  function restart() {
+    progress.checkpoint = 0;
+    progress.respawns = 0;
+    progress.finished = false;
+    progress.message = '';
+    try {
+      localStorage.removeItem(TUTORIAL_STORAGE_KEY);
+    } catch {
+      /* storage is optional */
+    }
+    controller.teleport(
+      level.spawn.x,
+      level.spawn.z,
+      level.spawn.yaw,
+      0,
+      false,
+      level.spawn.y,
+    );
+    setHud();
+  }
+
+  const startCheckpoint =
+    progress.checkpoint > 0
+      ? level.checkpoints[progress.checkpoint]
+      : null;
+  if (startCheckpoint) {
+    controller.teleport(
+      startCheckpoint.pos[0],
+      startCheckpoint.pos[2],
+      startCheckpoint.yaw,
+      0,
+      false,
+      startCheckpoint.pos[1] + 0.05,
+    );
+  } else {
+    controller.teleport(
+      level.spawn.x,
+      level.spawn.z,
+      level.spawn.yaw,
+      0,
+      false,
+      level.spawn.y,
+    );
+  }
   setHud();
+  saveProgress(progress);
+
+  function onKeyDown(event) {
+    if (event.code === 'KeyR' && !event.repeat) {
+      event.preventDefault();
+      respawn();
+    } else if (event.code === 'Backspace' && !event.repeat) {
+      event.preventDefault();
+      restart();
+    }
+  }
+  addEventListener('keydown', onKeyDown);
 
   game.glassline = {
     controller,
     root: built.root,
     tutorial: progress,
     level,
+    storageKey: TUTORIAL_STORAGE_KEY,
   };
 
   return {
     update(dt) {
+      if (beacon.visible) beacon.rotation.y += dt * 1.2;
       if (progress.finished) return;
       // Check before physics too: a teleport/debug drop below the roof may be
       // resolved upward by the capsule mover before the post-step check.
@@ -110,6 +274,7 @@ export async function showcaseTutorial(game) {
         if (Math.hypot(dx, dz) <= checkpoint.radius) {
           progress.checkpoint = i;
           progress.message = '';
+          saveProgress(progress);
           setHud();
           break;
         }
@@ -117,17 +282,17 @@ export async function showcaseTutorial(game) {
 
       const finish = level.finish;
       if (
-        Math.hypot(
-          state.pos.x - finish.pos[0],
-          state.pos.z - finish.pos[2],
-        ) <= finish.radius
+        Math.hypot(state.pos.x - finish.pos[0], state.pos.z - finish.pos[2]) <=
+        finish.radius
       ) {
         progress.finished = true;
         progress.message = '';
+        saveProgress(progress);
         setHud();
       }
     },
     dispose() {
+      removeEventListener('keydown', onKeyDown);
       hud.remove();
       controller.dispose();
     },
