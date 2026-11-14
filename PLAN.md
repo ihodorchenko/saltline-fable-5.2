@@ -185,13 +185,19 @@ Acceptance: coherent vertical slice; assets documented and licensed.
 
 ### Step 5 — Performance and reliability
 
-Branch: `feat/glassline-polish`
+Branch: `feat/glassline-polish` — **implemented, not merged**.
 
-- perf baseline: draw calls, tris, frame time;
-- culling/LOD/quality profiles;
-- save/load settings and checkpoints;
-- crash/fatal and `__errors` checks;
-- keyboard/gamepad/touch scope tested as chosen.
+- [x] perf baseline: draw calls, triangles, geometries, frame time;
+- [x] culling/LOD/quality: instanced windows/strips, merged edges and `?q=` profiles;
+- [x] `?stats=1` / F3 diagnostics overlay;
+- [x] automated low-quality draw-call/triangle/geometry budget;
+- [x] save/load settings and checkpoints already covered;
+- [x] fatal/`__errors` and repeated-reload reliability tests;
+- [x] keyboard/rebinding scope tested; gamepad/touch intentionally out of scope;
+- [ ] hardware 60 FPS peak-load profiling;
+- [ ] human pacing/audio acceptance.
+
+Evidence: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md).
 
 Acceptance: target FPS; no fatal on boot, restart or respawn.
 

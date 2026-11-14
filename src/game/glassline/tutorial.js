@@ -8,6 +8,7 @@ import { createPlayerController } from './player.js';
 import { createTutorialMenu } from './menu.js';
 import { createGlasslineAudio } from './audio.js';
 import { loadBindings } from './bindings.js';
+import { createPerfHud } from './perf.js';
 import {
   checkpointSplit,
   formatTime,
@@ -124,6 +125,7 @@ export async function showcaseTutorial(game) {
   const bindings = loadBindings();
   const controller = createPlayerController(game, { bindings });
   controller.setEnabled(false);
+  const perf = createPerfHud(game);
   const hud = createHud();
   const stageEl = hud.querySelector('#gl-stage');
   const promptEl = hud.querySelector('#gl-prompt');
@@ -392,10 +394,12 @@ export async function showcaseTutorial(game) {
     menu,
     audio,
     bindings,
+    perf,
   };
 
   return {
     update(dt) {
+      perf.update(dt);
       if (beacon.visible) beacon.rotation.y += dt * 1.2;
       if (paused) return;
       if (progress.finished) return;
@@ -515,6 +519,7 @@ export async function showcaseTutorial(game) {
       document.removeEventListener('pointerlockchange', onPointerLockChange);
       menu?.dispose();
       audio.dispose();
+      perf.dispose();
       hud.remove();
       controller.dispose();
     },

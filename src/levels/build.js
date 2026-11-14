@@ -55,6 +55,17 @@ export function buildLevel(game, level) {
     opacity: 0.22,
   });
   const textureCache = new Map();
+  const edgePositions = [];
+  const stripMatrices = [];
+  const windowMatrices = [];
+  const detailed = game.quality?.name !== 'low';
+  const stripGeometry = new THREE.BoxGeometry(1, 1, 1);
+  const windowGeometry = new THREE.BoxGeometry(0.05, 0.75, 0.42);
+  const windowMaterial = new THREE.MeshBasicMaterial({
+    color: 0xe0b06a,
+    transparent: true,
+    opacity: 0.55,
+  });
 
   const makeSurfaceTexture = (hex) => {
     if (textureCache.has(hex)) return textureCache.get(hex);
@@ -107,17 +118,25 @@ export function buildLevel(game, level) {
     mesh.position.fromArray(platform.pos);
     mesh.receiveShadow = true;
     mesh.castShadow = true;
-    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), edgeMat);
-    edges.name = 'platform-edge';
-    mesh.add(edges);
     root.add(mesh);
 
     const [px, py, pz] = platform.pos;
     const [pw, ph, pd] = platform.size;
-    const strip = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.025, Math.min(1.5, pd * 0.35)), routeMat);
-    strip.name = `route-strip-${platform.id}`;
-    strip.position.set(px, py + ph / 2 + 0.012, pz);
-    root.add(strip);
+    if (detailed) {
+      const edgeGeometry = new THREE.EdgesGeometry(mesh.geometry);
+      const positions = edgeGeometry.attributes.position;
+      for (let i = 0; i < positions.count; i += 1) {
+        edgePositions.push(positions.getX(i) + px, positions.getY(i) + py, positions.getZ(i) + pz);
+      }
+      edgeGeometry.dispose();
+    }
+    stripMatrices.push(
+      new THREE.Matrix4().compose(
+        new THREE.Vector3(px, py + ph / 2 + 0.012, pz),
+        new THREE.Quaternion(),
+        new THREE.Vector3(0.18, 0.025, Math.min(1.5, pd * 0.35)),
+      ),
+    );
 
     if (game.physics) {
       game.physics.addBox([px - pw / 2, py - ph / 2, pz - pd / 2], [px + pw / 2, py + ph / 2, pz + pd / 2], {
@@ -125,6 +144,23 @@ export function buildLevel(game, level) {
         tag: platform.tag || '',
       });
     }
+  }
+
+  if (edgePositions.length) {
+    const edgeGeometry = new THREE.BufferGeometry();
+    edgeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(edgePositions, 3));
+    const edges = new THREE.LineSegments(edgeGeometry, edgeMat);
+    edges.name = 'platform-edges';
+    root.add(edges);
+  }
+
+  if (stripMatrices.length) {
+    const strips = new THREE.InstancedMesh(stripGeometry, routeMat, stripMatrices.length);
+    strips.name = 'route-strips';
+    stripMatrices.forEach((matrix, index) => strips.setMatrixAt(index, matrix));
+    strips.instanceMatrix.needsUpdate = true;
+    strips.computeBoundingSphere();
+    root.add(strips);
   }
 
   for (const obstacle of level.obstacles || []) {
@@ -161,19 +197,24 @@ export function buildLevel(game, level) {
     const innerX = sx + (sx > 0 ? -sw / 2 - 0.03 : sw / 2 + 0.03);
     for (let row = 0; row < 4; row += 1) {
       for (let col = 0; col < 2; col += 1) {
-        const windowMesh = new THREE.Mesh(
-          new THREE.BoxGeometry(0.05, 0.75, 0.42),
-          new THREE.MeshBasicMaterial({
-            color: 0xe0b06a,
-            transparent: true,
-            opacity: 0.55,
-          }),
+        windowMatrices.push(
+          new THREE.Matrix4().compose(
+            new THREE.Vector3(innerX, sy + sh * 0.12 + row * 1.15, sz - sw * 0.22 + col * sw * 0.34),
+            new THREE.Quaternion(),
+            new THREE.Vector3(1, 1, 1),
+          ),
         );
-        windowMesh.name = 'window-light';
-        windowMesh.position.set(innerX, sy + sh * 0.12 + row * 1.15, sz - sw * 0.22 + col * sw * 0.34);
-        root.add(windowMesh);
       }
     }
+  }
+
+  if (windowMatrices.length) {
+    const windows = new THREE.InstancedMesh(windowGeometry, windowMaterial, windowMatrices.length);
+    windows.name = 'window-lights';
+    windowMatrices.forEach((matrix, index) => windows.setMatrixAt(index, matrix));
+    windows.instanceMatrix.needsUpdate = true;
+    windows.computeBoundingSphere();
+    root.add(windows);
   }
 
   const propMetal = standard(0x68757c, 0.72);
