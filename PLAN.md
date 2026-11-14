@@ -132,23 +132,23 @@ match reference targets within tolerance.
 
 ### Step 3 — Tutorial level and content pipeline
 
-Branch: `feat/glassline-tutorial` — **blockout in progress, not merged**.
+Branch: `feat/glassline-tutorial-route` — **expanded route in progress, not merged**.
 
 Delivered:
 
 - [x] data-driven level data in `src/levels/tutorial.js`;
 - [x] shared level builder in `src/levels/build.js`;
-- [x] format validator with unit tests;
+- [x] format validator and route-order unit tests;
 - [x] separate playable mode: `?show=glassline-tutorial`;
 - [x] checkpoints, fall respawn, finish trigger and stage HUD;
-- [x] one station for every Step 2 mechanic (jump, slide, vault, mantle, wallrun,
-      wallclimb, balance), plus roll-ready geometry;
-- [x] browser tests for boot, checkpoint advance, respawn and finish.
+- [x] complete 70 m multi-level mechanic route with 10 checkpoints:
+      jump, slide, vault, mantle, wallrun, wallclimb/landing, balance, drop/roll,
+      finish;
+- [x] route-order audit and browser tests for every checkpoint, respawn and finish.
 
 Still needed for Step 3 acceptance:
 
-- [ ] expand the blockout to a complete 10–20 minute route;
-- [ ] tutorial pacing and fail-safe retry prompts;
+- [ ] pacing/fail-safe retries to reach the 10–20 minute target;
 - [ ] route readability/art pass (colour, lighting, silhouettes);
 - [ ] checkpoint persistence across reloads;
 - [ ] optional editor/level-preview tooling.

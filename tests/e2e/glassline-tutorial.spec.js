@@ -27,15 +27,23 @@ test('glassline tutorial boots with checkpoints', async ({ page }) => {
 test('glassline tutorial advances checkpoints, respawns and finishes', async ({ page }) => {
   await boot(page, '?show=glassline-tutorial&q=low');
   await page.evaluate(() => {
-    const controller = window.__G.glassline.controller;
-    controller.teleport(0, 1, 0, 0, false, 0.05);
+    const game = window.__G;
+    const checkpoint = game.glassline.level.checkpoints.find((item) => item.id === 'slide');
+    game.glassline.controller.teleport(
+      checkpoint.pos[0],
+      checkpoint.pos[2],
+      checkpoint.yaw,
+      0,
+      false,
+      checkpoint.pos[1] + 0.05,
+    );
   });
   await page.waitForFunction(() => window.__G.glassline.tutorial.checkpoint >= 2, null, { timeout: 3_000 });
 
   const beforeRespawn = await page.evaluate(() => {
     const game = window.__G;
     const checkpoint = game.glassline.tutorial.checkpoint;
-    game.glassline.controller.teleport(0, -5, 0, 0, true, -5);
+    game.glassline.controller.teleport(0, -5, 0, 0, true, -10);
     return { checkpoint, respawns: game.glassline.tutorial.respawns };
   });
   await page.waitForFunction(
@@ -52,8 +60,36 @@ test('glassline tutorial advances checkpoints, respawns and finishes', async ({ 
   expect(afterRespawn.pos.y).toBeGreaterThan(-1);
 
   await page.evaluate(() => {
-    const controller = window.__G.glassline.controller;
-    controller.teleport(0, -24, 0, 0, false, 0.05);
+    const game = window.__G;
+    const finish = game.glassline.level.finish;
+    game.glassline.controller.teleport(finish.pos[0], finish.pos[2], 0, 0, false, finish.pos[1] + 0.05);
   });
   await page.waitForFunction(() => window.__G.glassline.tutorial.finished === true, null, { timeout: 3_000 });
+});
+
+test('glassline tutorial advances every checkpoint in route order', async ({ page }) => {
+  await boot(page, '?show=glassline-tutorial&q=low');
+  const count = await page.evaluate(() => window.__G.glassline.level.checkpoints.length);
+  for (let index = 1; index < count; index += 1) {
+    await page.evaluate((i) => {
+      const game = window.__G;
+      const checkpoint = game.glassline.level.checkpoints[i];
+      game.glassline.controller.teleport(
+        checkpoint.pos[0],
+        checkpoint.pos[2],
+        checkpoint.yaw,
+        0,
+        false,
+        checkpoint.pos[1] + 0.05,
+      );
+    }, index);
+    await page.waitForFunction((i) => window.__G.glassline.tutorial.checkpoint >= i, index, {
+      timeout: 3_000,
+    });
+  }
+  const last = await page.evaluate(() => ({
+    checkpoint: window.__G.glassline.tutorial.checkpoint,
+    total: window.__G.glassline.level.checkpoints.length,
+  }));
+  expect(last.checkpoint).toBe(last.total - 1);
 });
