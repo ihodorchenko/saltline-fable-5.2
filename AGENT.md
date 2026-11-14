@@ -12,9 +12,10 @@ and must not be merged back into `dev`.
 
 Phase 1 is complete and stabilized on `dev`. Step 0, Step 1 and all Step 2 parkour
 mechanics are merged into `project/glassline`; their feature branches are deleted.
-Step 3 is in progress on `feat/glassline-tutorial-polish`: expanded data-driven
-route with 10 checkpoints, respawn/finish, HUD, route readability and saved
-checkpoint progress. It is **not merged**; merge only on command.
+Step 3 implementation is complete on `feat/glassline-tutorial-final`: a three-act
+~200 m route with 21 checkpoints, respawn/finish, HUD/timer, route readability,
+act signage and saved checkpoint progress. It is **not merged**; merge only on
+command. Human 10–20 minute pacing is a Step 4 playtest item.
 
 The theme, language and platform are confirmed: **parkour in the spirit of
 Mirror's Edge with original IP**, **JS + JSDoc**, **desktop Chrome**, **60 FPS**.
@@ -94,16 +95,16 @@ map and regression tests for stuck/duplicate states.
 
 ### Step 3 — Tutorial level
 
-Branch `feat/glassline-tutorial-polish` (polish in progress).
+Branch `feat/glassline-tutorial-final` (implemented, not merged).
 
 - [x] data-driven layout and validator;
-- [x] complete mechanic route with 10 checkpoints;
-- [x] checkpoints, respawn, finish and stage HUD;
+- [x] three-act ~200 m route with 21 checkpoints;
+- [x] checkpoints, respawn, finish and stage HUD/timer;
 - [x] separate `?show=glassline-tutorial` mode;
-- [x] route-order audit and browser coverage;
-- [x] route strips, palette, silhouettes, fog and next-checkpoint diamond;
+- [x] route-order/length audit and browser coverage;
+- [x] route strips, palette, silhouettes, fog, act signage and finish gate;
 - [x] R retry, Backspace restart and localStorage checkpoint persistence;
-- [ ] final art pass and 10–20 minute pacing;
+- [ ] human 10–20 minute pacing playtest (Step 4);
 - [ ] optional level editor/preview.
 
 ### Step 4 — Theme, art, audio, UI

@@ -13,13 +13,17 @@ test('glassline tutorial boots with checkpoints', async ({ page }) => {
       checkpoint: tutorial.checkpoint,
       finished: tutorial.finished,
       rings: root.children.filter((child) => String(child.name).startsWith('checkpoint-')).length,
+      signs: root.children.filter((child) => String(child.name).startsWith('sign-')).length,
       finish: !!root.getObjectByName('glassline-finish'),
+      finishGate: !!root.getObjectByName('finish-gate'),
     };
   });
   expect(scene.level).toBe('tutorial');
   expect(scene.checkpoint).toBe(0);
-  expect(scene.rings).toBeGreaterThan(5);
+  expect(scene.rings).toBe(21);
+  expect(scene.signs).toBe(3);
   expect(scene.finish).toBe(true);
+  expect(scene.finishGate).toBe(true);
   await page.waitForTimeout(900);
   await page.screenshot({ path: 'artifacts/glassline-tutorial.png' });
 });

@@ -20,6 +20,30 @@ export function buildLevel(game, level) {
   const standard = (color, rough = 0.8) =>
     new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: 0.03 });
 
+  const makeLabel = (text) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 160;
+    const context = canvas.getContext('2d');
+    context.fillStyle = 'rgba(8, 12, 16, 0.78)';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = '#eef1ef';
+    context.font = '700 58px "IBM Plex Mono", monospace';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(text, canvas.width / 2, canvas.height / 2);
+    const texture = new THREE.CanvasTexture(canvas);
+    const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true,
+        depthWrite: false,
+      }),
+    );
+    sprite.scale.set(6, 0.94, 1);
+    return sprite;
+  };
+
   const palette = level.palette || [0xd7d2c6, 0xc3cbca, 0xb3bdc2];
   const routeMat = new THREE.MeshBasicMaterial({ color: 0xb51f2a });
 
@@ -79,6 +103,13 @@ export function buildLevel(game, level) {
     root.add(mesh);
   }
 
+  for (const act of level.acts || []) {
+    const label = makeLabel(act.title);
+    label.name = `sign-${act.id}`;
+    label.position.fromArray(act.pos);
+    root.add(label);
+  }
+
   const checkpointMeshes = [];
   for (const checkpoint of level.checkpoints) {
     const mesh = new THREE.Mesh(
@@ -100,6 +131,26 @@ export function buildLevel(game, level) {
   finishMesh.rotation.x = Math.PI / 2;
   finishMesh.position.set(level.finish.pos[0], level.finish.pos[1] + 0.08, level.finish.pos[2]);
   root.add(finishMesh);
+
+  const finish = level.finish.pos;
+  const gateMat = new THREE.MeshStandardMaterial({
+    color: 0xb51f2a,
+    emissive: 0x2a0205,
+    emissiveIntensity: 0.45,
+    roughness: 0.55,
+  });
+  for (const side of [-1, 1]) {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.28, 2.5, 0.28), gateMat);
+    post.name = 'finish-post';
+    post.position.set(finish[0] + side * 2.1, finish[1] + 1.25, finish[2]);
+    post.castShadow = true;
+    root.add(post);
+  }
+  const gateTop = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.28, 0.28), gateMat);
+  gateTop.name = 'finish-gate';
+  gateTop.position.set(finish[0], finish[1] + 2.5, finish[2]);
+  gateTop.castShadow = true;
+  root.add(gateTop);
 
   scene.fog = new THREE.Fog(0x9aa4ad, 34, 125);
   const hemisphere = new THREE.HemisphereLight(0xcfe6ff, 0x30343a, 2.0);

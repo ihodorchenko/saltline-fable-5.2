@@ -24,6 +24,7 @@ function createHud() {
     '<div id="gl-progress" style="height:3px;margin-top:10px;background:#30383c">' +
     '<div id="gl-progress-fill" style="height:100%;width:0;background:#d23a39"></div></div>' +
     '<div id="gl-count" style="margin-top:9px;color:#9aa4a8"></div>' +
+    '<div id="gl-time" style="margin-top:2px;color:#9aa4a8"></div>' +
     '<div id="gl-help" style="margin-top:4px;color:#707b80">R retry · Backspace restart</div>';
   document.body.appendChild(hud);
   return hud;
@@ -96,7 +97,17 @@ export async function showcaseTutorial(game) {
   const stageEl = hud.querySelector('#gl-stage');
   const promptEl = hud.querySelector('#gl-prompt');
   const countEl = hud.querySelector('#gl-count');
+  const timeEl = hud.querySelector('#gl-time');
   const fillEl = hud.querySelector('#gl-progress-fill');
+  let elapsed = 0;
+  let timeAccumulator = 0;
+
+  const formatTime = (seconds) => {
+    const whole = Math.max(0, Math.floor(seconds));
+    return `${String(Math.floor(whole / 60)).padStart(2, '0')}:${String(
+      whole % 60,
+    ).padStart(2, '0')}`;
+  };
 
   const saved = loadSavedProgress(level);
   const progress = {
@@ -154,6 +165,9 @@ export async function showcaseTutorial(game) {
         `${progress.checkpoint}/${level.checkpoints.length - 1} CHECKPOINTS · ` +
         `${progress.respawns} RESPAWNS`;
     }
+    if (timeEl) {
+      timeEl.textContent = `TIME ${formatTime(elapsed)}`;
+    }
     if (fillEl) {
       fillEl.style.width = `${
         progress.finished
@@ -188,6 +202,8 @@ export async function showcaseTutorial(game) {
     progress.respawns = 0;
     progress.finished = false;
     progress.message = '';
+    elapsed = 0;
+    timeAccumulator = 0;
     try {
       localStorage.removeItem(TUTORIAL_STORAGE_KEY);
     } catch {
@@ -253,6 +269,12 @@ export async function showcaseTutorial(game) {
     update(dt) {
       if (beacon.visible) beacon.rotation.y += dt * 1.2;
       if (progress.finished) return;
+      elapsed += dt;
+      timeAccumulator += dt;
+      if (timeAccumulator >= 0.2) {
+        timeAccumulator = 0;
+        if (timeEl) timeEl.textContent = `TIME ${formatTime(elapsed)}`;
+      }
       // Check before physics too: a teleport/debug drop below the roof may be
       // resolved upward by the capsule mover before the post-step check.
       if (controller.getState().pos.y < level.fallY) {

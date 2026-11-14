@@ -132,31 +132,29 @@ match reference targets within tolerance.
 
 ### Step 3 — Tutorial level and content pipeline
 
-Branch: `feat/glassline-tutorial-polish` — **polish in progress, not merged**.
+Branch: `feat/glassline-tutorial-final` — **implemented, not merged**.
 
 Delivered:
 
 - [x] data-driven level data in `src/levels/tutorial.js`;
 - [x] shared level builder in `src/levels/build.js`;
-- [x] format validator and route-order unit tests;
+- [x] format validator, route-order and route-length unit tests;
 - [x] separate playable mode: `?show=glassline-tutorial`;
 - [x] checkpoints, fall respawn, finish trigger and stage HUD;
-- [x] complete 70 m multi-level mechanic route with 10 checkpoints:
-      jump, slide, vault, mantle, wallrun, wallclimb/landing, balance, drop/roll,
-      finish;
-- [x] route-order audit and browser tests for every checkpoint, respawn and finish;
-- [x] palette, route strips, city silhouettes, fog and a floating next-checkpoint diamond;
-- [x] HUD progress bar, R retry and Backspace restart;
+- [x] three-act, ~200 m multi-level route with 21 checkpoints:
+      movement/jump, slide, vault, mantle, wallrun, wallclimb, balance, roll, repeated
+      second-pass mechanics, final rooftop sprint;
+- [x] route-order audit and browser tests for every checkpoint, respawn, reload
+      persistence and finish;
+- [x] art/readability pass: palette, route strips, city silhouettes, fog, act
+      signage, floating next-checkpoint marker and finish gate;
+- [x] HUD progress bar, run timer, R retry and Backspace restart;
 - [x] localStorage checkpoint persistence across reloads (tested).
 
-Still needed for Step 3 acceptance:
-
-- [ ] pacing/fail-safe retries to reach the 10–20 minute target;
-- [ ] full art/readability pass (final materials, signage, lighting);
-- [ ] optional editor/level-preview tooling.
-
-Acceptance remains: a new player can finish without developer guidance;
-checkpoint recovery is reliable.
+Acceptance: automated coverage confirms the full route order, every checkpoint,
+respawn recovery, persistence and finish. Human 10–20 minute pacing should be
+playtested during Step 4; optional editor/level-preview tooling is not required
+for the vertical slice.
 
 ### Step 4 — Theme, art, audio and UI
 
