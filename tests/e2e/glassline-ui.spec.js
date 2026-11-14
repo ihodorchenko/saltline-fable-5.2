@@ -67,3 +67,27 @@ test('glassline settings rebinds forward and persists', async ({ page }) => {
   const after = await page.evaluate(() => window.__G.glassline.controller.getState());
   expect(after.pos.z).toBeLessThan(before.pos.z - 0.2);
 });
+
+test('a saved completed run opens the completion menu and can restart', async ({ page }) => {
+  await boot(page, '?show=glassline-tutorial&q=low&autostart=1');
+  await page.evaluate(() => {
+    const game = window.__G;
+    const finish = game.glassline.level.finish;
+    game.glassline.controller.teleport(finish.pos[0], finish.pos[2], 0, 0, false, finish.pos[1] + 0.05);
+  });
+  await expect(page.locator('#glassline-menu')).toContainText('RUN COMPLETE');
+
+  await page.reload();
+  await page.waitForFunction(() => window.__ready === true, null, {
+    timeout: 60_000,
+  });
+  await expect(page.locator('#glassline-menu')).toContainText('RUN COMPLETE');
+  await page.locator('[data-action="restart"]').click();
+  await expect(page.locator('#glassline-menu')).toBeHidden();
+  const state = await page.evaluate(() => ({
+    finished: window.__G.glassline.tutorial.finished,
+    checkpoint: window.__G.glassline.tutorial.checkpoint,
+  }));
+  expect(state.finished).toBe(false);
+  expect(state.checkpoint).toBe(0);
+});

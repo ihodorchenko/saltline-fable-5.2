@@ -210,7 +210,10 @@ export async function showcaseTutorial(game) {
         `${progress.respawns} RESPAWNS`;
     }
     if (timeEl) {
-      timeEl.textContent = `TIME ${formatTime(elapsed)}`;
+      timeEl.textContent =
+        progress.finished && elapsed <= 0
+          ? 'TIME --:--'
+          : `TIME ${formatTime(elapsed)}`;
     }
     if (splitEl) {
       const last = progress.splits[progress.splits.length - 1];
@@ -471,14 +474,31 @@ export async function showcaseTutorial(game) {
   setHud();
   saveProgress(progress);
 
+  if (progress.finished && !benchMode) {
+    paused = true;
+    started = false;
+    controller.setEnabled(false);
+    menu?.showComplete({
+      time: '--:--',
+      best: best ? formatTime(best) : '--:--',
+      respawns: progress.respawns,
+    });
+  }
+
   function onKeyDown(event) {
+    if (bindings.matches(event.code, 'restart') && !event.repeat) {
+      event.preventDefault();
+      menu?.hide();
+      restart();
+      started = true;
+      paused = false;
+      controller.setEnabled(true);
+      return;
+    }
     if (paused) return;
     if (bindings.matches(event.code, 'retry') && !event.repeat) {
       event.preventDefault();
       respawn();
-    } else if (bindings.matches(event.code, 'restart') && !event.repeat) {
-      event.preventDefault();
-      restart();
     }
   }
   const canvas = game.renderer?.domElement || null;
