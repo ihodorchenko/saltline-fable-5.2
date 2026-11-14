@@ -66,11 +66,25 @@ test('glassline slide starts from a run and recovers', async ({ page }) => {
   await page.keyboard.down('w');
   await page.waitForTimeout(650);
   await page.keyboard.press('c');
-  await page.waitForTimeout(120);
+  await page.waitForFunction(
+    () => {
+      const state = window.__G.glassline.controller.getState();
+      return state.sliding === true && state.eyeHeight < 1.2;
+    },
+    null,
+    { timeout: 3_000 },
+  );
   const sliding = await page.evaluate(() => window.__G.glassline.controller.getState());
   expect(sliding.sliding).toBe(true);
   expect(sliding.eyeHeight).toBeLessThan(1.2);
-  await page.waitForTimeout(750);
+  await page.waitForFunction(
+    () => {
+      const state = window.__G.glassline.controller.getState();
+      return state.sliding === false && state.eyeHeight > 1.3;
+    },
+    null,
+    { timeout: 5_000 },
+  );
   const recovered = await page.evaluate(() => window.__G.glassline.controller.getState());
   await page.keyboard.up('w');
   expect(recovered.sliding).toBe(false);
