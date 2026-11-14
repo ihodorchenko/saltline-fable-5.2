@@ -39,6 +39,11 @@ import {
 } from './slide.js';
 import { VAULT_DURATION, VAULT_MAX_DISTANCE, canVault } from './vault.js';
 import { MANTLE_DURATION, canMantle } from './mantle.js';
+import {
+  WALLRUN_MAX_TIME,
+  WALLRUN_ROLL,
+  canWallrun,
+} from './wallrun.js';
 
 /**
  * @param {GameContext} game
@@ -83,6 +88,15 @@ export function createPlayerController(game) {
     mantles: 0,
     mantleFrom: new THREE.Vector3(),
     mantleTo: new THREE.Vector3(),
+    wallrunning: false,
+    wallTime: 0,
+    wallruns: 0,
+    wallSpeed: 0,
+    wallNormal: new THREE.Vector3(),
+    wallDir: new THREE.Vector3(),
+    wallSide: null,
+    roll: 0,
+    rollTarget: 0,
   };
 
   /** @type {any} */
@@ -259,17 +273,102 @@ export function createPlayerController(game) {
     return startMantle();
   }
 
-  function teleport(x, z, yaw = 0, speed = 0) {
+  function findWall() {
+    if (!physics || !physics.raycast) return null;
+    const origin = new THREE.Vector3(pos.x, pos.y + 1.0, pos.z);
+    const right = new THREE.Vector3(
+      Math.cos(state.yaw),
+      0,
+      -Math.sin(state.yaw),
+    );
+    const speed = Math.hypot(vel.x, vel.z);
+    for (const side of ['right', 'left']) {
+      const dir = side === 'right' ? right : right.clone().negate();
+      const hit = physics.raycast(origin, dir, 0.8);
+      if (!hit || Math.abs(hit.normal.y) >= 0.5) continue;
+      if (
+        !canWallrun({
+          airborne: !state.onGround,
+          speed,
+          wallDistance: hit.dist,
+          normalY: hit.normal.y,
+        })
+      ) {
+        continue;
+      }
+      return { side, hit, speed };
+    }
+    return null;
+  }
+
+  function startWallrun(wall = null) {
+    if (
+      state.wallrunning ||
+      state.vaulting ||
+      state.mantling ||
+      state.sliding
+    ) {
+      return false;
+    }
+    const found = wall || findWall();
+    if (!found) return false;
+    const forward = forwardVector();
+    state.wallNormal.copy(found.hit.normal);
+    const projection = forward
+      .clone()
+      .addScaledVector(
+        state.wallNormal,
+        -forward.dot(state.wallNormal),
+      )
+      .normalize();
+    if (projection.lengthSq() < 0.1) return false;
+    state.wallDir.copy(projection);
+    state.wallSpeed = Math.max(5.4, found.speed);
+    state.wallSide = found.side;
+    state.wallTime = 0;
+    state.wallrunning = true;
+    state.crouched = false;
+    state.bodyHeight = HEIGHT;
+    state.onGround = false;
+    state.rollTarget =
+      found.side === 'right' ? -WALLRUN_ROLL : WALLRUN_ROLL;
+    vel.set(0, 0, 0);
+    state.wallruns += 1;
+    return true;
+  }
+
+  function tryWallrun() {
+    return startWallrun();
+  }
+
+  function endWallrun(jump = false) {
+    if (!state.wallrunning) return;
+    state.wallrunning = false;
+    state.rollTarget = 0;
+    state.onGround = false;
+    vel.copy(state.wallDir).multiplyScalar(state.wallSpeed * 0.9);
+    if (jump) {
+      vel.addScaledVector(state.wallNormal, 3.8);
+      vel.y = JUMP;
+    } else {
+      vel.y = 0;
+    }
+  }
+
+  function teleport(x, z, yaw = 0, speed = 0, airborne = false) {
     pos.set(x, 0.05, z);
     vel.set(-Math.sin(yaw) * speed, 0, -Math.cos(yaw) * speed);
     state.yaw = yaw;
     state.vaulting = false;
     state.mantling = false;
+    state.wallrunning = false;
+    state.roll = 0;
+    state.rollTarget = 0;
     state.sliding = false;
     state.crouched = false;
     state.bodyHeight = HEIGHT;
     state.eyeHeight = EYE;
-    state.onGround = true;
+    state.onGround = !airborne;
     state.speed = speed;
     state.sprinting = false;
     applyCamera(0.016);
@@ -296,6 +395,14 @@ export function createPlayerController(game) {
         state.crouched = true;
         state.bodyHeight = SLIDE_HEIGHT;
       }
+    }
+    if (
+      event.code === 'Space' &&
+      !event.repeat &&
+      state.wallrunning
+    ) {
+      endWallrun(true);
+      return;
     }
     if (
       event.code === 'Space' &&
@@ -404,7 +511,8 @@ export function createPlayerController(game) {
       pos.y + state.eyeHeight - state.landDip,
       pos.z,
     );
-    game.camera.rotation.set(state.pitch, state.yaw, 0, 'YXZ');
+    state.roll += (state.rollTarget - state.roll) * (1 - Math.exp(-10 * step));
+    game.camera.rotation.set(state.pitch, state.yaw, state.roll, 'YXZ');
   }
 
   /**
@@ -412,6 +520,16 @@ export function createPlayerController(game) {
    */
   function update(dt) {
     const step = Math.min(Math.max(dt || 0, 0), MAX_DT);
+    if (state.wallrunning) {
+      state.wallTime += step;
+      pos.addScaledVector(state.wallDir, state.wallSpeed * step);
+      pos.y -= 0.35 * step;
+      if (state.wallTime >= WALLRUN_MAX_TIME) endWallrun(false);
+      state.speed = state.wallSpeed;
+      state.sprinting = false;
+      applyCamera(step);
+      return state;
+    }
     if (state.mantling) {
       state.mantleTime += step;
       const t = Math.min(1, state.mantleTime / MANTLE_DURATION);
@@ -522,6 +640,9 @@ export function createPlayerController(game) {
       state.airTime += step;
       state.coyote = Math.max(0, state.coyote - step);
     }
+    if (!state.onGround) {
+      startWallrun();
+    }
 
     // Query the surface under the capsule and the wall/ledge in front. These
     // probes are state/debug inputs for Step 2's mantle and slope work; they do
@@ -583,5 +704,13 @@ export function createPlayerController(game) {
   // otherwise boot would override the controller every frame.
   game.camera.position.set(pos.x, pos.y + EYE, pos.z);
   game.camera.rotation.set(state.pitch, state.yaw, 0, 'YXZ');
-  return { update, getState, dispose, teleport, tryVault, tryMantle };
+  return {
+    update,
+    getState,
+    dispose,
+    teleport,
+    tryVault,
+    tryMantle,
+    tryWallrun,
+  };
 }

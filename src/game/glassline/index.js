@@ -153,6 +153,16 @@ function createPrototype(game) {
   mantleLedge.receiveShadow = true;
   root.add(mantleLedge);
 
+  const wallrunWall = new THREE.Mesh(
+    new THREE.BoxGeometry(0.4, 4, 8),
+    whiteMaterial,
+  );
+  wallrunWall.name = 'glassline-wallrun-wall';
+  wallrunWall.position.set(6.2, 2, 2);
+  wallrunWall.castShadow = true;
+  wallrunWall.receiveShadow = true;
+  root.add(wallrunWall);
+
   const marker = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.06, 0.18), redMaterial);
   marker.name = 'glassline-start-marker';
   marker.position.set(0, 0.03, 1.4);
@@ -240,6 +250,7 @@ function createPrototype(game) {
     game.physics.addBox([0, 0, -2.6], [1.6, 0.9, -1], { surface: 'metal' });
     game.physics.addBox([2, 0, 2.1], [4, 0.8, 2.9], { surface: 'concrete' });
     game.physics.addBox([-4, 0, -1], [-2, 1.6, 1], { surface: 'concrete' });
+    game.physics.addBox([6, 0, -2], [6.4, 4, 6], { surface: 'concrete' });
     game.physics.addBox([-9.5, 0.25, -15], [-9.1, 1.5, -1], { surface: 'metal' });
     game.physics.addBox([-5, 1.55, -9.5], [-3, 2.05, -5.5], {
       surface: 'concrete',

@@ -20,6 +20,7 @@ test('glassline step 0 prototype boots', async ({ page }) => {
       ceiling: !!root?.getObjectByName('glassline-low-ceiling'),
       vaultLedge: !!root?.getObjectByName('glassline-vault-ledge'),
       mantleLedge: !!root?.getObjectByName('glassline-mantle-ledge'),
+      wallrunWall: !!root?.getObjectByName('glassline-wallrun-wall'),
     };
   });
   expect(scene).toEqual({
@@ -32,6 +33,7 @@ test('glassline step 0 prototype boots', async ({ page }) => {
     ceiling: true,
     vaultLedge: true,
     mantleLedge: true,
+    wallrunWall: true,
   });
   const platformY = await page.evaluate(() => window.__G.glassline.platform.position.y);
   await page.waitForTimeout(600);
@@ -126,4 +128,26 @@ test('glassline mantle climbs the high ledge', async ({ page }) => {
   expect(after.mantles).toBeGreaterThan(before.mantles);
   expect(after.pos.y).toBeGreaterThan(1.4);
   expect(after.pos.z).toBeLessThan(1.5);
+});
+
+test('glassline wallrun follows the wall and rolls the camera', async ({ page }) => {
+  await boot(page, '?show=glassline&q=low');
+  const before = await page.evaluate(() => {
+    window.__G.glassline.controller.teleport(5.4, 4, 0, 5.4, true);
+    return window.__G.glassline.controller.getState();
+  });
+  const started = await page.evaluate(() => window.__G.glassline.controller.tryWallrun());
+  expect(started).toBe(true);
+  await page.waitForFunction(() => Math.abs(window.__G.glassline.controller.getState().roll) > 0.1, null, {
+    timeout: 3_000,
+  });
+  const during = await page.evaluate(() => window.__G.glassline.controller.getState());
+  expect(during.wallrunning).toBe(true);
+  expect(Math.abs(during.roll)).toBeGreaterThan(0.1);
+  await page.waitForFunction(() => window.__G.glassline.controller.getState().wallrunning === false, null, {
+    timeout: 5_000,
+  });
+  const after = await page.evaluate(() => window.__G.glassline.controller.getState());
+  expect(after.wallruns).toBeGreaterThan(before.wallruns);
+  expect(after.pos.z).toBeLessThan(before.pos.z - 1);
 });
