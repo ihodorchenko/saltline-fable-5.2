@@ -118,10 +118,10 @@
 
 #### P1.3 — тесты, CI, производительность (1 неделя)
 
-- [ ] Vitest: RNG, математика, биндинги, настройки, физические запросы.
+- [x] **Vitest foundation (P1.3):** 19 тестов для RNG, event bus, time, bindings, settings и modes; `npm test` добавлен в CI. Математика и физические запросы ещё не покрыты.
 - [ ] Playwright: boot без `__errors`, титул, старт игры, `?show=level`.
 - [ ] Golden screenshots с фиксированными `seed/cam/q`.
-- [ ] CI: install → lint → test → build → smoke; артефакты скриншотов.
+- [ ] CI: install → lint → test → build → smoke; артефакты скриншотов. Сейчас: install → lint/format → unit tests → build.
 - [ ] Perf-baseline: draw calls, tris, frame time; JSON в artifacts.
 
 #### P1.4 — документация и референс (2–3 дня)

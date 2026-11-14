@@ -78,6 +78,7 @@ npm ci                              # dependencies from package-lock.json
 npm run dev                        # Vite dev server + HMR, http://127.0.0.1:5173
 npm run build                      # dist/index.html (Vite single-file)
 SERVE_DIR=dist npm run smoke       # headless boot check (needs Edge/Chrome)
+npm test                           # Vitest unit tests
 npm run lint                       # ESLint for handwritten JS/config
 npm run check                      # lint + prettier --check
 ```
@@ -93,8 +94,9 @@ Source layout:
 - `src/engine/core/` — event bus, time and deterministic RNG;
 - `src/engine/input/`, `ui/`, `audio/`, `materials/`, `physics/`, `render/`, `melee/`, `settings/` — runtime modules;
 - `src/ui/styles.css` — all UI styles;
+- `vitest.config.js`, `src/**/*.test.js` — unit tests for core/input/settings/modes;
 - `docs/` — expansion plan, [architecture](docs/ARCHITECTURE.md), ADRs and toolchain;
-- `.github/workflows/ci.yml` — CI: `npm ci`, `npm run check`, `npm run build` on `dev`/`feat/**` and PRs.
+- `.github/workflows/ci.yml` — CI: `npm ci`, `npm run check`, `npm test`, `npm run build` on `dev`/`feat/**` and PRs.
 
 ESLint/Prettier cover handwritten JS and config; minified legacy modules, CSS and docs are excluded (see `eslint.config.js` and `.prettierignore`).
 
