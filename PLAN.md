@@ -194,7 +194,8 @@ Branch: `feat/glassline-polish` — **implemented, not merged**.
 - [x] save/load settings and checkpoints already covered;
 - [x] fatal/`__errors` and repeated-reload reliability tests;
 - [x] keyboard/rebinding scope tested; gamepad/touch intentionally out of scope;
-- [ ] hardware 60 FPS peak-load profiling;
+- [x] hardware 60 FPS peak-load profile (Apple M1 Pro / Edge, 8.36 ms avg,
+      p95 9.3 ms); script and result in [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md);
 - [ ] human pacing/audio acceptance.
 
 Evidence: [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md).

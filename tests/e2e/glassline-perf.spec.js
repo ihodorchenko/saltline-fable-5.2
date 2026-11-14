@@ -56,3 +56,17 @@ test('glassline reloads repeatedly without fatal errors', async ({ page }) => {
     await page.reload();
   }
 });
+
+test('glassline peak-load benchmark produces a result', async ({ page }) => {
+  await boot(page, '?show=glassline-tutorial&peak=1&duration=1&q=low&dynres=0');
+  await page.waitForFunction(() => window.__glasslineBench && window.__glasslineBench.done === true, null, {
+    timeout: 20_000,
+  });
+  const result = await page.evaluate(() => window.__glasslineBench);
+  expect(result.frames).toBeGreaterThan(10);
+  expect(result.calls).toBeGreaterThan(0);
+  expect(result.tris).toBeGreaterThan(0);
+  expect(result.buffer.length).toBe(2);
+  expect(typeof result.pass60).toBe('boolean');
+  await expect(page.locator('#glassline-bench-result')).toBeVisible();
+});

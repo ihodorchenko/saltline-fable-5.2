@@ -337,6 +337,114 @@ export async function showcaseTutorial(game) {
     controller.setEnabled(true);
   }
 
+  const benchMode = game.params?.peak === '1';
+  let bench = null;
+  if (benchMode) {
+    menu.hide();
+    hud.style.display = 'none';
+    const hint = document.querySelector('#glassline-hint');
+    if (hint) hint.style.display = 'none';
+    controller.setEnabled(false);
+    started = true;
+    paused = false;
+    built.root.traverse((object) => {
+      if (object.isMesh || object.isSprite || object.isLine) {
+        object.frustumCulled = false;
+      }
+    });
+    game.camera.position.set(22, 18, 6);
+    game.camera.lookAt(2, 1, -95);
+    game.camera.updateProjectionMatrix();
+    bench = {
+      done: false,
+      duration: Math.max(1, Number(game.params?.duration) || 8),
+      warmup: 1.0,
+      elapsed: 0,
+      measureElapsed: 0,
+      samples: [],
+      lastTime: 0,
+      result: null,
+    };
+    window.__glasslineBench = bench;
+  }
+
+  function finishBench() {
+    if (!bench || bench.done) return;
+    const sorted = [...bench.samples].sort((a, b) => a - b);
+    const average = (list) =>
+      list.reduce((sum, value) => sum + value, 0) / Math.max(1, list.length);
+    const percentile = (p) =>
+      sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))] || 0;
+    const stats = game.render?.stats?.() || {};
+    const gl = game.renderer?.getContext?.();
+    const ext = gl?.getExtension?.('WEBGL_debug_renderer_info');
+    const gpu = ext
+      ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)
+      : gl?.getParameter?.(gl.RENDERER) || 'unknown';
+    const avgMs = average(sorted);
+    const p95 = percentile(0.95);
+    const result = {
+      done: true,
+      quality: game.quality?.name || 'unknown',
+      viewport: [window.innerWidth, window.innerHeight],
+      dpr: window.devicePixelRatio,
+      buffer: stats.res || [],
+      calls: stats.calls,
+      tris: stats.tris,
+      geos: stats.geos,
+      textures: stats.tex,
+      frames: sorted.length,
+      avgMs: +avgMs.toFixed(2),
+      p50Ms: +percentile(0.5).toFixed(2),
+      p95Ms: +p95.toFixed(2),
+      p99Ms: +percentile(0.99).toFixed(2),
+      fps: +(1000 / Math.max(avgMs, 0.001)).toFixed(1),
+      pass60: p95 <= 1000 / 60,
+      gpu,
+    };
+    bench.done = true;
+    bench.result = result;
+    window.__glasslineBench = result;
+    const panel = document.createElement('div');
+    panel.id = 'glassline-bench-result';
+    panel.style.cssText =
+      'position:fixed;left:50%;top:22px;transform:translateX(-50%);z-index:80;' +
+      'padding:12px 16px;background:rgba(8,12,16,.9);border:1px solid ' +
+      (result.pass60 ? '#8fbf9f' : '#d23a39') +
+      ';color:#eef1ef;font:12px/1.5 "IBM Plex Mono",monospace;white-space:pre;';
+    panel.textContent = [
+      'GLASSLINE PEAK LOAD',
+      `${result.pass60 ? 'PASS' : 'FAIL'} 60 FPS`,
+      `avg ${result.avgMs} ms · p95 ${result.p95Ms} ms · p99 ${result.p99Ms} ms`,
+      `${result.calls} calls · ${result.tris} tris · ${result.buffer.join('x')}`,
+      result.gpu,
+    ].join('\n');
+    document.body.appendChild(panel);
+    console.log('GLASSLINE_BENCH', JSON.stringify(result));
+  }
+
+  function updateBench(now) {
+    if (!bench || bench.done) return;
+    if (!bench.lastTime) {
+      bench.lastTime = now;
+      return;
+    }
+    const frameMs = now - bench.lastTime;
+    bench.lastTime = now;
+    if (bench.elapsed < bench.warmup * 1000) {
+      bench.elapsed += frameMs;
+      return;
+    }
+    bench.measureElapsed += frameMs;
+    bench.samples.push(frameMs);
+    if (
+      bench.samples.length >= 5 &&
+      bench.measureElapsed >= bench.duration * 1000
+    ) {
+      finishBench();
+    }
+  }
+
   const startCheckpoint =
     progress.checkpoint > 0
       ? level.checkpoints[progress.checkpoint]
@@ -395,10 +503,15 @@ export async function showcaseTutorial(game) {
     audio,
     bindings,
     perf,
+    bench,
   };
 
   return {
     update(dt) {
+      if (benchMode) {
+        updateBench(performance.now());
+        return;
+      }
       perf.update(dt);
       if (beacon.visible) beacon.rotation.y += dt * 1.2;
       if (paused) return;

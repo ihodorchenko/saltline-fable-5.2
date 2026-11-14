@@ -48,6 +48,39 @@ frame is ~255 calls. The important result is the reduction from ~409 to ~255 at
 the normal 1280×720 low/medium base frame, with geometry count reduced from 259
 to ~106.
 
+## Hardware peak-load profile
+
+Command (headed Microsoft Edge, Apple M1 Pro, 1920×1080, DPR 2, high quality,
+dynamic resolution disabled, all static objects forced visible):
+
+```sh
+BASE_URL=http://127.0.0.1:4173 DPR=2 QUALITY=high DURATION=8 \
+  node tools/bench-glassline.mjs
+```
+
+Result:
+
+| Metric | Value |
+|---|---:|
+| GPU | ANGLE Metal Renderer: Apple M1 Pro |
+| Buffer | 2022×1137 (high-quality pixel cap) |
+| Draw calls | 623 |
+| Triangles | 14,467 |
+| Geometries | 114 |
+| Frames sampled | 957 |
+| Average frame | 8.36 ms |
+| p50 / p95 / p99 | 8.3 / 9.3 / 10.5 ms |
+| Effective FPS | 119.6 |
+| 60 FPS verdict | **PASS** |
+
+This is a worst-case-style render (all static objects forced visible), not a
+gameplay camera. The 60 FPS budget is met with headroom; the browser was running
+on a 120 Hz ProMotion display. The buffer is capped by the renderer's high-quality
+pixel budget even at DPR 2.
+
+Raw result is written to ignored `artifacts/glassline-hardware-bench.json` by the
+script. The benchmark is manual hardware tooling and is not part of CI.
+
 ## Automated budgets
 
 `tests/e2e/glassline-perf.spec.js` asserts at low quality / 1280×720:
