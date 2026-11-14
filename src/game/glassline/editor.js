@@ -100,6 +100,8 @@ export async function showcaseEditor(game) {
       view.target.z + Math.cos(view.yaw) * cos * view.distance,
     );
     game.camera.lookAt(view.target);
+    // Keep the follow-sun shadows under whatever the inspector is framing.
+    built.lighting?.update(view.target);
   }
 
   function focusCheckpoint(index) {

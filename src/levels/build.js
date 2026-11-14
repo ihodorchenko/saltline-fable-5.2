@@ -6,11 +6,12 @@ import { validateLevel } from './validate.js';
 import { buildCity, createCityPlan } from './city.js';
 import { createTextureFactory } from './textures.js';
 import { createHighKeySky } from './sky.js';
+import { createLighting, SUN_DIRECTION } from './lighting.js';
 
 /**
  * @param {any} game
  * @param {any} level
- * @returns {{root: any, checkpointMeshes: any[], finishMesh: any, city: any}}
+ * @returns {{root: any, checkpointMeshes: any[], finishMesh: any, city: any, lighting: any}}
  */
 export function buildLevel(game, level) {
   const errors = validateLevel(level);
@@ -521,26 +522,11 @@ export function buildLevel(game, level) {
   root.add(gateTop);
 
   scene.fog = new THREE.FogExp2(0xe3f2f9, 0.0018);
-  const hemisphere = new THREE.HemisphereLight(0xffffff, 0x6699cc, 1.45);
-  const key = new THREE.DirectionalLight(0xfff4df, 3.1);
-  key.position.set(7, 11, -18);
-  key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024);
-  key.shadow.camera.left = -18;
-  key.shadow.camera.right = 18;
-  key.shadow.camera.top = 18;
-  key.shadow.camera.bottom = -18;
-  const rim = new THREE.DirectionalLight(0xb9e4ff, 1.4);
-  rim.position.set(14, 8, -24);
-  const warm = new THREE.DirectionalLight(0xffd0a4, 0.6);
-  warm.position.set(-12, 4, -60);
-  scene.add(hemisphere, key, rim, warm);
-  if (game.render && game.render.exposure != null) {
-    game.render.exposure = 1.08;
-  }
+  const sunDirection = new THREE.Vector3(...SUN_DIRECTION).normalize();
+  const lighting = createLighting(game);
+  lighting.update({ x: level.spawn.x, y: level.spawn.y, z: level.spawn.z });
   const sky = game.render?.sky || game.scene?.getObjectByName?.('sky');
   if (sky) sky.visible = false;
-  const sunDirection = new THREE.Vector3(0.3, 0.45, -0.85).normalize();
   const highSky = createHighKeySky(game, sunDirection);
   root.add(highSky.mesh);
 
@@ -581,5 +567,5 @@ export function buildLevel(game, level) {
   }
   game.physics?.build?.();
   scene.add(root);
-  return { root, checkpointMeshes, finishMesh, city: city.stats, sky: highSky.mesh };
+  return { root, checkpointMeshes, finishMesh, city: city.stats, sky: highSky.mesh, lighting };
 }

@@ -694,6 +694,7 @@ export async function showcaseTutorial(game) {
       }
       perf.update(dt);
       if (built.sky) built.sky.position.copy(game.camera.position);
+      if (built.lighting) built.lighting.update(game.camera.position);
       if (beacon.visible) beacon.rotation.y += dt * 1.2;
       if (paused) return;
       if (progress.finished) return;
