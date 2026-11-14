@@ -10,6 +10,10 @@ function mulberry(seed) {
   };
 }
 
+// Per-pixel grain amplitude (0-255 scale). High-key surfaces must read as clean
+// ceramic and concrete; heavy grain reads as fabric. Guarded by textures.test.js.
+export const GRAIN = { concrete: 7, concreteDark: 10, side: 6, facade: 10, roof: 6, metal: 9 };
+
 function canvasOf(size) {
   const canvas = document.createElement('canvas');
   canvas.width = size;
@@ -55,20 +59,12 @@ function panelSeams(context, size, step, color, width = 1) {
   }
 }
 
-function crack(context, random, size, color) {
-  context.strokeStyle = color;
-  context.lineWidth = 0.8;
-  for (let i = 0; i < 5; i += 1) {
-    let x = random() * size;
-    let y = random() * size;
-    context.beginPath();
-    context.moveTo(x, y);
-    for (let j = 0; j < 6; j += 1) {
-      x += (random() - 0.5) * 28;
-      y += random() * 20;
-      context.lineTo(x, y);
-    }
-    context.stroke();
+// Light edge on the far side of each seam so panels read as separate slabs.
+function seamHighlights(context, size, step, color) {
+  context.fillStyle = color;
+  for (let i = 0; i <= size; i += step) {
+    context.fillRect(i + 1, 0, 1, size);
+    context.fillRect(0, i + 1, size, 1);
   }
 }
 
@@ -105,16 +101,12 @@ export function createTextureFactory(game) {
     const random = mulberry(hex + (options.dark ? 91 : 7));
     context.fillStyle = `#${hex.toString(16).padStart(6, '0')}`;
     context.fillRect(0, 0, size, size);
-    addNoise(context, size, random, options.dark ? 30 : 22);
-    stain(context, size * 0.2, size * 0.16, size * 0.22, '45, 52, 52', 0.09);
-    stain(context, size * 0.78, size * 0.64, size * 0.3, '70, 72, 62', 0.1);
-    stain(context, size * 0.42, size * 0.94, size * 0.2, '24, 32, 34', 0.11);
-    panelSeams(context, size, 128, 'rgba(42, 50, 50, .18)', 1);
-    crack(context, random, size, 'rgba(35, 43, 44, .18)');
-    for (let i = 0; i < 24; i += 1) {
-      context.fillStyle = `rgba(30, 36, 36, ${0.03 + random() * 0.08})`;
-      context.fillRect(random() * size, random() * size, 1 + random() * 3, 1 + random() * 2);
-    }
+    addNoise(context, size, random, options.dark ? GRAIN.concreteDark : GRAIN.concrete);
+    stain(context, size * 0.2, size * 0.16, size * 0.22, '45, 52, 52', 0.05);
+    stain(context, size * 0.78, size * 0.64, size * 0.3, '70, 72, 62', 0.06);
+    stain(context, size * 0.42, size * 0.94, size * 0.2, '24, 32, 34', 0.06);
+    panelSeams(context, size, 128, 'rgba(42, 50, 50, .2)', 1);
+    seamHighlights(context, size, 128, 'rgba(255, 255, 255, .16)');
     const texture = finish(canvas, [2, 2]);
     cache.set(key, texture);
     return texture;
@@ -129,24 +121,17 @@ export function createTextureFactory(game) {
     const random = mulberry(hex + 31);
     context.fillStyle = `#${hex.toString(16).padStart(6, '0')}`;
     context.fillRect(0, 0, size, size);
-    addNoise(context, size, random, 26, [0, 2, 2]);
-    // Board-formed verticals and tie holes.
-    for (let x = 0; x < size; x += 64) {
-      context.fillStyle = 'rgba(22, 32, 36, .18)';
+    addNoise(context, size, random, GRAIN.side, [0, 1, 1]);
+    // Clean cast panels: wide seams with a soft light edge, no tie holes or cracks.
+    for (let x = 0; x < size; x += 128) {
+      context.fillStyle = 'rgba(16, 26, 30, .24)';
       context.fillRect(x, 0, 2, size);
-      context.fillStyle = 'rgba(200, 220, 220, .06)';
+      context.fillStyle = 'rgba(210, 228, 230, .12)';
       context.fillRect(x + 2, 0, 1, size);
-      for (let y = 24; y < size; y += 96) {
-        context.beginPath();
-        context.arc(x + 30, y, 2.4, 0, Math.PI * 2);
-        context.fillStyle = 'rgba(28, 36, 38, .24)';
-        context.fill();
-      }
     }
-    for (let i = 0; i < 5; i += 1) {
-      stain(context, random() * size, random() * size, 30 + random() * 80, '24, 38, 40', 0.1);
+    for (let i = 0; i < 4; i += 1) {
+      stain(context, random() * size, random() * size, 40 + random() * 90, '24, 38, 40', 0.05);
     }
-    crack(context, random, size, 'rgba(18, 28, 30, .2)');
     const texture = finish(canvas, [1, 2]);
     cache.set(key, texture);
     return texture;
@@ -161,7 +146,7 @@ export function createTextureFactory(game) {
     const random = mulberry(hex + 57);
     context.fillStyle = `#${hex.toString(16).padStart(6, '0')}`;
     context.fillRect(0, 0, size, size);
-    addNoise(context, size, random, 10);
+    addNoise(context, size, random, GRAIN.facade);
     const cols = 6;
     const rows = 9;
     const cellW = size / cols;
@@ -248,11 +233,11 @@ export function createTextureFactory(game) {
     const random = mulberry(hex + 11);
     context.fillStyle = `#${hex.toString(16).padStart(6, '0')}`;
     context.fillRect(0, 0, size, size);
-    addNoise(context, size, random, 18);
+    addNoise(context, size, random, GRAIN.roof);
     panelSeams(context, size, 64, 'rgba(60, 67, 62, .13)', 1);
     panelSeams(context, size, 256, 'rgba(44, 52, 52, .3)', 2);
     for (let i = 0; i < 6; i += 1) {
-      stain(context, random() * size, random() * size, 10 + random() * 50, '52, 58, 52', 0.12);
+      stain(context, random() * size, random() * size, 10 + random() * 50, '52, 58, 52', 0.06);
     }
     // A few drainage grates.
     for (let i = 0; i < 4; i += 1) {
@@ -276,13 +261,13 @@ export function createTextureFactory(game) {
     const random = mulberry(8221);
     context.fillStyle = '#6d7a7e';
     context.fillRect(0, 0, size, size);
-    addNoise(context, size, random, 26, [0, 1, 2]);
+    addNoise(context, size, random, GRAIN.metal, [0, 1, 2]);
     for (let x = 0; x < size; x += 3) {
-      context.fillStyle = `rgba(225, 236, 234, ${0.02 + random() * 0.06})`;
+      context.fillStyle = `rgba(225, 236, 234, ${0.015 + random() * 0.03})`;
       context.fillRect(x, 0, 1, size);
     }
     for (let i = 0; i < 8; i += 1) {
-      stain(context, random() * size, random() * size, 8 + random() * 30, '130, 84, 54', 0.15);
+      stain(context, random() * size, random() * size, 8 + random() * 30, '58, 74, 80', 0.07);
     }
     const texture = finish(canvas, [2, 2]);
     cache.set('metal', texture);

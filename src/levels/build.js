@@ -7,6 +7,7 @@ import { buildCity, createCityPlan } from './city.js';
 import { createTextureFactory } from './textures.js';
 import { createHighKeySky } from './sky.js';
 import { createLighting, SUN_DIRECTION } from './lighting.js';
+import { CONTACT, buildContactShadows, contactFootprint } from './contact.js';
 
 /**
  * @param {any} game
@@ -85,6 +86,7 @@ export function buildLevel(game, level) {
   const railPostMatrices = [];
   const solarMatrices = [];
   const doorMatrices = [];
+  const contactDecals = [];
   const detailed = game.quality?.name !== 'low';
   const stripGeometry = new THREE.BoxGeometry(1, 1, 1);
   const windowGeometry = new THREE.BoxGeometry(0.05, 0.75, 0.42);
@@ -149,6 +151,9 @@ export function buildLevel(game, level) {
         ),
       );
     };
+    const slab = { minX: px - pw / 2, maxX: px + pw / 2, minZ: pz - pd / 2, maxZ: pz + pd / 2 };
+    const pushContact = (w, d, x, z) =>
+      contactDecals.push({ ...contactFootprint({ x, z, w, d }, slab), y: topY + CONTACT.lift });
     // Dark metal fascia band and a shallow roof curb give every slab real edges.
     pushBox(fasciaMatrices, pw, 0.34, 0.1, px, topY - 0.2, pz + pd / 2 + 0.05);
     pushBox(fasciaMatrices, pw, 0.34, 0.1, px, topY - 0.2, pz - pd / 2 - 0.05);
@@ -173,11 +178,14 @@ export function buildLevel(game, level) {
     // Rooftop services sit on the edges, never on the route line.
     if (pw > 4.4 && pd > 2.6) {
       pushBox(acMatrices, 1.05, 0.75, 0.8, px - pw / 2 + 1.1, topY + 0.4, pz - pd / 2 + 1.05);
+      pushContact(1.05, 0.8, px - pw / 2 + 1.1, pz - pd / 2 + 1.05);
       if (index % 2 === 0) {
         pushBox(ventMatrices, 0.32, 1.1, 0.32, px + pw / 2 - 1.15, topY + 0.55, pz + pd / 2 - 1.1);
+        pushContact(0.32, 0.32, px + pw / 2 - 1.15, pz + pd / 2 - 1.1);
       }
       if (index % 5 === 2 || index === 0) {
         pushBox(hutMatrices, 1.7, 1.5, 2.1, px + pw / 2 - 1.25, topY + 0.75, pz);
+        pushContact(1.7, 2.1, px + pw / 2 - 1.25, pz);
       }
       pushBox(pipeMatrices, Math.min(2.8, pw * 0.32), 0.11, 0.11, px, topY + 0.12, pz + pd / 2 - 0.55);
     }
@@ -240,6 +248,11 @@ export function buildLevel(game, level) {
     const edges = new THREE.LineSegments(edgeGeometry, edgeMat);
     edges.name = 'platform-edges';
     root.add(edges);
+  }
+
+  if (detailed) {
+    const contact = buildContactShadows(THREE, contactDecals);
+    if (contact) root.add(contact);
   }
 
   if (stripMatrices.length) {
