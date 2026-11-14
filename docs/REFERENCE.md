@@ -48,7 +48,7 @@ Status: **waiting for the owner's reference video**.
 | Wall-run duration | TBD |
 | Camera roll | TBD |
 | Checkpoint spacing | TBD |
-| Target FPS | TBD |
+| Target FPS | 60 desktop |
 
 ## Rules
 

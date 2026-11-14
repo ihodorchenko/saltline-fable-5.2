@@ -2,18 +2,18 @@
 
 **Codename:** GLASSLINE  
 **Branch:** `project/glassline` (long-lived, separate from Saltline)  
-**Status:** docs and branch created; **waiting for the owner's reference video**. No
-gameplay implementation starts before the reference is analyzed.
+**Status:** decisions confirmed; **waiting for the owner's reference video**. No
+implementation starts before the reference is analyzed.
 
 GLASSLINE is a new first-person parkour project built on the Phase 1 engine. It
 does not preserve Saltline gameplay and does not merge back into `dev`.
 
 ## 1. Goal
 
-Build a 10–20 minute playable vertical slice: a first-person parkour tutorial
-with readable movement, a clear route, checkpoints and a strong sense of speed.
-The exact theme, art direction and mechanics will be calibrated against the
-owner's reference video.
+Build a 10–20 minute playable vertical slice: a first-person parkour tutorial in
+the spirit of Mirror's Edge — readable movement, a clear route, checkpoints and a
+strong sense of speed — with an original world, story, art and assets. Movement
+timing and level language are calibrated against the owner's reference video.
 
 ## 2. Reference intake (blocking)
 
@@ -25,22 +25,30 @@ The owner will add a reference video from the target game.
 - [ ] Write observations to `docs/REFERENCE.md` (text only; no copied frames).
 - [ ] Translate observations into measurable targets: speed, jump height,
       vault height, wall-run duration, camera roll/FOV, checkpoint spacing.
-- [ ] Only then start Step 2.
+- [ ] Only then start Step 0.
 
 Rules: use the video for analysis, not for redistributing assets, textures,
 audio, level data or frames. No Mirror's Edge files in the repository.
 
-## 3. Decisions needed from the owner
+## 3. Decisions
 
-| Decision | Default proposal |
-| --- | --- |
-| Theme / fiction | urban rooftop courier, original IP |
-| Platform | desktop Chrome; gamepad optional |
-| Language | JS + JSDoc for new modules; no TS migration of legacy |
-| Target FPS | 60 FPS desktop, graceful low mode |
-| Template mode | include a small empty `template` mode if cheap |
-| Reference timing | wait for video before movement tuning |
-| Art/audio | original/generated or licensed only |
+Confirmed by the owner:
+
+| Decision        | Choice                                                                     |
+| --------------- | -------------------------------------------------------------------------- |
+| Theme / fiction | Parkour in the spirit of Mirror's Edge; **original IP/world/story/assets** |
+| Platform        | **Desktop Chrome** first; gamepad optional                                 |
+| Language        | **JS + JSDoc** (`// @ts-check` where useful); no TS migration of legacy    |
+| Target FPS      | **60 FPS** desktop; graceful low mode                                      |
+| Art/audio       | original/generated or licensed only; no copied IP                          |
+
+Still open:
+
+| Decision            | Default proposal                                           |
+| ------------------- | ---------------------------------------------------------- |
+| Template mode       | include a small empty `template` mode if cheap             |
+| Reference timing    | wait for video before implementation                       |
+| Gamepad/touch scope | gamepad after first playable; touch out of the first slice |
 
 ## 4. Non-negotiable constraints
 
@@ -49,6 +57,7 @@ audio, level data or frames. No Mirror's Edge files in the repository.
 - Shared engine fixes go through `fix/engine-*` and reach `dev` only by owner command.
 - Phase 2 feature branches merge into `project/glassline` only by owner command.
 - Do not reformat the retained minified Saltline core.
+- New GLASSLINE modules are JS + JSDoc; do not introduce a TS migration or a second toolchain.
 - No third-party IP assets; preserve `NOTICE.md` and the license scope.
 - Every step has tests, a smoke path and a rollback point.
 
@@ -60,6 +69,7 @@ Branch: `feat/glassline-skeleton`
 
 - create `src/game/glassline/`, `src/levels/`, `src/assets/`, `src/prototypes/`;
 - register a new mode in `src/modes/`;
+- set up `jsconfig.json` / `checkJs` and a thin `types/engine.d.ts` for the game context;
 - minimal scene: ground, camera, player capsule, exit to menu;
 - project-specific README/commands;
 - boot test with empty `__errors`/`__fatal`;
@@ -182,13 +192,13 @@ dev (Saltline, Phase 1 complete)
 
 ## 8. Timeline
 
-| Step | Estimate |
-| --- | --- |
-| Skeleton | 2–4 days |
-| Physics + core moves | 2–3 weeks |
-| Tutorial/content | 1–2 weeks |
-| Art/audio/UI | 1–2 weeks |
-| Polish/playtest | 1 week |
-| **Total** | **5–9 weeks** |
+| Step                 | Estimate      |
+| -------------------- | ------------- |
+| Skeleton             | 2–4 days      |
+| Physics + core moves | 2–3 weeks     |
+| Tutorial/content     | 1–2 weeks     |
+| Art/audio/UI         | 1–2 weeks     |
+| Polish/playtest      | 1 week        |
+| **Total**            | **5–9 weeks** |
 
 These are agent+human estimates and depend on the reference video and playtests.

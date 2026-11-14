@@ -13,12 +13,16 @@ and must not be merged back into `dev`.
 Phase 1 is complete and stabilized on `dev`. This branch currently contains only
 planning. The owner will add a reference video from the target game.
 
-**Do not start gameplay/physics implementation until:**
+The theme, language and platform are confirmed: **parkour in the spirit of
+Mirror's Edge with original IP**, **JS + JSDoc**, **desktop Chrome**, **60 FPS**.
+Use `// @ts-check` and a thin engine type declaration where useful; do not start a
+TypeScript migration.
+
+**Do not start implementation until:**
 
 1. the reference video is available;
 2. it has been analyzed for movement, camera, level language and UI;
-3. `docs/REFERENCE.md` contains the observations and measurable targets;
-4. the owner has confirmed the theme/platform decisions in `PLAN.md`.
+3. `docs/REFERENCE.md` contains the observations and measurable targets.
 
 ## Hard rules
 
@@ -33,6 +37,7 @@ planning. The owner will add a reference video from the target game.
   third-party IP. Observations are text only.
 - Preserve `NOTICE.md`; original Saltline rights remain with its author.
 - Every step must include tests and a smoke path.
+- Language: JS + JSDoc; target: desktop Chrome at 60 FPS; no TS migration of the legacy engine.
 
 ## Plan mirrored from PLAN.md
 
@@ -42,6 +47,7 @@ Branch `feat/glassline-skeleton`.
 
 - `src/game/glassline/`, `src/levels/`, `src/assets/`, `src/prototypes/`;
 - register a GLASSLINE mode;
+- `jsconfig.json`/`checkJs` + thin engine type declarations;
 - minimal ground/camera/player scene;
 - boot test with empty `__errors`/`__fatal`;
 - project CI path, separate from Saltline.
