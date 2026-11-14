@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { boot } from './helpers.js';
 
 test('glassline tutorial boots with checkpoints', async ({ page }) => {
-  const state = await boot(page, '?show=glassline-tutorial&q=low');
+  const state = await boot(page, '?show=glassline-tutorial&q=low&autostart=1');
   expect(state.showcase).toBe('glassline-tutorial');
   const scene = await page.evaluate(() => {
     const game = window.__G;
@@ -29,7 +29,7 @@ test('glassline tutorial boots with checkpoints', async ({ page }) => {
 });
 
 test('glassline tutorial advances checkpoints, respawns and finishes', async ({ page }) => {
-  await boot(page, '?show=glassline-tutorial&q=low');
+  await boot(page, '?show=glassline-tutorial&q=low&autostart=1');
   await page.evaluate(() => {
     const game = window.__G;
     const checkpoint = game.glassline.level.checkpoints.find((item) => item.id === 'slide');
@@ -72,7 +72,7 @@ test('glassline tutorial advances checkpoints, respawns and finishes', async ({ 
 });
 
 test('glassline tutorial advances every checkpoint in route order', async ({ page }) => {
-  await boot(page, '?show=glassline-tutorial&q=low');
+  await boot(page, '?show=glassline-tutorial&q=low&autostart=1');
   const count = await page.evaluate(() => window.__G.glassline.level.checkpoints.length);
   for (let index = 1; index < count; index += 1) {
     await page.evaluate((i) => {
@@ -101,7 +101,7 @@ test('glassline tutorial advances every checkpoint in route order', async ({ pag
 });
 
 test('glassline tutorial fail-safe prompts and auto-respawns when stuck', async ({ page }) => {
-  await boot(page, '?show=glassline-tutorial&q=low');
+  await boot(page, '?show=glassline-tutorial&q=low&autostart=1');
   await page.waitForFunction(() => window.__G.glassline.tutorial.message.includes('Stuck'), null, {
     timeout: 10_000,
   });
@@ -118,7 +118,7 @@ test('glassline tutorial fail-safe prompts and auto-respawns when stuck', async 
 });
 
 test('glassline tutorial restores the last checkpoint after reload', async ({ page }) => {
-  await boot(page, '?show=glassline-tutorial&q=low');
+  await boot(page, '?show=glassline-tutorial&q=low&autostart=1');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.waitForFunction(() => window.__ready === true, null, {

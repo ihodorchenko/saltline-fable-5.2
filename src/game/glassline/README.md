@@ -17,6 +17,10 @@ Level inspector/preview:
 ?show=glassline-editor&q=low
 ```
 
+The tutorial starts with the GLASSLINE title/pause/complete shell. Mouse
+sensitivity is saved under `glassline.sensitivity.v1`; `R` retries and
+`Backspace` restarts. The inspector is linked from the title screen.
+
 Sandbox for mechanic testing:
 
 ```text

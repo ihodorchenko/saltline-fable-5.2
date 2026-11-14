@@ -160,12 +160,18 @@ for the vertical slice.
 
 Branches: `feat/glassline-art`, `feat/glassline-ui`, `feat/glassline-audio`
 
-- original visual language and palette;
-- original/generated textures and models;
-- minimal HUD: objective, checkpoint, speed/flow feedback;
-- menu, settings, controls, rebinding decision;
-- original music/SFX;
-- no copied IP.
+Status: `feat/glassline-ui` implemented, not merged.
+
+- [x] original GLASSLINE title, pause and completion overlay;
+- [x] start gates the timer/run and requests pointer lock;
+- [x] pause on pointer-lock loss, resume/restart actions;
+- [x] mouse sensitivity setting with localStorage persistence;
+- [x] tutorial HUD already covers objective, checkpoint, timer/splits/best;
+- [x] level inspector linked from the menu;
+- [ ] original art/theme pass beyond the tutorial blockout (art branch);
+- [ ] original music/SFX and audio settings (audio branch);
+- [ ] full settings/controls/rebinding decision;
+- [ ] no copied IP audit.
 
 Acceptance: coherent vertical slice; assets documented and licensed.
 

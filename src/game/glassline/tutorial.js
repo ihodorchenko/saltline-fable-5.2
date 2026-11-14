@@ -5,6 +5,7 @@
 import { tutorialLevel } from '../../levels/tutorial.js';
 import { buildLevel } from '../../levels/build.js';
 import { createPlayerController } from './player.js';
+import { createTutorialMenu } from './menu.js';
 import {
   checkpointSplit,
   formatTime,
@@ -129,6 +130,9 @@ export async function showcaseTutorial(game) {
   const fillEl = hud.querySelector('#gl-progress-fill');
   let elapsed = 0;
   let timeAccumulator = 0;
+  let paused = true;
+  let started = false;
+  let menu = null;
   let lastCheckpointAt = 0;
   let best = loadBest();
   let idleTime = 0;
@@ -272,7 +276,36 @@ export async function showcaseTutorial(game) {
       false,
       level.spawn.y,
     );
+    paused = false;
+    started = true;
     setHud();
+  }
+
+  const autostart =
+    game.params?.autostart === '1' || game.params?.shot === '1';
+  menu = createTutorialMenu({
+    level,
+    canvas: game.renderer?.domElement || null,
+    onStart: () => {
+      started = true;
+      paused = false;
+    },
+    onResume: () => {
+      paused = false;
+    },
+    onRestart: () => {
+      restart();
+      started = true;
+      paused = false;
+    },
+    onSensitivity: (value) => {
+      controller.setSensitivity(0.0022 * value);
+    },
+  });
+  if (autostart) {
+    menu.hide();
+    started = true;
+    paused = false;
   }
 
   const startCheckpoint =
@@ -302,6 +335,7 @@ export async function showcaseTutorial(game) {
   saveProgress(progress);
 
   function onKeyDown(event) {
+    if (paused) return;
     if (event.code === 'KeyR' && !event.repeat) {
       event.preventDefault();
       respawn();
@@ -310,6 +344,15 @@ export async function showcaseTutorial(game) {
       restart();
     }
   }
+  const canvas = game.renderer?.domElement || null;
+  function onPointerLockChange() {
+    if (!started || progress.finished || paused) return;
+    if (document.pointerLockElement !== canvas) {
+      paused = true;
+      menu?.showPause();
+    }
+  }
+  document.addEventListener('pointerlockchange', onPointerLockChange);
   addEventListener('keydown', onKeyDown);
 
   game.glassline = {
@@ -318,11 +361,13 @@ export async function showcaseTutorial(game) {
     tutorial: progress,
     level,
     storageKey: TUTORIAL_STORAGE_KEY,
+    menu,
   };
 
   return {
     update(dt) {
       if (beacon.visible) beacon.rotation.y += dt * 1.2;
+      if (paused) return;
       if (progress.finished) return;
       elapsed += dt;
       timeAccumulator += dt;
@@ -412,10 +457,18 @@ export async function showcaseTutorial(game) {
         }
         saveProgress(progress);
         setHud();
+        paused = true;
+        menu?.showComplete({
+          time: formatTime(elapsed),
+          best: formatTime(best ?? elapsed),
+          respawns: progress.respawns,
+        });
       }
     },
     dispose() {
       removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('pointerlockchange', onPointerLockChange);
+      menu?.dispose();
       hud.remove();
       controller.dispose();
     },

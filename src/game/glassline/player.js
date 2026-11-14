@@ -603,10 +603,17 @@ export function createPlayerController(game) {
     }
   }
 
+  let sensitivity = 0.0022;
+
+  function setSensitivity(value) {
+    sensitivity = Math.max(0.0005, Math.min(0.006, Number(value) || 0.0022));
+    return sensitivity;
+  }
+
   function onMouseMove(event) {
     if (!state.locked) return;
-    state.yaw -= (event.movementX || 0) * 0.0022;
-    state.pitch -= (event.movementY || 0) * 0.0022;
+    state.yaw -= (event.movementX || 0) * sensitivity;
+    state.pitch -= (event.movementY || 0) * sensitivity;
     state.pitch = Math.max(-1.35, Math.min(1.35, state.pitch));
   }
 
@@ -918,5 +925,6 @@ export function createPlayerController(game) {
     tryWallrun,
     tryWallclimb,
     tryRoll,
+    setSensitivity,
   };
 }
