@@ -23,8 +23,9 @@ the palette, scenery and prop placements. The tutorial starts with the GLASSLINE
 title/pause/complete shell. Audio is procedural (no samples): a wind bed and pad
 plus movement/checkpoint/finish cues; the title/pause menu has sound mute and
 volume controls saved locally. Mouse sensitivity is saved under
-`glassline.sensitivity.v1`; `R` retries and `Backspace` restarts. The inspector is
-linked from the title screen.
+`glassline.sensitivity.v1`; `R` retries and `Backspace` restarts. Settings include
+rebindable movement/action keys, conflict rejection, reset and localStorage
+persistence. The inspector is linked from the title screen.
 
 Sandbox for mechanic testing:
 

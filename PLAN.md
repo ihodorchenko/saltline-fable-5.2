@@ -160,7 +160,7 @@ for the vertical slice.
 
 Branches: `feat/glassline-art`, `feat/glassline-ui`, `feat/glassline-audio`
 
-Status: UI shell and art merged. `feat/glassline-audio` implemented, not merged.
+Status: UI shell, art and audio merged. `feat/glassline-settings` implemented, not merged.
 
 - [x] original GLASSLINE title, pause and completion overlay (merged);
 - [x] start gates the timer/run and requests pointer lock;
@@ -175,7 +175,8 @@ Status: UI shell and art merged. `feat/glassline-audio` implemented, not merged.
       land, slide, vault, mantle, wallrun, wallclimb, roll, checkpoint, finish,
       respawn and UI cues (audio branch, not merged);
 - [x] menu mute/volume controls with localStorage persistence;
-- [ ] full settings/controls/rebinding decision;
+- [x] settings view with dynamic controls, rebinding and reset (settings branch);
+- [x] keyboard bindings model with conflict rejection and localStorage persistence;
 - [ ] no copied-IP audit and final audio QA.
 
 Acceptance: coherent vertical slice; assets documented and licensed.

@@ -7,6 +7,7 @@ import { buildLevel } from '../../levels/build.js';
 import { createPlayerController } from './player.js';
 import { createTutorialMenu } from './menu.js';
 import { createGlasslineAudio } from './audio.js';
+import { loadBindings } from './bindings.js';
 import {
   checkpointSplit,
   formatTime,
@@ -120,7 +121,9 @@ export async function showcaseTutorial(game) {
       child.visible = false;
     }
   }
-  const controller = createPlayerController(game);
+  const bindings = loadBindings();
+  const controller = createPlayerController(game, { bindings });
+  controller.setEnabled(false);
   const hud = createHud();
   const stageEl = hud.querySelector('#gl-stage');
   const promptEl = hud.querySelector('#gl-prompt');
@@ -129,6 +132,10 @@ export async function showcaseTutorial(game) {
   const splitEl = hud.querySelector('#gl-split');
   const bestEl = hud.querySelector('#gl-best');
   const fillEl = hud.querySelector('#gl-progress-fill');
+  const helpEl = hud.querySelector('#gl-help');
+  if (helpEl) {
+    helpEl.textContent = `${bindings.label('retry')} retry · ${bindings.label('restart')} restart`;
+  }
   let elapsed = 0;
   let timeAccumulator = 0;
   let paused = true;
@@ -295,14 +302,17 @@ export async function showcaseTutorial(game) {
     level,
     canvas: game.renderer?.domElement || null,
     audio,
+    bindings,
     onStart: () => {
       started = true;
       paused = false;
+      controller.setEnabled(true);
       audio.start();
       audio.play('ui');
     },
     onResume: () => {
       paused = false;
+      controller.setEnabled(true);
       audio.start();
       audio.play('ui');
     },
@@ -310,6 +320,7 @@ export async function showcaseTutorial(game) {
       restart();
       started = true;
       paused = false;
+      controller.setEnabled(true);
       audio.start();
       audio.play('ui');
     },
@@ -321,6 +332,7 @@ export async function showcaseTutorial(game) {
     menu.hide();
     started = true;
     paused = false;
+    controller.setEnabled(true);
   }
 
   const startCheckpoint =
@@ -351,10 +363,10 @@ export async function showcaseTutorial(game) {
 
   function onKeyDown(event) {
     if (paused) return;
-    if (event.code === 'KeyR' && !event.repeat) {
+    if (bindings.matches(event.code, 'retry') && !event.repeat) {
       event.preventDefault();
       respawn();
-    } else if (event.code === 'Backspace' && !event.repeat) {
+    } else if (bindings.matches(event.code, 'restart') && !event.repeat) {
       event.preventDefault();
       restart();
     }
@@ -364,6 +376,7 @@ export async function showcaseTutorial(game) {
     if (!started || progress.finished || paused) return;
     if (document.pointerLockElement !== canvas) {
       paused = true;
+      controller.setEnabled(false);
       menu?.showPause();
     }
   }
@@ -378,6 +391,7 @@ export async function showcaseTutorial(game) {
     storageKey: TUTORIAL_STORAGE_KEY,
     menu,
     audio,
+    bindings,
   };
 
   return {
@@ -488,6 +502,7 @@ export async function showcaseTutorial(game) {
           /* events are optional */
         }
         paused = true;
+        controller.setEnabled(false);
         menu?.showComplete({
           time: formatTime(elapsed),
           best: formatTime(best ?? elapsed),

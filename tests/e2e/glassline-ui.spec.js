@@ -45,3 +45,25 @@ test('glassline completion overlay shows run stats', async ({ page }) => {
   await expect(page.locator('#glassline-menu')).toContainText('TIME');
   await expect(page.locator('#glassline-menu')).toContainText('RESPAWNS');
 });
+
+test('glassline settings rebinds forward and persists', async ({ page }) => {
+  await boot(page, '?show=glassline-tutorial&q=low');
+  await page.locator('[data-action="settings"]').click();
+  await expect(page.locator('#glassline-menu')).toContainText('CONTROLS');
+  const forward = page.locator('[data-action="bind"][data-binding="forward"]');
+  await forward.click();
+  await expect(forward).toHaveText('PRESS KEY');
+  await page.keyboard.press('i');
+  await expect(forward).toHaveText('I');
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('glassline.bindings.v1')));
+  expect(stored.forward).toEqual(['KeyI']);
+
+  await page.locator('[data-action="back-settings"]').click();
+  await page.locator('[data-action="start"]').click();
+  const before = await page.evaluate(() => window.__G.glassline.controller.getState());
+  await page.keyboard.down('i');
+  await page.waitForTimeout(500);
+  await page.keyboard.up('i');
+  const after = await page.evaluate(() => window.__G.glassline.controller.getState());
+  expect(after.pos.z).toBeLessThan(before.pos.z - 0.2);
+});

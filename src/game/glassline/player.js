@@ -8,6 +8,8 @@
  * @typedef {{update: (dt: number) => void, getState: () => object, dispose: () => void}} PlayerController
  */
 
+import { createBindings } from './bindings.js';
+
 const EYE = 1.65;
 const RADIUS = 0.35;
 const HEIGHT = 1.8;
@@ -61,7 +63,8 @@ import {
  * @param {GameContext} game
  * @returns {PlayerController}
  */
-export function createPlayerController(game) {
+export function createPlayerController(game, options = {}) {
+  const bindings = options.bindings || createBindings();
   const { THREE } = game;
   const physics = game.physics;
   const canvas = game.renderer && game.renderer.domElement;
@@ -122,11 +125,15 @@ export function createPlayerController(game) {
   };
 
   /** @type {any} */
+  function controlHint(locked) {
+    return `${locked ? '' : 'Click to look  ·  '}${bindings.label('forward')} move  ·  ${bindings.label('sprint')} sprint  ·  ${bindings.label('jump')} jump`;
+  }
+
   let hint = null;
   if (typeof document !== 'undefined') {
     hint = document.createElement('div');
     hint.id = 'glassline-hint';
-    hint.textContent = 'Click to look  ·  WASD move  ·  Shift sprint  ·  Space jump';
+    hint.textContent = controlHint(false);
     hint.style.cssText =
       'position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:40;' +
       'padding:10px 14px;border:1px solid rgba(255,255,255,.5);border-radius:2px;' +
@@ -510,20 +517,16 @@ export function createPlayerController(game) {
   }
 
   function onKeyDown(event) {
+    if (!enabled) return;
     if (
-      event.code === 'Space' ||
-      event.code === 'ArrowUp' ||
-      event.code === 'ArrowDown'
+      bindings.matches(event.code, 'jump') ||
+      bindings.matches(event.code, 'forward') ||
+      bindings.matches(event.code, 'back')
     ) {
       event.preventDefault();
     }
     keys.add(event.code);
-    if (
-      (event.code === 'KeyC' ||
-        event.code === 'ControlLeft' ||
-        event.code === 'ControlRight') &&
-      !event.repeat
-    ) {
+    if (bindings.matches(event.code, 'slide') && !event.repeat) {
       state.slideBuffer = 0.15;
       if (state.onGround && !startSlide()) {
         state.crouched = true;
@@ -531,7 +534,7 @@ export function createPlayerController(game) {
       }
     }
     if (
-      event.code === 'Space' &&
+      bindings.matches(event.code, 'jump') &&
       !event.repeat &&
       state.rolling
     ) {
@@ -542,7 +545,7 @@ export function createPlayerController(game) {
       return;
     }
     if (
-      event.code === 'Space' &&
+      bindings.matches(event.code, 'jump') &&
       !event.repeat &&
       state.wallrunning
     ) {
@@ -550,7 +553,7 @@ export function createPlayerController(game) {
       return;
     }
     if (
-      event.code === 'Space' &&
+      bindings.matches(event.code, 'jump') &&
       !event.repeat &&
       state.onGround &&
       !state.sliding &&
@@ -559,7 +562,7 @@ export function createPlayerController(game) {
       return;
     }
     if (
-      event.code === 'Space' &&
+      bindings.matches(event.code, 'jump') &&
       !event.repeat &&
       state.onGround &&
       !state.sliding &&
@@ -568,7 +571,7 @@ export function createPlayerController(game) {
       return;
     }
     if (
-      event.code === 'Space' &&
+      bindings.matches(event.code, 'jump') &&
       !event.repeat &&
       state.wallclimbing
     ) {
@@ -576,7 +579,7 @@ export function createPlayerController(game) {
       return;
     }
     if (
-      event.code === 'Space' &&
+      bindings.matches(event.code, 'jump') &&
       !event.repeat &&
       state.onGround &&
       !state.sliding &&
@@ -585,7 +588,7 @@ export function createPlayerController(game) {
       return;
     }
     if (
-      event.code === 'Space' &&
+      bindings.matches(event.code, 'jump') &&
       !event.repeat &&
       (state.onGround || coyoteActive(state.coyote))
     ) {
@@ -602,12 +605,8 @@ export function createPlayerController(game) {
     keys.delete(event.code);
     if (
       !state.sliding &&
-      (event.code === 'KeyC' ||
-        event.code === 'ControlLeft' ||
-        event.code === 'ControlRight') &&
-      !keys.has('KeyC') &&
-      !keys.has('ControlLeft') &&
-      !keys.has('ControlRight')
+      bindings.matches(event.code, 'slide') &&
+      !bindings.codes('slide').some((code) => keys.has(code))
     ) {
       tryStand();
     }
@@ -621,6 +620,13 @@ export function createPlayerController(game) {
     } catch {
       /* audio/events are optional */
     }
+  }
+
+  let enabled = true;
+
+  function setEnabled(value) {
+    enabled = !!value;
+    if (!enabled) keys.clear();
   }
 
   let sensitivity = 0.0022;
@@ -649,8 +655,7 @@ export function createPlayerController(game) {
 
   function onLockChange() {
     state.locked = document.pointerLockElement === canvas;
-    if (state.locked) setHint('WASD move  ·  Shift sprint  ·  Space jump  ·  Esc release');
-    else setHint('Click to look  ·  WASD move  ·  Shift sprint  ·  Space jump');
+    setHint(controlHint(state.locked));
   }
 
   function onBlur() {
@@ -763,11 +768,11 @@ export function createPlayerController(game) {
       return state;
     }
     const forwardInput =
-      (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) -
-      (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
+      (bindings.isDown('forward', keys) ? 1 : 0) -
+      (bindings.isDown('back', keys) ? 1 : 0);
     const rightInput =
-      (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) -
-      (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
+      (bindings.isDown('right', keys) ? 1 : 0) -
+      (bindings.isDown('left', keys) ? 1 : 0);
     const length = Math.hypot(forwardInput, rightInput);
     const nx = length > 1 ? rightInput / length : rightInput;
     const nz = length > 1 ? forwardInput / length : forwardInput;
@@ -775,7 +780,7 @@ export function createPlayerController(game) {
     const forwardZ = -Math.cos(state.yaw);
     const rightX = Math.cos(state.yaw);
     const rightZ = -Math.sin(state.yaw);
-    const sprinting = keys.has('ShiftLeft') || keys.has('ShiftRight');
+    const sprinting = bindings.isDown('sprint', keys);
     state.slideBuffer = Math.max(0, state.slideBuffer - step);
 
     if (!state.sliding && state.slideBuffer > 0) {
@@ -825,10 +830,7 @@ export function createPlayerController(game) {
     const fallSpeed = vel.y;
     const prevX = pos.x;
     const prevZ = pos.z;
-    const wantsCrouch =
-      keys.has('KeyC') ||
-      keys.has('ControlLeft') ||
-      keys.has('ControlRight');
+    const wantsCrouch = bindings.isDown('slide', keys);
     const result = physics.moveCapsule(
       pos,
       vel,
@@ -967,5 +969,7 @@ export function createPlayerController(game) {
     tryWallclimb,
     tryRoll,
     setSensitivity,
+    setEnabled,
+    bindings,
   };
 }
