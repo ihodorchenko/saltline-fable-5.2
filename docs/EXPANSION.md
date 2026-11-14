@@ -121,8 +121,10 @@
 - [x] **Tests (P1.3):** 23 Vitest-теста для RNG, event bus, time, math, bindings, settings и modes + Playwright-тест физического `addBox/raycast/lineOfSight`; `npm test` и браузерные тесты в CI.
 - [x] **Playwright foundation (P1.3):** `@playwright/test` + `tests/e2e` — boot без `__errors`/fatal, title, `?autostart=1` до состояния `playing`, `?show=level`; отчёт и скриншоты в artifact.
 - [x] **Golden screenshots (P1.3):** Playwright-тест снимает `?show=level&q=low&seed=4207&efreeze=1&cam=…` с текущей сборки и legacy `index.html` в одном браузере; pixelmatch <2%, source/legacy/diff прикрепляются к отчёту.
-- [ ] CI: install → lint → test → build → smoke; артефакты скриншотов. Сейчас: install → lint/format → unit tests → build → Playwright boot + golden parity; отчёт Playwright — artifact. Smoke ещё не в CI.
-- [ ] Perf-baseline: draw calls, tris, frame time; JSON в artifacts.
+
+**P1.3 завершён.** Unit, browser, golden, physics и perf-тесты подключены к CI; smoke и артефакты настроены.
+- [x] **CI (P1.3):** install → lint/format → unit tests → build → Playwright (boot/gameplay/level/golden/physics/perf) → headless smoke. Playwright report, smoke PNG/HTML и `perf-baseline.json` загружаются артефактами.
+- [x] **Perf baseline (P1.3):** Playwright снимает 30 кадров и `render.stats()`; JSON (`quality`, `calls`, `tris`, `geos`, `tex`, `programs`, frame avg/p95/min/max) пишется в `artifacts/perf-baseline.json` и загружается CI-артефактом.
 
 #### P1.4 — документация и референс (2–3 дня)
 

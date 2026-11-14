@@ -45,6 +45,11 @@ jobs:
       - name: Playwright boot tests
         run: npx playwright test
 
+      - name: Headless smoke
+        run: |
+          BROWSER="$(node --input-type=module -e "import { chromium } from '@playwright/test'; process.stdout.write(chromium.executablePath())")" \
+          SERVE_DIR="$PWD/dist" SMOKE_NAME=ci-smoke PORT=4175 tools/smoke.sh
+
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
@@ -53,4 +58,17 @@ jobs:
           path: |
             playwright-report/
             test-results/
+          retention-days: 7
+
+      - name: Upload smoke and performance artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-perf
+          path: |
+            artifacts/ci-smoke.png
+            artifacts/ci-smoke.html
+            artifacts/ci-smoke.log
+            artifacts/server-ci-smoke.log
+            artifacts/perf-baseline.json
           retention-days: 7

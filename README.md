@@ -79,7 +79,7 @@ npm run dev                        # Vite dev server + HMR, http://127.0.0.1:517
 npm run build                      # dist/index.html (Vite single-file)
 SERVE_DIR=dist npm run smoke       # headless boot check (needs Edge/Chrome)
 npm test                           # Vitest unit tests
-npm run test:e2e                   # Playwright boot/title/gameplay/level + golden parity
+npm run test:e2e                   # Playwright boot/gameplay/level, golden, physics, perf
 npm run lint                       # ESLint for handwritten JS/config
 npm run check                      # lint + prettier --check
 ```
@@ -96,9 +96,9 @@ Source layout:
 - `src/engine/input/`, `ui/`, `audio/`, `materials/`, `physics/`, `render/`, `melee/`, `settings/` — runtime modules;
 - `src/ui/styles.css` — all UI styles;
 - `vitest.config.js`, `src/**/*.test.js` — unit tests for core math/RNG/time/events, input/settings/modes;
-- `playwright.config.js`, `tests/e2e/` — browser boot/title/gameplay/level tests, physics queries and a source-vs-legacy golden screenshot;
+- `playwright.config.js`, `tests/e2e/` — boot/gameplay/level, physics, source-vs-legacy golden and perf-baseline tests;
 - `docs/` — expansion plan, [architecture](docs/ARCHITECTURE.md), ADRs and toolchain;
-- `.github/workflows/ci.yml` — CI: install, lint, unit tests, build, Playwright browser tests on `dev`/`feat/**` and PRs; report artifact uploaded.
+- `.github/workflows/ci.yml` — CI: install, lint, unit tests, build, Playwright browser tests, headless smoke on `dev`/`feat/**` and PRs; Playwright, smoke and `perf-baseline.json` artifacts uploaded.
 
 ESLint/Prettier cover handwritten JS and config; minified legacy modules, CSS and docs are excluded (see `eslint.config.js` and `.prettierignore`).
 
