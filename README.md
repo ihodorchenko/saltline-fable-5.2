@@ -1,122 +1,63 @@
-# Saltline — Fable 5.2 FPS
+# GLASSLINE
 
-A small browser first-person shooter: one level in a rainy container port. Cut three uplink relays while drones ("Gulls") and robot dogs ("Hounds") hunt you.
+An original first-person rooftop parkour vertical slice: a three-act tutorial route through a bright, vertical future city, built on the project’s extracted browser engine.
 
-<img width="1685" height="906" alt="Saltline" src="https://github.com/user-attachments/assets/8dd32149-90f4-4d69-a573-4411a49a9ba9" />
+The original Saltline artifact is intentionally preserved at [`index.html`](index.html) as a legacy reference and remains playable. It is not the active build. Its attribution lives in [`docs/legacy/SALTLINE_README.md`](docs/legacy/SALTLINE_README.md).
 
-## Demo
-
-https://realcodebear.github.io/saltline-fable-5.2/ (upstream build; the local control remaps are not deployed there)
-
-## Where it comes from
-
-- Built by **Claude Fable 5.2**. The run was set up by Felix Rieseberg (Anthropic) and shared on X on 2026-11-09:
-  https://x.com/felixrieseberg/status/2119925633564463609
-- Original playable artifact: https://claude.ai/artifact/BGY1SztrAYcJQHSsnHHGmp
-- Per his post: one prompt, no human feedback, about 8 hours, about 2.7M output and 445M input tokens (heavily cached), about $550 at API pricing. Models, sounds and textures are all made in code. These numbers are his own and not checked here.
-
-All credit for the game goes to its original author. This repo is a mirror of the artifact so people can run it locally; local changes are listed below. If you are the author and want it taken down, open an issue.
-
-## Fork status
-
-Phase 1 — build, module extraction, tests and documentation — is complete. `dev` is the integration branch; `src/` is the source of truth. Phase 2 starts separately in a `project/…` branch and does not merge back into `dev`.
-
-The original root `index.html` is kept as the legacy baseline for parity checks. It is still playable, but it is not the primary entry point and will be retired or moved once automated golden tests cover the source build. `exp/foundation` was merged into `dev` and retired.
-
-**Melee v1** is in `dev` as an intermediate release before Phase 2 (merged from `feat/melee`): **Q**, 1.8 m raycast, 40 damage, 0.8 s cooldown, with a wind-up/strike/recovery rifle-butt animation and fire lockout. See [docs/MELEE.md](docs/MELEE.md).
-
-The source tree now includes engine core/FX, the Saltline game state/content, modes, the gameplay HUD adapter, bindings, versioned settings, unit tests, Playwright golden/physics/perf tests and CI smoke. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) and [docs/ENGINE_REUSE.md](docs/ENGINE_REUSE.md).
-
-## Controls
-
-| Action          | Binding                      |
-| --------------- | ---------------------------- |
-| Move            | `W` `A` `S` `D`              |
-| Look            | Mouse                        |
-| Fire            | Left mouse button or `Shift` |
-| Aim             | Right mouse button or `E`    |
-| Reload          | `R`                          |
-| Cut relay / use | `F`                          |
-| Jump            | `Space`                      |
-| Sprint          | `X`                          |
-| Crouch          | `C` or `Ctrl`                |
-| Pause           | `Esc` or `P`                 |
-| Melee           | `Q`                          |
-
-Mouse buttons still work as before. Touch controls are shown on touch devices.
-
-## Quick start (source)
-
-Requires Node 22 (see [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md)).
+## Run
 
 ```sh
-npm ci
-npm run build
-python3 -m http.server 8731 --directory dist
-```
-
-Then open http://localhost:8731 and click the page to capture the mouse and start the sound.
-
-For development with HMR:
-
-```sh
+npm install
 npm run dev
 ```
 
-The legacy original is still runnable from the repository root:
+Open the tutorial:
 
-```sh
-python3 -m http.server 8731
+```text
+http://127.0.0.1:5173/?show=glassline-tutorial&q=high
 ```
 
-It is kept for comparison with the source build, not as the development entry point.
-
-## Development
+Or build the single-file artifact:
 
 ```sh
-npm ci                              # dependencies from package-lock.json
-npm run dev                        # Vite dev server + HMR, http://127.0.0.1:5173
-npm run build                      # dist/index.html (Vite single-file)
-SERVE_DIR=dist npm run smoke       # headless boot check (needs Edge/Chrome)
-npm test                           # Vitest unit tests
-npm run test:e2e                   # Playwright boot/gameplay/level, golden, physics, perf
-npm run lint                       # ESLint for handwritten JS/config
-npm run check                      # lint + prettier --check
+npm run build
+npm run preview
 ```
 
-Node 22 LTS is pinned in `.nvmrc`; system packages are in `Brewfile`; npm versions are in `package.json` and `package-lock.json`.
+## Controls
 
-Source layout:
+- **WASD** move
+- **Shift** sprint
+- **Space** jump / vault / mantle / wall-jump / wallclimb
+- **C / Ctrl** slide, crouch, landing roll
+- **A / D** balance
+- **R** retry checkpoint
+- **Backspace** restart
+- **Esc** pause / release mouse
+- **F3** performance overlay
 
-- `src/index.html` — HTML shell;
-- `src/game/main.js` — boot, URL/mode wiring and the retained legacy minified core;
-- `src/game/saltline/` — game state machine, flow/content, level, weapon, enemies and gameplay HUD rules;
-- `src/modes/` — campaign/showcase/bench resolution and showcase registry;
-- `src/engine/core/` — event bus, time and deterministic RNG;
-- `src/engine/input/`, `ui/`, `audio/`, `materials/`, `physics/`, `render/`, `melee/`, `settings/` — runtime modules;
-- `src/ui/styles.css` — all UI styles;
-- `vitest.config.js`, `src/**/*.test.js` — unit tests for core math/RNG/time/events, input/settings/modes;
-- `playwright.config.js`, `tests/e2e/` — boot/gameplay/level, physics, source-vs-legacy golden and perf-baseline tests;
-- `docs/` — expansion plan, [architecture](docs/ARCHITECTURE.md), [contributing](docs/CONTRIBUTING.md), [engine reuse](docs/ENGINE_REUSE.md), ADRs and toolchain;
-- `.github/workflows/ci.yml` — CI: install, lint, unit tests, build, Playwright browser tests, headless smoke on `dev`/`feat/**` and PRs; Playwright, smoke and `perf-baseline.json` artifacts uploaded.
+The title screen separates **Continue / Start over**, **Settings**, **Controls** and **Level Inspector**. Settings and Controls are independent screens; bindings, sensitivity, audio and checkpoint progress persist locally.
 
-ESLint/Prettier cover handwritten JS and config; minified legacy modules, CSS and docs are excluded (see `eslint.config.js` and `.prettierignore`).
+## Project map
 
-## What changed from the artifact
+- `src/game/glassline/` — playable modes, controller, menu, audio, tutorial flow and editor.
+- `src/levels/` — data-driven route, builder and validator.
+- `src/engine/` — minimal shared engine: core, physics and renderer.
+- `tools/bench-glassline.mjs` — headed hardware peak-load benchmark.
+- `docs/PERFORMANCE.md` — measured draw-call/frame budgets and the 60 FPS profile.
+- `docs/GLASSLINE_AUDIT.md` — QA and no-copied-IP audit.
+- `docs/THIRD_PARTY.md` — engine/font/dependency notices.
 
-- The claude.ai frame-runtime scripts were removed from `<head>`, and a doctype, charset and viewport tag were added so the file runs as a plain web page.
-- Local control remaps: sprint moved from `Shift` to `X`, fire is on `LMB` or `Shift`, aim is on `RMB` or `E`, cut relay moved from `E` to `F`, and melee is on `Q`.
-- Phase 1: Vite single-file build, extracted engine/game modules, split CSS, parity checks, unit + Playwright + golden + physics + perf tests, ESLint/Prettier, CI smoke and artifacts. Title, gameplay and level screenshots match the legacy file at 0.0% diff; the current CI also checks a source-vs-legacy golden image.
-- Melee v1 in `dev`: Q, 1.8 m center raycast, 40 damage, 0.8 s cooldown, 0.48 s rifle-butt state-machine animation, fire lockout, hitmarker/audio/camera kick; no combos yet.
+## Verification
+
+```sh
+npm run check
+npm test
+npx playwright test
+```
+
+Playwright covers movement, slide, vault, mantle, wallrun, wallclimb, roll, balance, tutorial checkpoints, fail-safe respawn, persistence, UI/settings and performance diagnostics.
 
 ## License
 
-The Phase 1 refactor, module boundaries, build tooling and documentation added in this fork are MIT-licensed; see [LICENSE](LICENSE).
-
-The original Saltline game code, art and audio are mirrored from the original artifact and remain the property of their original author. The MIT license does not apply to that original material; see [NOTICE.md](NOTICE.md).
-
-## Project notes
-
-Technical overview (in Russian): [`docs/OVERVIEW.md`](docs/OVERVIEW.md) — file anatomy, gameplay constants, rendering and audio pipelines, dev hooks, measured numbers, known gaps.
-Architecture and decisions: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/adr/`](docs/adr/).
-Working rules: [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md). Starting a new game on this engine: [`docs/ENGINE_REUSE.md`](docs/ENGINE_REUSE.md).
+GLASSLINE source and generated assets are MIT-licensed as described in [`LICENSE`](LICENSE). The legacy root artifact retains its original ownership/attribution; see the legacy README.

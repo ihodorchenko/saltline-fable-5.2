@@ -160,8 +160,8 @@ for the vertical slice.
 
 Branches: `feat/glassline-art`, `feat/glassline-ui`, `feat/glassline-audio`
 
-Status: UI shell, art and audio merged. City-shell refresh is in progress on
-`feat/glassline-city-shell` (not merged).
+Status: UI shell, art, audio and city-shell are merged. Saltline source has been
+removed from `src/`; the original artifact remains at the repository root.
 
 - [x] original GLASSLINE boot/loading screen replaces Saltline branding;
 - [x] original GLASSLINE title, pause and completion overlay (merged);

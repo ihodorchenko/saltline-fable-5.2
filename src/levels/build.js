@@ -1,6 +1,6 @@
 // @ts-check
 // Build a playable level from tutorial data: meshes, AABB colliders, checkpoint
-// rings and a finish gate. No Saltline-specific imports.
+// rings and a finish gate. No game-specific imports.
 
 import { validateLevel } from './validate.js';
 

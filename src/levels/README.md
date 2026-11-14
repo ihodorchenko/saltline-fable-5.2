@@ -1,7 +1,7 @@
 # GLASSLINE levels
 
-Level content for GLASSLINE lives here. Step 0 has no playable level yet; the
-prototype scene is registered as `?show=glassline`.
+Level content for GLASSLINE lives here. The playable tutorial is
+`?show=glassline-tutorial`; the mechanic sandbox remains `?show=glassline`.
 
 Later steps should use a data-driven format with:
 

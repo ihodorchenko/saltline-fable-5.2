@@ -70,6 +70,6 @@ npx playwright test tests/e2e/glassline.spec.js
 
 - This game lives in `src/game/glassline/`; it must not be imported by engine
   modules.
-- Do not import `src/game/saltline/`.
+- Do not import the legacy root artifact; GLASSLINE uses only `src/engine`.
 - The reference video is local/untracked; observations live in
   [`docs/REFERENCE.md`](../../../docs/REFERENCE.md).

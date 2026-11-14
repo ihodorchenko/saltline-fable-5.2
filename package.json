@@ -1,9 +1,9 @@
 {
-  "name": "saltline",
+  "name": "glassline",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Saltline — single-file browser FPS. Phase 1 build setup.",
+  "description": "GLASSLINE — original first-person rooftop parkour vertical slice.",
   "engines": {
     "node": ">=22.12.0"
   },
@@ -11,7 +11,6 @@
     "dev": "vite --config vite.config.js",
     "build": "vite build --config vite.config.js",
     "preview": "vite preview --config vite.config.js",
-    "smoke": "tools/smoke.sh",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -33,5 +32,8 @@
     "vite-plugin-singlefile": "^2.3.4",
     "vitest": "^5.1.0"
   },
-  "packageManager": "npm@10.9.9"
+  "packageManager": "npm@10.9.9",
+  "dependencies": {
+    "three": "^0.180.0"
+  }
 }

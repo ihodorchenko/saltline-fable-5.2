@@ -1,11 +1,15 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>GLASSLINE — Rooftop Induction</title>
+<meta name="description" content="GLASSLINE — an original first-person rooftop parkour vertical slice.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500&family=Barlow+Condensed:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/ui/styles.css">
 <script>
 (function () {
-  var show = new URLSearchParams(location.search).get("show") || "";
-  if (show.indexOf("glassline") !== 0) return;
-  document.documentElement.dataset.show = "glassline";
-  document.title = "GLASSLINE — Rooftop Induction";
   var copy = {
     "Raising the terminal": "BOOTING ROOFTOP SYSTEMS",
     "Waking the renderer": "INITIALIZING CITY LIGHT",
@@ -19,6 +23,7 @@
     "Waiting for first light": "WAITING FOR THE SUN",
     "Ready": "READY TO RUN"
   };
+  document.documentElement.dataset.show = "glassline";
   function apply() {
     var mark = document.querySelector(".boot-mark");
     if (mark) mark.textContent = "GLASSLINE";
@@ -36,32 +41,23 @@
     document.addEventListener("DOMContentLoaded", function () {
       apply();
       var sub = document.querySelector("#boot-msg");
-      if (sub) {
-        new MutationObserver(apply).observe(sub, { childList: true, characterData: true, subtree: true });
-      }
+      if (sub) new MutationObserver(apply).observe(sub, { childList: true, characterData: true, subtree: true });
     }, { once: true });
-  } else {
-    apply();
-  }
+  } else apply();
 })();
-</script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Saltline</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500&family=Barlow+Condensed:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="/ui/styles.css">
+</script>
 </head>
 <body>
 <div id="app">
   <canvas id="view" tabindex="0"></canvas>
   <div id="ui"></div>
   <div id="boot">
-    <div class="boot-mark">SALTLINE</div>
-    <div class="boot-sub" id="boot-msg">Raising the terminal</div>
+    <div class="boot-mark">GLASSLINE</div>
+    <div class="boot-sub" id="boot-msg">BOOTING ROOFTOP SYSTEMS</div>
     <div class="boot-bar"><i id="boot-fill"></i></div>
+    <div class="gl-boot-tag">CITY OF LIGHT / ROOFTOP INDUCTION</div>
   </div>
 </div>
 <script type="module" src="/game/main.js"></script>
-
 </body>
 </html>
