@@ -91,3 +91,58 @@ test('a saved completed run opens the completion menu and can restart', async ({
   expect(state.finished).toBe(false);
   expect(state.checkpoint).toBe(0);
 });
+
+test('an in-progress run offers continue and start-over', async ({ page }) => {
+  await boot(page, '?show=glassline-tutorial&q=low&autostart=1');
+  await page.evaluate(() => {
+    const game = window.__G;
+    const checkpoint = game.glassline.level.checkpoints.find((item) => item.id === 'slide');
+    game.glassline.controller.teleport(
+      checkpoint.pos[0],
+      checkpoint.pos[2],
+      checkpoint.yaw,
+      0,
+      false,
+      checkpoint.pos[1] + 0.05,
+    );
+  });
+  await page.waitForFunction(() => window.__G.glassline.tutorial.checkpoint >= 2, null, { timeout: 3_000 });
+
+  await boot(page, '?show=glassline-tutorial&q=low');
+  const menu = page.locator('#glassline-menu');
+  await expect(menu).toContainText('CONTINUE');
+  await expect(menu).toContainText('START OVER');
+  await page.locator('[data-action="start"]').click();
+  await expect(menu).toBeHidden();
+  const continued = await page.evaluate(() => window.__G.glassline.tutorial.checkpoint);
+  expect(continued).toBeGreaterThanOrEqual(2);
+
+  await boot(page, '?show=glassline-tutorial&q=low');
+  await expect(page.locator('#glassline-menu')).toContainText('START OVER');
+  await page.locator('[data-action="start-over"]').click();
+  await expect(page.locator('#glassline-menu')).toBeHidden();
+  const fresh = await page.evaluate(() => ({
+    checkpoint: window.__G.glassline.tutorial.checkpoint,
+    finished: window.__G.glassline.tutorial.finished,
+  }));
+  expect(fresh.checkpoint).toBe(0);
+  expect(fresh.finished).toBe(false);
+});
+
+test('starting and reloading at checkpoint zero still offers continue', async ({ page }) => {
+  await boot(page, '?show=glassline-tutorial&q=low');
+  await page.locator('[data-action="start"]').click();
+  await expect(page.locator('#glassline-menu')).toBeHidden();
+  await page.waitForTimeout(300);
+
+  await boot(page, '?show=glassline-tutorial&q=low');
+  await expect(page.locator('#glassline-menu')).toContainText('CONTINUE');
+  await expect(page.locator('#glassline-menu')).toContainText('START OVER');
+  await page.locator('[data-action="start-over"]').click();
+  const state = await page.evaluate(() => ({
+    checkpoint: window.__G.glassline.tutorial.checkpoint,
+    started: window.__G.glassline.tutorial.started,
+  }));
+  expect(state.checkpoint).toBe(0);
+  expect(state.started).toBe(true);
+});

@@ -164,6 +164,7 @@ Status: UI shell, art and audio merged. `feat/glassline-settings` implemented, n
 
 - [x] original GLASSLINE title, pause and completion overlay (merged);
 - [x] start gates the timer/run and requests pointer lock;
+- [x] in-progress start screen offers **Continue** or **Start over**;
 - [x] pause on pointer-lock loss, resume/restart actions;
 - [x] mouse sensitivity setting with localStorage persistence;
 - [x] tutorial HUD already covers objective, checkpoint, timer/splits/best;

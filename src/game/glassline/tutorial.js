@@ -48,7 +48,12 @@ function createHud() {
  * @returns {{checkpoint: number, respawns: number, finished: boolean}}
  */
 function loadSavedProgress(level) {
-  const empty = { checkpoint: 0, respawns: 0, finished: false };
+  const empty = {
+    checkpoint: 0,
+    respawns: 0,
+    finished: false,
+    started: false,
+  };
   try {
     const raw = localStorage.getItem(TUTORIAL_STORAGE_KEY);
     if (!raw) return empty;
@@ -60,6 +65,8 @@ function loadSavedProgress(level) {
       checkpoint,
       respawns: Number.isInteger(data.respawns) ? Math.max(0, data.respawns) : 0,
       finished: data.finished === true,
+      started:
+        data.started === true || checkpoint > 0 || Number(data.respawns) > 0,
     };
   } catch {
     return empty;
@@ -77,6 +84,7 @@ function saveProgress(progress) {
         checkpoint: progress.checkpoint,
         respawns: progress.respawns,
         finished: progress.finished,
+        started: progress.started === true,
       }),
     );
   } catch {
@@ -155,6 +163,7 @@ export async function showcaseTutorial(game) {
     checkpoint: saved.checkpoint,
     respawns: saved.respawns,
     finished: saved.finished,
+    started: saved.started,
     message: saved.checkpoint > 0 ? 'Resumed from checkpoint.' : '',
     splits: [],
     best,
@@ -294,23 +303,43 @@ export async function showcaseTutorial(game) {
       false,
       level.spawn.y,
     );
+    progress.started = true;
+    saveProgress(progress);
     paused = false;
     started = true;
     setHud();
+  }
+
+  function startOver() {
+    restart();
+    started = true;
+    paused = false;
+    controller.setEnabled(true);
+    audio.start();
+    audio.play('ui');
   }
 
   const autostart =
     game.params?.autostart === '1' || game.params?.shot === '1';
   const audio = createGlasslineAudio();
   audio.bind(game.events);
+  const hasRunProgress = progress.started === true;
+  const resumeLabel =
+    progress.checkpoint > 0
+      ? `CONTINUE · CHECKPOINT ${progress.checkpoint}/${level.checkpoints.length - 1}`
+      : 'CONTINUE · SAVED RUN';
   menu = createTutorialMenu({
     level,
     canvas: game.renderer?.domElement || null,
+    runStarted: hasRunProgress,
+    resumeLabel,
     audio,
     bindings,
     onStart: () => {
       started = true;
       paused = false;
+      progress.started = true;
+      saveProgress(progress);
       controller.setEnabled(true);
       audio.start();
       audio.play('ui');
@@ -329,6 +358,9 @@ export async function showcaseTutorial(game) {
       audio.start();
       audio.play('ui');
     },
+    onStartOver: () => {
+      startOver();
+    },
     onSensitivity: (value) => {
       controller.setSensitivity(0.0022 * value);
     },
@@ -337,6 +369,8 @@ export async function showcaseTutorial(game) {
     menu.hide();
     started = true;
     paused = false;
+    progress.started = true;
+    saveProgress(progress);
     controller.setEnabled(true);
   }
 

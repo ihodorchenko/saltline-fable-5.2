@@ -30,6 +30,9 @@ function saveSensitivity(value) {
  *   onStart: () => void,
  *   onResume: () => void,
  *   onRestart: () => void,
+ *   onStartOver?: () => void,
+ *   runStarted?: boolean,
+ *   resumeLabel?: string,
  *   onSensitivity: (value: number) => void,
  *   audio?: any,
  *   bindings?: any,
@@ -42,6 +45,9 @@ export function createTutorialMenu(options) {
     onStart,
     onResume,
     onRestart,
+    onStartOver,
+    runStarted = false,
+    resumeLabel = '',
     onSensitivity,
     audio,
     bindings,
@@ -140,8 +146,12 @@ export function createTutorialMenu(options) {
 
   function actionsMarkup() {
     if (current === 'start') {
+      const startButtons = runStarted
+        ? '<div style="display:flex;gap:8px"><button data-action="start" style="flex:1;padding:14px;background:#d23a39;color:#fff;border:0;font:700 14px \'IBM Plex Mono\',monospace;letter-spacing:.14em;cursor:pointer">CONTINUE</button>' +
+          '<button data-action="start-over" style="flex:1;padding:14px;background:#1a2226;color:#eef1ef;border:1px solid #465258;font:700 14px \'IBM Plex Mono\',monospace;letter-spacing:.14em;cursor:pointer">START OVER</button></div>'
+        : '<button data-action="start" style="width:100%;padding:14px;background:#d23a39;color:#fff;border:0;font:700 14px \'IBM Plex Mono\',monospace;letter-spacing:.14em;cursor:pointer">START RUN</button>';
       return (
-        '<button data-action="start" style="width:100%;padding:14px;background:#d23a39;color:#fff;border:0;font:700 14px \'IBM Plex Mono\',monospace;letter-spacing:.14em;cursor:pointer">START RUN</button>' +
+        startButtons +
         '<div style="display:flex;justify-content:space-between;margin-top:10px"><button data-action="settings" style="padding:6px 10px;background:#1a2226;color:#eef1ef;border:1px solid #465258;font:700 11px \'IBM Plex Mono\',monospace;cursor:pointer">SETTINGS</button><a href="?show=glassline-editor&q=low" style="color:#aeb8bc">LEVEL INSPECTOR</a><span style="color:#707b80">CLICK TO CAPTURE MOUSE</span></div>'
       );
     }
@@ -174,14 +184,18 @@ export function createTutorialMenu(options) {
           ? 'PAUSED'
           : 'RUN COMPLETE';
     const kicker = isStart
-      ? 'PHASE 2 / PARKOUR'
+      ? runStarted
+        ? 'RUN IN PROGRESS'
+        : 'PHASE 2 / PARKOUR'
       : isSettings
         ? 'SYSTEM'
         : current === 'pause'
           ? 'RUN SUSPENDED'
           : 'COURSE COMPLETE';
     const subtitle = isStart
-      ? level.name
+      ? runStarted
+        ? resumeLabel || 'Continue from your checkpoint.'
+        : level.name
       : isSettings
         ? 'Input, audio and sensitivity.'
         : current === 'pause'
@@ -303,6 +317,10 @@ export function createTutorialMenu(options) {
     if (action === 'start') {
       hide();
       onStart();
+      lock();
+    } else if (action === 'start-over') {
+      hide();
+      onStartOver?.();
       lock();
     } else if (action === 'resume') {
       hide();
