@@ -9,6 +9,7 @@ import { createTime, advanceTime } from '../engine/core/time.js';
 import { glasslineMode } from './glassline/index.js';
 import { glasslineTutorialMode } from './glassline/tutorial.js';
 import { glasslineEditorMode } from './glassline/editor.js';
+import { SUN_DIRECTION } from '../levels/lighting.js';
 
 const SHOWCASES = {
   glassline: glasslineMode,
@@ -102,7 +103,7 @@ async function bootGlassline() {
   await step('INITIALIZING CITY LIGHT', 0.08);
   const renderModule = installRender(game, {
     sky: {
-      dir: new THREE.Vector3(-0.35, 0.55, -0.75).normalize(),
+      dir: new THREE.Vector3(...SUN_DIRECTION).normalize(),
       color: new THREE.Color(0xffe2b8),
       intensity: 3.4,
     },

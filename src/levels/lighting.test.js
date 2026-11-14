@@ -7,12 +7,12 @@ const sunVector = () => new THREE.Vector3(...SUN_DIRECTION).normalize();
 // The engine fits these bounds from the level volume at renderer start-up and
 // bakes them into the soft-shadow shader, so the real values must survive.
 const ENGINE_FRUSTUM = {
-  left: -49.87,
-  right: 49.87,
-  top: 39.59,
-  bottom: -39.59,
-  near: 123.59,
-  far: 250.8,
+  left: -48.43,
+  right: 48.43,
+  top: 34.68,
+  bottom: -34.68,
+  near: 111.83,
+  far: 249.8,
 };
 
 function makeGame({ withEngineSun = true, mapSize = 2048 } = {}) {
@@ -59,6 +59,18 @@ describe('LIGHTING', () => {
   it('keeps the shadow frustum sensible', () => {
     expect(LIGHTING.shadow.far).toBeGreaterThan(LIGHTING.shadow.near);
     expect(LIGHTING.shadow.half).toBeGreaterThan(10);
+  });
+});
+
+describe('SUN_DIRECTION', () => {
+  it('points above the horizon and ahead along the route (-z)', () => {
+    const [, y, z] = SUN_DIRECTION;
+    expect(y).toBeGreaterThan(0);
+    expect(z).toBeLessThan(0);
+  });
+
+  it('is a usable, non-zero vector', () => {
+    expect(Math.hypot(...SUN_DIRECTION)).toBeGreaterThan(0.5);
   });
 });
 
