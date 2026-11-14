@@ -38,7 +38,30 @@ export function createCityPlan(level) {
     roofUnit: false,
     landmark: true,
   }));
-  const occupied = [...landmarks];
+  const edgeBuildings = [
+    // Start: frame the spawn roof with near, mid-height blocks on both sides.
+    { x: -24, z: 8, w: 9, d: 11, h: 26, color: 2, roofColor: 1, edge: 'start' },
+    { x: 25, z: 4, w: 9, d: 10, h: 32, color: 1, roofColor: 0, edge: 'start' },
+    { x: -27, z: -8, w: 11, d: 12, h: 24, color: 3, roofColor: 2, edge: 'start' },
+    { x: 28, z: -15, w: 10, d: 13, h: 30, color: 4, roofColor: 1, edge: 'start' },
+    // Finish: a taller ring framing the final roof and the spire behind it.
+    { x: -27, z: -202, w: 12, d: 12, h: 44, color: 3, roofColor: 0, edge: 'finish' },
+    { x: 30, z: -208, w: 11, d: 10, h: 38, color: 1, roofColor: 1, edge: 'finish' },
+    { x: -32, z: -224, w: 14, d: 14, h: 56, color: 4, roofColor: 2, edge: 'finish' },
+    { x: 36, z: -230, w: 12, d: 14, h: 48, color: 2, roofColor: 0, edge: 'finish' },
+    { x: -20, z: -214, w: 8, d: 9, h: 18, color: 1, roofColor: 3, edge: 'finish' },
+    { x: 23, z: -220, w: 8, d: 9, h: 20, color: 3, roofColor: 3, edge: 'finish' },
+  ].map((building) => ({
+    ...building,
+    streetY,
+    top: streetY + building.h,
+    keep: 0,
+    floors: Math.max(2, Math.floor((building.h - 4) / 5)),
+    windows: true,
+    roofUnit: building.h > 22,
+    landmark: false,
+  }));
+  const occupied = [...landmarks, ...edgeBuildings];
   const overlaps = (candidate) =>
     occupied.some((other) => {
       const ox = (candidate.w + other.w) / 2 - Math.abs(candidate.x - other.x);
@@ -82,9 +105,11 @@ export function createCityPlan(level) {
     }
   }
 
+  buildings.push(...edgeBuildings);
+
   const spire = {
-    x: 0,
-    z: -238,
+    x: -76,
+    z: -246,
     height: 132,
     baseY: streetY,
     radius: 7,
@@ -118,8 +143,9 @@ export function createCityPlan(level) {
   ];
 
   const signs = [
-    { x: -27, y: 9, z: -29, w: 11, h: 3.2, text: 'CITY OF LIGHT' },
-    { x: 28, y: 13, z: -105, w: 11, h: 3.2, text: 'GLASSLINE / 04' },
+    { x: -27, y: 9, z: -29, w: 11, h: 3.2, text: 'CITY OF LIGHT', sub: 'ROOFTOP TRANSIT AUTHORITY' },
+    { x: 28, y: 13, z: -105, w: 11, h: 3.2, text: 'GLASSLINE / 04', sub: 'DISTRICT TRANSIT' },
+    { x: 0, y: 5.6, z: -207, w: 10, h: 2.8, text: 'END OF LINE', sub: 'ROOFTOP INDUCTION / FINAL ROOF' },
   ];
 
   const distant = [];
@@ -428,7 +454,7 @@ export function buildCity(game, level, plan, textures = null) {
     context.fillText(sign.text, 260, 62);
     context.fillStyle = '#8fa3a9';
     context.font = '500 17px "IBM Plex Mono", monospace';
-    context.fillText('ROOFTOP TRANSIT AUTHORITY', 260, 108);
+    context.fillText(sign.sub || 'ROOFTOP TRANSIT AUTHORITY', 260, 108);
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     const board = new THREE.Mesh(

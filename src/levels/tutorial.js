@@ -25,6 +25,20 @@ export const tutorialLevel = {
       color: 0x68747b,
     },
     {
+      id: 'ac-start-right',
+      type: 'ac',
+      pos: [3.9, 0.65, 8.5],
+      size: [1.4, 1.3, 1.8],
+      color: 0x68747b,
+    },
+    {
+      id: 'planter-start-right',
+      type: 'planter',
+      pos: [3.9, 0.3, 6.7],
+      size: [1.5, 0.6, 0.8],
+      color: 0x78977d,
+    },
+    {
       id: 'vent-jump',
       type: 'vent',
       pos: [-3, 0.55, 2],

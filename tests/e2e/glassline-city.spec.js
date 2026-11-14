@@ -28,7 +28,7 @@ test('generated city surrounds the route without blocking it', async ({ page }, 
   expect(city.stats.buildings).toBeGreaterThan(50);
   expect(city.buildings).toBeGreaterThan(50);
   expect(city.windows).toBeGreaterThan(200);
-  expect(city.signs).toBe(2);
+  expect(city.signs).toBe(3);
   expect(city.transit).toBeGreaterThan(2);
   expect(city.routeZ).toBeCloseTo(10, 0);
   await page.screenshot({

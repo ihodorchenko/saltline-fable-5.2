@@ -170,7 +170,7 @@ export function buildLevel(game, level) {
       if (index % 2 === 0) {
         pushBox(ventMatrices, 0.32, 1.1, 0.32, px + pw / 2 - 1.15, topY + 0.55, pz + pd / 2 - 1.1);
       }
-      if (index % 5 === 2) {
+      if (index % 5 === 2 || index === 0) {
         pushBox(hutMatrices, 1.7, 1.5, 2.1, px + pw / 2 - 1.25, topY + 0.75, pz);
       }
       pushBox(pipeMatrices, Math.min(2.8, pw * 0.32), 0.11, 0.11, px, topY + 0.12, pz + pd / 2 - 0.55);
@@ -210,7 +210,7 @@ export function buildLevel(game, level) {
     }
 
     // Access huts need a door, not just a textured box.
-    if (index % 5 === 2) {
+    if (index % 5 === 2 || index === 0) {
       doorMatrices.push(
         new THREE.Matrix4().compose(
           new THREE.Vector3(px + pw / 2 - 1.25, topY + 0.7, pz - 1.08),
