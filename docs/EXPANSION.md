@@ -99,6 +99,7 @@
 #### P1.2 — движок, игра, режимы (1–2 недели)
 
 - [ ] `src/engine/*`: render, materials, audio, fx, ui, input, physics, core.
+- [x] **Core (P1.2):** event bus, frame-time helpers and deterministic mulberry32 RNG extracted to `src/engine/core/` (`createEvents`, `createTime`/`advanceTime`, `createRng`).
 - [ ] `src/game/saltline`: уровни, правила, враги, оружие, HUD-геймплей.
 - [ ] `src/modes/*`: title / campaign / showcase / bench; query-параметры остаются алиасами.
 - [ ] Event bus, время, детерминированный RNG.
