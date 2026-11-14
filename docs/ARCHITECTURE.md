@@ -184,6 +184,9 @@ be tested at module level, not by a fixed headless delay.
 
 ## Portability checklist
 
+See [`ENGINE_REUSE.md`](ENGINE_REUSE.md) for the full checklist and a
+step-by-step start. Short version:
+
 When reusing the engine in another project:
 
 - copy `src/engine/` and keep its imports inside `src/engine/`;
@@ -192,6 +195,11 @@ When reusing the engine in another project:
 - keep `createEvents`, `createTime` and `createRng` as the shared primitives;
 - provide a storage implementation if `localStorage` is unavailable;
 - build with the single-file Vite config or inline the emitted assets yourself.
+
+## Working rules
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for branch rules, extraction workflow,
+tests, assets and the merge checklist.
 
 ## Decision records
 

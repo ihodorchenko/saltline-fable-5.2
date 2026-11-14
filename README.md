@@ -19,13 +19,13 @@ All credit for the game goes to its original author. This repo is a mirror of th
 
 ## Fork status
 
-Phase 1 — build and module extraction — was accepted on 2026-11-13. `dev` is the integration branch; `src/` is the source of truth.
+Phase 1 — build, module extraction, tests and documentation — is complete. `dev` is the integration branch; `src/` is the source of truth. Phase 2 starts separately in a `project/…` branch and does not merge back into `dev`.
 
 The original root `index.html` is kept as the legacy baseline for parity checks. It is still playable, but it is not the primary entry point and will be retired or moved once automated golden tests cover the source build. `exp/foundation` was merged into `dev` and retired.
 
 **Melee v1** is in `dev` as an intermediate release before Phase 2 (merged from `feat/melee`): **Q**, 1.8 m raycast, 40 damage, 0.8 s cooldown, with a wind-up/strike/recovery rifle-butt animation and fire lockout. See [docs/MELEE.md](docs/MELEE.md).
 
-Phase 1.2 continues on `dev`: core primitives, game state/content, modes, the gameplay HUD adapter, action bindings and versioned settings are extracted. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+The source tree now includes engine core/FX, the Saltline game state/content, modes, the gameplay HUD adapter, bindings, versioned settings, unit tests, Playwright golden/physics/perf tests and CI smoke. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) and [docs/ENGINE_REUSE.md](docs/ENGINE_REUSE.md).
 
 ## Controls
 
@@ -97,7 +97,7 @@ Source layout:
 - `src/ui/styles.css` — all UI styles;
 - `vitest.config.js`, `src/**/*.test.js` — unit tests for core math/RNG/time/events, input/settings/modes;
 - `playwright.config.js`, `tests/e2e/` — boot/gameplay/level, physics, source-vs-legacy golden and perf-baseline tests;
-- `docs/` — expansion plan, [architecture](docs/ARCHITECTURE.md), ADRs and toolchain;
+- `docs/` — expansion plan, [architecture](docs/ARCHITECTURE.md), [contributing](docs/CONTRIBUTING.md), [engine reuse](docs/ENGINE_REUSE.md), ADRs and toolchain;
 - `.github/workflows/ci.yml` — CI: install, lint, unit tests, build, Playwright browser tests, headless smoke on `dev`/`feat/**` and PRs; Playwright, smoke and `perf-baseline.json` artifacts uploaded.
 
 ESLint/Prettier cover handwritten JS and config; minified legacy modules, CSS and docs are excluded (see `eslint.config.js` and `.prettierignore`).
@@ -106,7 +106,7 @@ ESLint/Prettier cover handwritten JS and config; minified legacy modules, CSS an
 
 - The claude.ai frame-runtime scripts were removed from `<head>`, and a doctype, charset and viewport tag were added so the file runs as a plain web page.
 - Local control remaps: sprint moved from `Shift` to `X`, fire is on `LMB` or `Shift`, aim is on `RMB` or `E`, cut relay moved from `E` to `F`, and melee is on `Q`.
-- Phase 1: Vite single-file build, extracted engine modules, split CSS, parity checks, ESLint/Prettier and minimal CI. Title, gameplay and level screenshots match the legacy file at 0.0% diff.
+- Phase 1: Vite single-file build, extracted engine/game modules, split CSS, parity checks, unit + Playwright + golden + physics + perf tests, ESLint/Prettier, CI smoke and artifacts. Title, gameplay and level screenshots match the legacy file at 0.0% diff; the current CI also checks a source-vs-legacy golden image.
 - Melee v1 in `dev`: Q, 1.8 m center raycast, 40 damage, 0.8 s cooldown, 0.48 s rifle-butt state-machine animation, fire lockout, hitmarker/audio/camera kick; no combos yet.
 
 ## License
@@ -119,3 +119,4 @@ The original Saltline game code, art and audio are mirrored from the original ar
 
 Technical overview (in Russian): [`docs/OVERVIEW.md`](docs/OVERVIEW.md) — file anatomy, gameplay constants, rendering and audio pipelines, dev hooks, measured numbers, known gaps.
 Architecture and decisions: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/adr/`](docs/adr/).
+Working rules: [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md). Starting a new game on this engine: [`docs/ENGINE_REUSE.md`](docs/ENGINE_REUSE.md).

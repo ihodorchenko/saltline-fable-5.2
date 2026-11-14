@@ -4,8 +4,9 @@
 
 Документ описательный: он не заменяет код. Если текст расходится с `index.html` — верьте коду и обновите текст.
 
-**Проверено:** 2026-11-13. База — коммит `09c5177` (импорт артефакта); поверх него в этом форке добавлены `docs/OVERVIEW.md` и два ремапа управления (раздел 11).
-**Отпечаток:** `index.html` = 1 423 592 байт, sha256 `2599361f982c1a8575d19440913735ced6ff0310378f3479730fd6be4b19aef1`.
+**Проверено:** 2026-11-14. Legacy-baseline — `index.html`; source build — `dev` (Phase 1 complete: P1.0–P1.4).
+**Legacy fingerprint:** `index.html` = 1 423 592 байт, sha256 `2599361f982c1a8575d19440913735ced6ff0310378f3479730fd6be4b19aef1`.
+**Source build:** `src/` → `dist/index.html` (~1.44 MB), 23 Vitest-теста + 7 Playwright-тестов, CI с smoke, golden, physics и perf artifacts.
 
 Проверка актуальности:
 
@@ -23,7 +24,7 @@ shasum -a 256 index.html
 - **Saltline** — браузерный FPS в одном файле: рассветный контейнерный порт, дождь, три uplink-реле, дроны «Gull» и робопсы «Hound», один карабин, катер на финале.
 - Один проход ~5–10 минут; уровня, оружия и врагов ровно столько, сколько нужно одной миссии.
 - Внутри: `three.js r180` + ~690 КБ собственного кода, ≈79 GLSL-фрагментов, процедурные текстуры, модели, анимации и **весь звук** (57 синтезируемых звуков, две свёрточные реверберации).
-- Нет сборки, нет ассетов, нет внешних библиотек кроме Google Fonts. Всё в `index.html`.
+- Legacy-артефакт: нет сборки, ассетов и внешних библиотек кроме Google Fonts — всё в `index.html`. Source-версия в `src/` собирается Vite в один `dist/index.html`.
 - Проверено в headless-браузере: игра стартует, рендерит, ошибок нет. На программном рендерере автоматически выбирается `medium`; на реальном GPU — `high`, на мобильных — `low`.
 
 Происхождение: README утверждает, что игра сгенерирована «Claude Fable 5.2» одним промптом (~8 часов, ~2.7M output / 445M input токенов, ~$550 по API-цене), автор поста — Felix Rieseberg (Anthropic), оригинал — claude.ai artifact. Цифры — со слов автора, здесь не проверялись. Изначально это зеркало; в этом форке код игры изменён только в управлении (раздел 11), плюс добавлен этот документ.
@@ -34,23 +35,24 @@ shasum -a 256 index.html
 
 | | |
 |---|---|
-| Файлы | `README.md`, `index.html` (legacy single file, 6 193 строки), `docs/OVERVIEW.md`; в `dev` — `src/`, `tools/`, `package.json`, CI |
-| Ветки | `main` = `ddfbf83` (исходное зеркало + docs/remaps); `dev` — Phase 1 + Melee; `exp/foundation` и `feat/melee` слиты и удалены |
+| Файлы | `README.md`, legacy `index.html` (6 193 строки), `src/`, `tests/`, `tools/`, `docs/`, `package.json`, CI |
+| Ветки | `main` = `ddfbf83` (исходное зеркало + docs/remaps); `dev` — Phase 1 (P1.0–P1.4) + Melee; Phase 2 — отдельный `project/…` |
 | Remote | `git@github.com:ihodorchenko/saltline-fable-5.2.git` (форк от `realcodebear`) |
-| Коммиты | 7 на `dev`: импорт, три README, docs, два ремапа; `dev` добавляет Phase 1 и Melee |
-| Лицензия | отсутствует |
-| CI / тесты / сорсмапы | CI нет; в `dev` есть Vite-сборка, CI, `tools/smoke.sh` и baseline-скриншоты (в `artifacts/`, не коммитятся) |
+| Лицензия | MIT для изменений форка; оригинальный код/арт/аудио остаются у автора (`LICENSE`, `NOTICE.md`) |
+| CI / тесты | GitHub Actions: lint/format, 23 Vitest, build, 7 Playwright (boot/gameplay/level/golden/physics/perf/smoke), artifacts |
 | Демо | `https://realcodebear.github.io/saltline-fable-5.2/` — исходное зеркало (без локальных ремапов); на момент проверки отвечает `200` |
 | Внешние запросы страницы | только `fonts.googleapis.com` и `fonts.gstatic.com` (подтверждено сетевым логом) |
 
 ### Локальные изменения в этом форке
 
 - `docs/OVERVIEW.md` — этот обзор.
-- Управление: бег `X`, огонь `Shift`/ЛКМ, прицел `E`/ПКМ, взаимодействие `F` (подробнее — раздел 11).
-- `README.md` — ссылка на docs, раздел Development и обновлённый «What changed».
-- Phase 1 (`dev`): `src/` + Vite-сборка в `dist/index.html`; input — `src/engine/input/`, UI — `src/engine/ui/`, audio — `src/engine/audio/`, materials — `src/engine/materials/`, physics — `src/engine/physics/`, render — `src/engine/render/`, CSS — `src/ui/styles.css`; root `index.html` пока остаётся legacy-файлом.
+- Управление: бег `X`, огонь `Shift`/ЛКМ, прицел `E`/ПКМ, взаимодействие `F`, melee `Q` (подробнее — раздел 11).
+- `README.md` — ссылка на docs, Development, contributing и engine reuse.
+- Phase 1 (`dev`): `src/` + Vite-сборка в `dist/index.html`; engine — `src/engine/{core,input,ui,audio,materials,physics,render,fx,melee,settings}/`; игра — `src/game/saltline/`; режимы — `src/modes/`; CSS — `src/ui/styles.css`; root `index.html` остаётся legacy-baseline.
+- Phase 1.3: unit/browser/golden/physics/perf тесты, CI smoke и artifacts.
+- Phase 1.4: `docs/ARCHITECTURE.md`, `docs/CONTRIBUTING.md`, `docs/ENGINE_REUSE.md`, ADR.
 
-Игровая логика, кроме ремапов управления и структурного выноса Phase 1, соответствует `09c5177`.
+Игровая логика, кроме ремапов управления, melee v1 и структурного выноса Phase 1, соответствует `09c5177`.
 
 Запуск локально:
 
@@ -63,7 +65,7 @@ python3 -m http.server 8731
 
 ## 3. Анатомия одного файла
 
-> В `dev` тот же код вынесен в `src/game/main.js` (пока копия legacy) и собирается Vite в `dist/index.html`; dev-сервер с HMR — `npm run dev`. Таблица ниже описывает legacy-файл в корне.
+> В `dev` код вынесен в `src/` (engine, `src/game/saltline`, `src/modes`) и собирается Vite в `dist/index.html`; dev-сервер с HMR — `npm run dev`. Таблица ниже описывает legacy-файл в корне; source-версия использует те же подсистемы через модули.
 
 | Блок | Границы | Размер | Доля |
 |---|---|---|---|

@@ -128,10 +128,12 @@
 
 #### P1.4 — документация и референс (2–3 дня)
 
-- [ ] `docs/ARCHITECTURE.md`, `docs/CONTRIBUTING.md`, ADR на ключевые решения.
-- [ ] `README` — раздел Development: сборка, тесты, структура.
-- [ ] Чек-лист «как взять engine в другой проект».
-- [ ] Обновить `docs/OVERVIEW.md` (fingerprint и разделы, затронутые рефакторингом).
+- [x] `docs/ARCHITECTURE.md`, `docs/CONTRIBUTING.md`, ADR на ключевые решения — `docs/adr/0001`–`0004`.
+- [x] `README` — Development: сборка, тесты, структура, contributing.
+- [x] Чек-лист «как взять engine в другой проект» — `docs/ENGINE_REUSE.md`.
+- [x] `docs/OVERVIEW.md` — обновлены актуальный статус, структура, тесты, CI и fingerprint legacy-файла.
+
+**P1.4 завершён. Phase 1 закрыт.**
 
 ### 2.4 Критерии готовности Фазы 1
 
