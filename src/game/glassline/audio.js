@@ -13,6 +13,14 @@ export function clampVolume(value) {
 }
 
 /**
+ * Map a landing impact speed to a safe landing-audio intensity.
+ * @param {number} impact
+ */
+export function landingPower(impact) {
+  return Math.max(0.3, Math.min(1, Math.abs(Number(impact) || 0) / 14));
+}
+
+/**
  * Map run speed/finale state to the procedural mix. Pure so it can be tested
  * without an AudioContext.
  * @param {number} speed
@@ -260,6 +268,38 @@ export function createGlasslineAudio() {
     cityGain?.gain.setTargetAtTime(mix.cityGain, now, 0.5);
   }
 
+  function playLanding(intensity = 0.7) {
+    if (!started || muted) return;
+    const power = Math.max(0.3, Math.min(1, Number(intensity) || 0.7));
+    for (const [delay, weight] of [
+      [0, 1],
+      [0.055, 0.72],
+    ]) {
+      tone({
+        frequency: 92 * power + 28,
+        endFrequency: 24,
+        duration: 0.17,
+        gain: 0.085 * power * weight,
+        delay,
+      });
+    }
+    noise({
+      duration: 0.17,
+      cutoff: 720,
+      gain: 0.035 * power,
+      type: 'bandpass',
+      q: 1.15,
+    });
+    noise({
+      duration: 0.12,
+      cutoff: 1700,
+      gain: 0.012 * power,
+      type: 'highpass',
+      delay: 0.02,
+      pan: -0.12,
+    });
+  }
+
   let stepSide = 1;
 
   function playDispatch() {
@@ -305,12 +345,9 @@ export function createGlasslineAudio() {
         noise({ duration: 0.07, cutoff: 2400, gain: 0.012, type: 'highpass' });
         tone({ frequency: 110, endFrequency: 50, duration: 0.12, gain: 0.032 });
         break;
-      case 'land': {
-        const impact = Math.min(1, Math.abs(payload.impact || 0) / 8);
-        tone({ frequency: 95, endFrequency: 55, duration: 0.2, gain: 0.06 + impact * 0.04 });
-        noise({ duration: 0.16, cutoff: 500, gain: 0.04 + impact * 0.03 });
+      case 'land':
+        playLanding(landingPower(payload.impact));
         break;
-      }
       case 'slide':
         noise({ duration: 0.58, cutoff: 1500, gain: 0.055, q: 1.05 });
         noise({ duration: 0.5, cutoff: 420, gain: 0.022, delay: 0.04 });
@@ -420,6 +457,7 @@ export function createGlasslineAudio() {
     setMuted,
     updateMotion,
     playDispatch,
+    playLanding,
     dispose,
     get volume() {
       return volume;

@@ -184,6 +184,8 @@ removed from `src/`; the original artifact remains at the repository root.
       signs, high-quality 1.1 supersampling with final FXAA;
 - [x] camera polish: sprint/slide FOV, procedural strafe/vault/wallrun roll,
       damped landing spring and head nod;
+- [x] landing audio: speed-scaled double heel/toe hit, low concrete boom and
+      cloth rustle layered over the existing footstep/SFX system;
 - [x] generated city district around the route: terraced blocks, windows,
       skybridges, transit, roof gardens and signage; instanced draw calls;
 - [x] procedural first-person courier rig and mentor character using capsule

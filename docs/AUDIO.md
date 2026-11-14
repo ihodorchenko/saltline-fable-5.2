@@ -14,7 +14,8 @@ recordings or third-party music are shipped.
 3. **Parkour SFX** — short filtered-noise and sine transients for footsteps,
    jump, land, slide, vault, mantle, wallrun, wallclimb, roll, checkpoint,
    finish and respawn. Footsteps add a low body thump; slides use a longer
-   layered friction tail.
+   layered friction tail. Landings are a two-hit heel/toe synth with a low
+   concrete boom and cloth rustle, scaled from fall speed.
 4. **Intro dispatch** — a short synthesized radio chirp plus a readable
    on-screen dispatch line after the first Start click. Browser speech synthesis
    was removed because its voice, accent and intelligibility vary by OS; the
