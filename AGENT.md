@@ -82,8 +82,8 @@ Branch `feat/glassline-physics` (in progress).
 One branch per move, in this order:
 
 1. `feat/glassline-slide` — merged
-2. `feat/glassline-vault` — implemented, not merged
-3. `feat/glassline-mantle`
+2. `feat/glassline-vault` — merged
+3. `feat/glassline-mantle` — implemented, not merged
 4. `feat/glassline-wallrun`
 5. `feat/glassline-wallclimb`
 6. `feat/glassline-roll`

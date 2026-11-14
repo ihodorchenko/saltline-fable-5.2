@@ -38,6 +38,7 @@ import {
   slideSpeed,
 } from './slide.js';
 import { VAULT_DURATION, VAULT_MAX_DISTANCE, canVault } from './vault.js';
+import { MANTLE_DURATION, canMantle } from './mantle.js';
 
 /**
  * @param {GameContext} game
@@ -77,6 +78,11 @@ export function createPlayerController(game) {
     vaultTo: new THREE.Vector3(),
     vaultDir: new THREE.Vector3(),
     vaultArc: 0,
+    mantling: false,
+    mantleTime: 0,
+    mantles: 0,
+    mantleFrom: new THREE.Vector3(),
+    mantleTo: new THREE.Vector3(),
   };
 
   /** @type {any} */
@@ -208,11 +214,57 @@ export function createPlayerController(game) {
     return startVault();
   }
 
+  function findMantle() {
+    if (!physics || !physics.raycast) return null;
+    const dir = forwardVector();
+    const origin = new THREE.Vector3(pos.x, pos.y + 0.55, pos.z);
+    const wall = physics.raycast(origin, dir, 1.45);
+    if (!wall) return null;
+    const top = physics.raycast(
+      new THREE.Vector3(wall.point.x, wall.point.y + 2, wall.point.z),
+      new THREE.Vector3(0, -1, 0),
+      3,
+    );
+    if (!top) return null;
+    const height = top.point.y - pos.y;
+    const distance = Math.hypot(
+      wall.point.x - pos.x,
+      wall.point.z - pos.z,
+    );
+    if (!canMantle({ height, distance, onGround: state.onGround })) {
+      return null;
+    }
+    return { dir, height, distance, topY: top.point.y };
+  }
+
+  function startMantle(obstacle = null) {
+    if (state.vaulting || state.mantling || state.sliding) return false;
+    const found = obstacle || findMantle();
+    if (!found) return false;
+    state.mantleFrom.copy(pos);
+    state.mantleTo
+      .copy(pos)
+      .addScaledVector(found.dir, found.distance + 0.45);
+    state.mantleTo.y = found.topY + 0.02;
+    state.mantleTime = 0;
+    state.mantling = true;
+    state.crouched = false;
+    state.bodyHeight = HEIGHT;
+    vel.set(0, 0, 0);
+    state.mantles += 1;
+    return true;
+  }
+
+  function tryMantle() {
+    return startMantle();
+  }
+
   function teleport(x, z, yaw = 0, speed = 0) {
     pos.set(x, 0.05, z);
     vel.set(-Math.sin(yaw) * speed, 0, -Math.cos(yaw) * speed);
     state.yaw = yaw;
     state.vaulting = false;
+    state.mantling = false;
     state.sliding = false;
     state.crouched = false;
     state.bodyHeight = HEIGHT;
@@ -251,6 +303,15 @@ export function createPlayerController(game) {
       state.onGround &&
       !state.sliding &&
       tryVault()
+    ) {
+      return;
+    }
+    if (
+      event.code === 'Space' &&
+      !event.repeat &&
+      state.onGround &&
+      !state.sliding &&
+      tryMantle()
     ) {
       return;
     }
@@ -351,6 +412,22 @@ export function createPlayerController(game) {
    */
   function update(dt) {
     const step = Math.min(Math.max(dt || 0, 0), MAX_DT);
+    if (state.mantling) {
+      state.mantleTime += step;
+      const t = Math.min(1, state.mantleTime / MANTLE_DURATION);
+      const eased = 1 - Math.pow(1 - t, 3);
+      pos.lerpVectors(state.mantleFrom, state.mantleTo, eased);
+      pos.y += Math.sin(Math.PI * t) * 0.08;
+      if (t >= 1) {
+        state.mantling = false;
+        state.onGround = true;
+        vel.set(0, 0, 0);
+      }
+      state.speed = 0;
+      state.sprinting = false;
+      applyCamera(step);
+      return state;
+    }
     if (state.vaulting) {
       state.vaultTime += step;
       const t = Math.min(1, state.vaultTime / VAULT_DURATION);
@@ -506,5 +583,5 @@ export function createPlayerController(game) {
   // otherwise boot would override the controller every frame.
   game.camera.position.set(pos.x, pos.y + EYE, pos.z);
   game.camera.rotation.set(state.pitch, state.yaw, 0, 'YXZ');
-  return { update, getState, dispose, teleport, tryVault };
+  return { update, getState, dispose, teleport, tryVault, tryMantle };
 }
