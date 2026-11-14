@@ -8,6 +8,8 @@
  * @typedef {{cam: number[], target: number[], update: (dt: number) => void}} Showcase
  */
 
+import { createPlayerController } from './player.js';
+
 const PROTOTYPE_NAME = 'glassline-prototype';
 const PLAYER_NAME = 'glassline-player';
 
@@ -166,6 +168,16 @@ function createPrototype(game) {
 
   for (const light of createLights(game)) scene.add(light);
   scene.add(root);
+
+  // Step 1 sandbox colliders. The visual meshes and the AABB colliders are
+  // intentionally separate so later level tooling can replace the layout.
+  if (game.physics) {
+    game.physics.addBox([-13, -0.5, -21], [13, 0, 13], { surface: 'concrete' });
+    game.physics.addBox([-9.5, 0, -15], [-0.5, 0.25, -1], { surface: 'concrete' });
+    game.physics.addBox([0, 0, -2.6], [1.6, 0.9, -1], { surface: 'metal' });
+    game.physics.addBox([-9.5, 0.25, -15], [-9.1, 1.5, -1], { surface: 'metal' });
+    game.physics.build();
+  }
   return root;
 }
 
@@ -174,14 +186,17 @@ function createPrototype(game) {
  * @returns {Promise<Showcase>}
  */
 export async function showcaseGlassline(game) {
-  createPrototype(game);
-  game.camera.position.set(0, 2.6, 8.6);
-  game.camera.lookAt(0, 0.9, -2.2);
+  const root = createPrototype(game);
+  const player = root.getObjectByName(PLAYER_NAME);
+  if (player) player.visible = false;
+  const controller = createPlayerController(game);
+  game.glassline = { controller, root };
   if (game.render && game.render.exposure != null) game.render.exposure = 1.0;
+  // No `cam` field: the capsule controller owns the camera every frame.
   return {
-    cam: [0, 2.6, 8.6],
-    target: [0, 0.9, -2.2],
-    update() {},
+    update(dt) {
+      controller.update(dt);
+    },
   };
 }
 

@@ -3,7 +3,7 @@
 Phase 2 first-person parkour project. The full plan is in [`PLAN.md`](../../../PLAN.md);
 the agent rules are in [`AGENT.md`](../../../AGENT.md).
 
-## Step 0 prototype
+## Step 1a sandbox
 
 Open:
 
@@ -11,9 +11,11 @@ Open:
 ?show=glassline&q=low
 ```
 
-The current scene is intentionally minimal: rooftop deck, first-person-height
-capsule, vault block, red route beam and a fixed camera. It is a visual and boot
-skeleton, not the movement controller.
+Click the view to capture the mouse. Controls: **WASD** move, **Shift** sprint,
+**Space** jump, **Esc** release the mouse. The scene has a rooftop deck, a step,
+an obstacle block, a wall and skyline blocks. Movement uses the engine
+`moveCapsule` contract; slopes, ledges, moving platforms and camera collision are
+Step 1b.
 
 ## Commands
 

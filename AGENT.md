@@ -25,9 +25,11 @@ Reference analysis is complete:
 - [`docs/MOVEMENT.md`](docs/MOVEMENT.md) — movement spec and starting targets;
 - [`docs/CAMERA.md`](docs/CAMERA.md) — camera/FOV/roll/landing spec.
 
-Step 0 is implemented on `feat/glassline-skeleton`: prototype mode `?show=glassline`,
-minimal scene, jsconfig/JSDoc contract, boot test and dedicated CI. Merge only on
-owner command. The reference video is local/untracked and must not be committed.
+Step 0 is merged into `project/glassline`; its feature branch is deleted. Step 1a
+(`feat/glassline-physics`) is in progress: capsule movement, colliders, WASD,
+pointer lock, jump and landing dip. Step 1b still needs slopes, ledges, moving
+platforms and camera collision. The reference video is local/untracked and must
+not be committed.
 
 ## Hard rules
 
@@ -62,12 +64,14 @@ Branch `feat/glassline-skeleton`.
 
 ### Step 1 — Physics contract
 
-Branch `feat/glassline-physics`.
+Branch `feat/glassline-physics` (in progress).
 
-- capsule on slopes, steps, walls, ledges, moving platforms;
-- ground/wall/ledge/coyote queries;
-- camera collision and landing response;
-- unit tests for deterministic queries.
+- [x] capsule movement on ground/steps/walls via engine `moveCapsule`;
+- [x] WASD, sprint, pointer lock/mouse look, jump, landing camera dip;
+- [x] Playwright boot/movement/jump tests;
+- [ ] slopes and moving platforms;
+- [ ] ledge/coyote queries and camera collision;
+- [ ] deterministic physics unit tests.
 
 ### Step 2 — Parkour moves
 

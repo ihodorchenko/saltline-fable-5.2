@@ -79,22 +79,28 @@ Branch: `feat/glassline-skeleton` — **in progress, not merged**.
 - [x] project-specific README/commands;
 - [x] boot test with empty `__errors`/`__fatal`;
 - [x] dedicated `.github/workflows/glassline.yml` CI path separate from Saltline;
-- [ ] merge into `project/glassline` after the owner's command.
+- [x] merged into `project/glassline`; feature branch deleted.
 
 Acceptance: `npm run dev` opens a clean scene; build and boot test pass.
 Screenshot: `artifacts/glassline-step0.png` (ignored local/CI artifact).
 
 ### Step 1 — Engine contract and capsule physics
 
-Branch: `feat/glassline-physics`
+Branch: `feat/glassline-physics` — **in progress, not merged**.
 
-- capsule movement on slopes, steps, walls, ledges;
-- ground/wall/ledge/coyote queries;
-- moving platforms;
-- camera collision and landing response;
-- unit tests for queries and deterministic step behaviour.
+Delivered in Step 1a:
 
-Acceptance: movement sandbox playable; Saltline untouched; engine tests pass.
+- [x] engine `moveCapsule` contract against scene AABBs;
+- [x] ground, deck step, block and wall colliders;
+- [x] WASD movement, sprint, pointer lock/mouse look;
+- [x] jump with gravity and landing camera dip;
+- [x] Playwright boot, movement and jump tests;
+- [ ] slopes and moving platforms;
+- [ ] ledge queries and camera collision;
+- [ ] dedicated deterministic physics unit tests.
+
+Acceptance for Step 1a: movement sandbox playable; Saltline untouched; browser
+tests pass. Step 1b covers slopes, ledges, moving platforms and camera collision.
 
 ### Step 2 — Core parkour moves
 
