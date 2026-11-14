@@ -48,7 +48,7 @@ jobs:
       - name: Headless smoke
         run: |
           BROWSER="$(node --input-type=module -e "import { chromium } from '@playwright/test'; process.stdout.write(chromium.executablePath())")" \
-          SERVE_DIR="$PWD/dist" SMOKE_NAME=ci-smoke PORT=4175 tools/smoke.sh
+          SERVE_DIR="$PWD/dist" SMOKE_NAME=ci-smoke PORT=4175 SMOKE_BUDGET=60000 tools/smoke.sh
 
       - name: Upload Playwright report
         if: always()
