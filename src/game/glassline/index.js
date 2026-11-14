@@ -173,6 +173,16 @@ function createPrototype(game) {
   wallclimbWall.receiveShadow = true;
   root.add(wallclimbWall);
 
+  const balanceBeam = new THREE.Mesh(
+    new THREE.BoxGeometry(0.6, 0.3, 8),
+    redMaterial,
+  );
+  balanceBeam.name = 'glassline-balance-beam';
+  balanceBeam.position.set(0, 0.15, -5);
+  balanceBeam.castShadow = true;
+  balanceBeam.receiveShadow = true;
+  root.add(balanceBeam);
+
   const marker = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.06, 0.18), redMaterial);
   marker.name = 'glassline-start-marker';
   marker.position.set(0, 0.03, 1.4);
@@ -263,6 +273,10 @@ function createPrototype(game) {
     game.physics.addBox([6, 0, -2], [6.4, 4, 6], { surface: 'concrete' });
     game.physics.addBox([-8, 0, -4.2], [-6, 4.5, -3.8], {
       surface: 'concrete',
+    });
+    game.physics.addBox([-0.45, 0, -9], [0.45, 0.3, -1], {
+      surface: 'metal',
+      tag: 'balance',
     });
     game.physics.addBox([-9.5, 0.25, -15], [-9.1, 1.5, -1], { surface: 'metal' });
     game.physics.addBox([-5, 1.55, -9.5], [-3, 2.05, -5.5], {

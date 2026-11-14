@@ -22,6 +22,7 @@ test('glassline step 0 prototype boots', async ({ page }) => {
       mantleLedge: !!root?.getObjectByName('glassline-mantle-ledge'),
       wallrunWall: !!root?.getObjectByName('glassline-wallrun-wall'),
       wallclimbWall: !!root?.getObjectByName('glassline-wallclimb-wall'),
+      balanceBeam: !!root?.getObjectByName('glassline-balance-beam'),
     };
   });
   expect(scene).toEqual({
@@ -36,6 +37,7 @@ test('glassline step 0 prototype boots', async ({ page }) => {
     mantleLedge: true,
     wallrunWall: true,
     wallclimbWall: true,
+    balanceBeam: true,
   });
   const platformY = await page.evaluate(() => window.__G.glassline.platform.position.y);
   await page.waitForTimeout(600);
@@ -193,4 +195,29 @@ test('glassline roll keeps momentum and lowers the camera', async ({ page }) => 
   expect(after.rolls).toBeGreaterThan(before.rolls);
   expect(after.pos.z).toBeLessThan(before.pos.z - 0.5);
   expect(after.speed).toBeGreaterThan(4);
+});
+
+test('glassline balance stays on the beam and leans with A/D', async ({ page }) => {
+  await boot(page, '?show=glassline&q=low');
+  const before = await page.evaluate(() => {
+    window.__G.glassline.controller.teleport(0, -2, 0, 0, false, 0.31);
+    return window.__G.glassline.controller.getState();
+  });
+  await page.waitForFunction(() => window.__G.glassline.controller.getState().balancing === true, null, {
+    timeout: 3_000,
+  });
+  await page.keyboard.down('d');
+  await page.waitForFunction(
+    (beforeX) => {
+      const state = window.__G.glassline.controller.getState();
+      return state.balancing === true && Math.abs(state.roll) > 0.01 && state.pos.x > beforeX + 0.02;
+    },
+    before.pos.x,
+    { timeout: 3_000 },
+  );
+  const during = await page.evaluate(() => window.__G.glassline.controller.getState());
+  await page.keyboard.up('d');
+  expect(during.balancing).toBe(true);
+  expect(Math.abs(during.roll)).toBeGreaterThan(0.01);
+  expect(during.pos.x).toBeGreaterThan(before.pos.x);
 });

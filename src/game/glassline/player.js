@@ -50,6 +50,12 @@ import {
   canWallclimb,
 } from './wallclimb.js';
 import { ROLL_DURATION, ROLL_RETENTION, canRoll } from './roll.js';
+import {
+  BALANCE_LATERAL_SPEED,
+  BALANCE_SPEED,
+  balanceRoll,
+  isBalanceSurface,
+} from './balance.js';
 
 /**
  * @param {GameContext} game
@@ -112,6 +118,7 @@ export function createPlayerController(game) {
     rollSpeed: 0,
     rolls: 0,
     rollDir: new THREE.Vector3(),
+    balancing: false,
   };
 
   /** @type {any} */
@@ -471,8 +478,8 @@ export function createPlayerController(game) {
     }
   }
 
-  function teleport(x, z, yaw = 0, speed = 0, airborne = false) {
-    pos.set(x, 0.05, z);
+  function teleport(x, z, yaw = 0, speed = 0, airborne = false, y = 0.05) {
+    pos.set(x, y, z);
     vel.set(-Math.sin(yaw) * speed, 0, -Math.cos(yaw) * speed);
     state.yaw = yaw;
     state.vaulting = false;
@@ -480,6 +487,7 @@ export function createPlayerController(game) {
     state.wallrunning = false;
     state.wallclimbing = false;
     state.rolling = false;
+    state.balancing = false;
     state.roll = 0;
     state.rollTarget = 0;
     state.sliding = false;
@@ -768,6 +776,14 @@ export function createPlayerController(game) {
       ) {
         endSlide();
       }
+    } else if (state.balancing) {
+      const balanceForward = forwardInput < 0 ? -BALANCE_SPEED : BALANCE_SPEED;
+      vel.x =
+        forwardX * balanceForward +
+        rightX * rightInput * BALANCE_LATERAL_SPEED;
+      vel.z =
+        forwardZ * balanceForward +
+        rightZ * rightInput * BALANCE_LATERAL_SPEED;
     } else {
       const maxSpeed = sprinting ? SPRINT : RUN;
       const wantX = (forwardX * nz + rightX * nx) * maxSpeed;
@@ -835,6 +851,13 @@ export function createPlayerController(game) {
       2.2,
     );
     state.walkable = downHit ? isWalkableGround(downHit.normal) : true;
+    const onBeam =
+      !!state.onGround &&
+      !!downHit &&
+      !!downHit.box &&
+      isBalanceSurface(downHit.box.tag);
+    state.balancing = onBeam;
+    state.rollTarget = onBeam ? balanceRoll(rightInput) : 0;
     const eye = new THREE.Vector3(pos.x, pos.y + EYE, pos.z);
     const forward = new THREE.Vector3(
       -Math.sin(state.yaw),
@@ -857,7 +880,7 @@ export function createPlayerController(game) {
       state.ledge = topHit ? ledgeInfo(topHit, pos.y) : null;
     }
 
-    state.sprinting = sprinting && length > 0 && !state.sliding;
+    state.sprinting = sprinting && length > 0 && !state.sliding && !state.balancing;
     state.speed = Math.hypot(vel.x, vel.z);
     applyCamera(step);
     return state;
