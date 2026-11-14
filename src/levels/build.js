@@ -515,7 +515,7 @@ export function buildLevel(game, level) {
   gateTop.castShadow = true;
   root.add(gateTop);
 
-  scene.fog = new THREE.Fog(0xcfe0e7, 62, 240);
+  scene.fog = new THREE.Fog(0xcfe0e7, 95, 430);
   const hemisphere = new THREE.HemisphereLight(0xeaf7ff, 0x7d898b, 2.6);
   const key = new THREE.DirectionalLight(0xffe5c0, 3.5);
   key.position.set(-8, 12, 6);

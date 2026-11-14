@@ -16,6 +16,7 @@ test('generated city surrounds the route without blocking it', async ({ page }, 
       street: !!byName('city-street'),
       cityTexture: !!byName('city-buildings')?.material?.map,
       spire: !!window.__G.scene.getObjectByName('city-spire'),
+      backdrop: byName('city-backdrop')?.count || 0,
       roofTexture: !!window.__G.glassline.root.getObjectByName('platform-start-roof')?.material?.[2]?.map,
       routeZ: window.__G.glassline.controller.getState().pos.z,
     };
@@ -24,6 +25,7 @@ test('generated city surrounds the route without blocking it', async ({ page }, 
   expect(city.street).toBe(true);
   expect(city.cityTexture).toBe(true);
   expect(city.spire).toBe(true);
+  expect(city.backdrop).toBeGreaterThan(100);
   expect(city.roofTexture).toBe(true);
   expect(city.stats.buildings).toBeGreaterThan(50);
   expect(city.buildings).toBeGreaterThan(50);

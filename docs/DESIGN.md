@@ -112,12 +112,14 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
   vents, huts, pipes, guard rails, solar arrays and access doors.
 - **Route** is a continuous red strip; current checkpoint ring and next-checkpoint
   diamond are red.
-- **City** is a deterministic generated district: about 120 blocks at high
-  quality, terraced low-rise roofs near the route, taller towers behind, cyan
-  window bands, green roofs/trees, four skybridges, an elevated diagonal transit
-  line, rooftop service units, three original wayfinding signs and a central
-  spire landmark. Explicit start/finish clusters frame both ends of the route;
-  building footprints are collision-checked against each other, and window bands
+- **City** is a deterministic generated district: about 130 near blocks plus
+  349 perimeter-ring blocks at high quality, terraced low-rise roofs near the
+  route, taller towers behind, cyan window bands, green roofs/trees, four
+  skybridges, an elevated diagonal transit line, rooftop service units, three
+  original wayfinding signs and a central spire landmark. Explicit start/finish
+  clusters frame both ends; concentric horizon rings and a far terminal tower
+  close every sightline without turning the finish into a flat facade wall.
+  Building footprints are collision-checked against each other, and window bands
   are geometric so they do not stretch with the facade atlas. All city geometry
   is instanced into roughly a dozen draw calls and kept out of the route corridor.
 - **Acts**: ascent → descent/second pass → final sprint. Act labels are in-world

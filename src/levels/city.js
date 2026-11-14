@@ -105,6 +105,39 @@ export function createCityPlan(level) {
     }
   }
 
+  // Smaller infill blocks break the checkerboard rhythm of the primary grid.
+  let infill = 0;
+  for (let attempt = 0; attempt < 180 && infill < 26; attempt += 1) {
+    const bx = (rng() * 2 - 1) * 92;
+    const bz = 18 - rng() * 238;
+    if (Math.abs(bx) < corridor + 4) continue;
+    const width = 4.5 + rng() * 4;
+    const depth = 4.5 + rng() * 4;
+    if (Math.abs(bx) - width / 2 < corridor) continue;
+    const height = 10 + rng() * 30;
+    const inner = Math.abs(bx) < 44;
+    const candidate = {
+      x: bx,
+      z: bz,
+      w: width,
+      d: depth,
+      h: height,
+      top: streetY + height,
+      color: Math.floor(rng() * BODY_COLORS.length),
+      roofColor: inner && rng() < 0.4 ? 3 : Math.floor(rng() * (ROOF_COLORS.length - 1)),
+      keep: 0,
+      floors: Math.max(2, Math.floor((height - 4) / 5)),
+      windows: rng() > 0.3,
+      roofUnit: rng() > 0.6,
+      landmark: false,
+      infill: true,
+    };
+    if (!overlaps(candidate)) {
+      buildings.push(candidate);
+      occupied.push(candidate);
+      infill += 1;
+    }
+  }
   buildings.push(...edgeBuildings);
 
   const spire = {
@@ -161,6 +194,48 @@ export function createCityPlan(level) {
     });
   }
 
+  // Two overlapping horizon rings. They are deliberately outside the playable
+  // district and tall enough to close every sightline from the route.
+  const backdrop = [];
+  const rings = [
+    { radius: 210, count: 110, minHeight: 48, maxHeight: 92, xScale: 1.24 },
+    { radius: 270, count: 132, minHeight: 54, maxHeight: 108, xScale: 1.3 },
+    { radius: 330, count: 120, minHeight: 42, maxHeight: 96, xScale: 1.35 },
+  ];
+  for (const [ringIndex, ring] of rings.entries()) {
+    const offset = ringIndex * 0.5;
+    for (let i = 0; i < ring.count; i += 1) {
+      const angle = (i / ring.count) * Math.PI * 2 + offset;
+      const radius = ring.radius + (rng() - 0.5) * 18;
+      const width = 24 + rng() * 22;
+      const depth = 20 + rng() * 18;
+      const height = ring.minHeight + rng() * (ring.maxHeight - ring.minHeight);
+      const x = Math.cos(angle) * radius * ring.xScale;
+      const z = -96 + Math.sin(angle) * radius;
+      // Leave a central canyon behind the finish; a far terminal tower closes
+      // the view without flattening the whole horizon into one facade wall.
+      if (Math.abs(x) < 58 && z < -255) continue;
+      backdrop.push({
+        x,
+        z,
+        w: width,
+        d: depth,
+        h: height,
+        color: Math.floor(rng() * BODY_COLORS.length),
+      });
+    }
+  }
+
+  backdrop.push(
+    { x: 0, z: -382, w: 58, d: 32, h: 78, color: 1 },
+    { x: -112, z: -350, w: 62, d: 30, h: 88, color: 3 },
+    { x: 114, z: -350, w: 62, d: 30, h: 84, color: 2 },
+    // The same treatment behind the spawn, seen if the player turns around.
+    { x: 0, z: 206, w: 58, d: 30, h: 74, color: 2 },
+    { x: -94, z: 178, w: 58, d: 30, h: 78, color: 4 },
+    { x: 94, z: 178, w: 58, d: 30, h: 82, color: 1 },
+  );
+
   return {
     seed,
     streetY,
@@ -173,6 +248,7 @@ export function createCityPlan(level) {
     signs,
     spire,
     distant,
+    backdrop,
   };
 }
 
@@ -192,11 +268,16 @@ export function buildCity(game, level, plan, textures = null) {
   const allBuildings = [...buildings, ...plan.landmarks];
 
   // Street plate.
+  const streetTexture = textures?.asphalt ? textures.asphalt().clone() : null;
+  if (streetTexture) {
+    streetTexture.repeat.set(16, 20);
+    streetTexture.needsUpdate = true;
+  }
   const street = new THREE.Mesh(
-    new THREE.PlaneGeometry(300, 360),
+    new THREE.PlaneGeometry(1040, 1160),
     new THREE.MeshStandardMaterial({
-      map: textures?.asphalt ? textures.asphalt() : null,
-      color: textures?.asphalt ? 0xffffff : 0x27363a,
+      map: streetTexture,
+      color: streetTexture ? 0xffffff : 0x27363a,
       roughness: 0.96,
       metalness: 0.02,
     }),
@@ -602,6 +683,30 @@ export function buildCity(game, level, plan, textures = null) {
     root.add(spire);
   }
 
+  // Outer horizon rings: overlapping towers that close every sightline.
+  const backdropMesh = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshStandardMaterial({
+      map: textures?.facade ? textures.facade() : null,
+      roughness: 0.9,
+      metalness: 0.03,
+    }),
+    plan.backdrop.length,
+  );
+  backdropMesh.name = 'city-backdrop';
+  plan.backdrop.forEach((building, index) => {
+    position.set(building.x, plan.streetY + building.h / 2, building.z);
+    scale.set(building.w, building.h, building.d);
+    matrix.compose(position, quaternion.identity(), scale);
+    backdropMesh.setMatrixAt(index, matrix);
+    color.setHex(BODY_COLORS[building.color % BODY_COLORS.length]);
+    backdropMesh.setColorAt(index, color);
+  });
+  backdropMesh.instanceMatrix.needsUpdate = true;
+  if (backdropMesh.instanceColor) backdropMesh.instanceColor.needsUpdate = true;
+  backdropMesh.computeBoundingSphere();
+  root.add(backdropMesh);
+
   // Distant low-detail skyline; fades into fog.
   const distantMesh = new THREE.InstancedMesh(
     new THREE.BoxGeometry(1, 1, 1),
@@ -633,6 +738,7 @@ export function buildCity(game, level, plan, textures = null) {
       transitSupports: supports.length,
       balconies: balconies.length,
       spire: !!plan.spire,
+      backdrop: plan.backdrop.length,
     },
   };
 }
