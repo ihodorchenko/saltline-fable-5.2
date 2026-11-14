@@ -49,6 +49,7 @@ import {
   WALLCLIMB_SPEED,
   canWallclimb,
 } from './wallclimb.js';
+import { ROLL_DURATION, ROLL_RETENTION, canRoll } from './roll.js';
 
 /**
  * @param {GameContext} game
@@ -106,6 +107,11 @@ export function createPlayerController(game) {
     wallclimbTime: 0,
     wallclimbs: 0,
     climbNormal: new THREE.Vector3(),
+    rolling: false,
+    rollTime: 0,
+    rollSpeed: 0,
+    rolls: 0,
+    rollDir: new THREE.Vector3(),
   };
 
   /** @type {any} */
@@ -364,6 +370,46 @@ export function createPlayerController(game) {
     }
   }
 
+  function startRoll(speed = Math.hypot(vel.x, vel.z)) {
+    if (
+      state.rolling ||
+      state.wallclimbing ||
+      state.wallrunning ||
+      state.vaulting ||
+      state.mantling
+    ) {
+      return false;
+    }
+    const current = Math.max(4, speed);
+    if (current <= 0.001) return false;
+    state.rollDir.set(vel.x, 0, vel.z);
+    if (state.rollDir.lengthSq() < 0.001) {
+      state.rollDir.copy(forwardVector());
+    }
+    state.rollDir.normalize();
+    state.rollTime = 0;
+    state.rollSpeed = current;
+    state.rolling = true;
+    state.crouched = true;
+    state.bodyHeight = SLIDE_HEIGHT;
+    state.onGround = true;
+    vel.set(0, 0, 0);
+    state.rolls += 1;
+    return true;
+  }
+
+  function tryRoll() {
+    return startRoll();
+  }
+
+  function endRoll() {
+    state.rolling = false;
+    state.rollTime = 0;
+    state.crouched = false;
+    state.bodyHeight = HEIGHT;
+    vel.copy(state.rollDir).multiplyScalar(state.rollSpeed * ROLL_RETENTION);
+  }
+
   function findClimbWall() {
     if (!physics || !physics.raycast) return null;
     const dir = forwardVector();
@@ -433,6 +479,7 @@ export function createPlayerController(game) {
     state.mantling = false;
     state.wallrunning = false;
     state.wallclimbing = false;
+    state.rolling = false;
     state.roll = 0;
     state.rollTarget = 0;
     state.sliding = false;
@@ -466,6 +513,16 @@ export function createPlayerController(game) {
         state.crouched = true;
         state.bodyHeight = SLIDE_HEIGHT;
       }
+    }
+    if (
+      event.code === 'Space' &&
+      !event.repeat &&
+      state.rolling
+    ) {
+      endRoll();
+      vel.y = JUMP;
+      state.onGround = false;
+      return;
     }
     if (
       event.code === 'Space' &&
@@ -578,7 +635,7 @@ export function createPlayerController(game) {
    */
   function applyCamera(step) {
     state.landDip *= Math.exp(-8 * step);
-    const targetEye = state.sliding
+    const targetEye = state.sliding || state.rolling
       ? SLIDE_EYE
       : state.crouched
         ? CROUCH_EYE
@@ -608,6 +665,16 @@ export function createPlayerController(game) {
    */
   function update(dt) {
     const step = Math.min(Math.max(dt || 0, 0), MAX_DT);
+    if (state.rolling) {
+      state.rollTime += step;
+      pos.addScaledVector(state.rollDir, state.rollSpeed * step);
+      state.rollSpeed = Math.max(0, state.rollSpeed - 2.5 * step);
+      if (state.rollTime >= ROLL_DURATION) endRoll();
+      state.speed = state.rollSpeed;
+      state.sprinting = false;
+      applyCamera(step);
+      return state;
+    }
     if (state.wallclimbing) {
       state.wallclimbTime += step;
       pos.y += WALLCLIMB_SPEED * step;
@@ -713,6 +780,10 @@ export function createPlayerController(game) {
     vel.y -= GRAVITY * step;
 
     const fallSpeed = vel.y;
+    const wantsCrouch =
+      keys.has('KeyC') ||
+      keys.has('ControlLeft') ||
+      keys.has('ControlRight');
     const result = physics.moveCapsule(
       pos,
       vel,
@@ -722,8 +793,19 @@ export function createPlayerController(game) {
       true,
     );
     if (result.onGround) {
-      if (!state.onGround && fallSpeed < -2) {
+      const justLanded = !state.onGround;
+      if (justLanded && fallSpeed < -2) {
         state.landDip = Math.min(0.12, -fallSpeed * 0.012);
+      }
+      if (
+        justLanded &&
+        wantsCrouch &&
+        canRoll({
+          speed: Math.hypot(vel.x, vel.z),
+          fallingSpeed: fallSpeed,
+        })
+      ) {
+        startRoll();
       }
       if (vel.y < 0) vel.y = 0;
       state.onGround = true;
@@ -812,5 +894,6 @@ export function createPlayerController(game) {
     tryMantle,
     tryWallrun,
     tryWallclimb,
+    tryRoll,
   };
 }

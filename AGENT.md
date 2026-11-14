@@ -85,8 +85,8 @@ One branch per move, in this order:
 2. `feat/glassline-vault` — merged
 3. `feat/glassline-mantle` — merged
 4. `feat/glassline-wallrun` — merged
-5. `feat/glassline-wallclimb` — implemented, not merged
-6. `feat/glassline-roll`
+5. `feat/glassline-wallclimb` — merged
+6. `feat/glassline-roll` — implemented, not merged
 7. `feat/glassline-balance`
 
 Each move needs a state machine, input buffering, camera/audio feedback, a test

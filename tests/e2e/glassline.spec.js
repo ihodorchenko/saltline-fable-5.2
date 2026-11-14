@@ -169,3 +169,28 @@ test('glassline wallclimb ascends and drops after stamina', async ({ page }) => 
   expect(after.wallclimbs).toBeGreaterThan(before.wallclimbs);
   expect(after.pos.y).toBeGreaterThan(before.pos.y + 1);
 });
+
+test('glassline roll keeps momentum and lowers the camera', async ({ page }) => {
+  await boot(page, '?show=glassline&q=low');
+  const before = await page.evaluate(() => {
+    window.__G.glassline.controller.teleport(0, 4, 0, 6, false);
+    return window.__G.glassline.controller.getState();
+  });
+  const started = await page.evaluate(() => window.__G.glassline.controller.tryRoll());
+  expect(started).toBe(true);
+  await page.waitForFunction(
+    () => {
+      const state = window.__G.glassline.controller.getState();
+      return state.rolling === true && state.eyeHeight < 1.2;
+    },
+    null,
+    { timeout: 3_000 },
+  );
+  await page.waitForFunction(() => window.__G.glassline.controller.getState().rolling === false, null, {
+    timeout: 5_000,
+  });
+  const after = await page.evaluate(() => window.__G.glassline.controller.getState());
+  expect(after.rolls).toBeGreaterThan(before.rolls);
+  expect(after.pos.z).toBeLessThan(before.pos.z - 0.5);
+  expect(after.speed).toBeGreaterThan(4);
+});
