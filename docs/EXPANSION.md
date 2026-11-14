@@ -119,9 +119,9 @@
 #### P1.3 — тесты, CI, производительность (1 неделя)
 
 - [x] **Tests (P1.3):** 23 Vitest-теста для RNG, event bus, time, math, bindings, settings и modes + Playwright-тест физического `addBox/raycast/lineOfSight`; `npm test` и браузерные тесты в CI.
-- [x] **Playwright foundation (P1.3):** `@playwright/test` + `tests/e2e` — boot без `__errors`/fatal, title, `?autostart=1` до состояния `playing`, `?show=level`; отчёт и скриншоты в artifact. Golden screenshots ещё отдельным пунктом.
-- [ ] Golden screenshots с фиксированными `seed/cam/q`.
-- [ ] CI: install → lint → test → build → smoke; артефакты скриншотов. Сейчас: install → lint/format → unit tests → build → Playwright boot tests; отчёт Playwright — artifact. Smoke и golden-сравнение ещё не в CI.
+- [x] **Playwright foundation (P1.3):** `@playwright/test` + `tests/e2e` — boot без `__errors`/fatal, title, `?autostart=1` до состояния `playing`, `?show=level`; отчёт и скриншоты в artifact.
+- [x] **Golden screenshots (P1.3):** Playwright-тест снимает `?show=level&q=low&seed=4207&efreeze=1&cam=…` с текущей сборки и legacy `index.html` в одном браузере; pixelmatch <2%, source/legacy/diff прикрепляются к отчёту.
+- [ ] CI: install → lint → test → build → smoke; артефакты скриншотов. Сейчас: install → lint/format → unit tests → build → Playwright boot + golden parity; отчёт Playwright — artifact. Smoke ещё не в CI.
 - [ ] Perf-baseline: draw calls, tris, frame time; JSON в artifacts.
 
 #### P1.4 — документация и референс (2–3 дня)
