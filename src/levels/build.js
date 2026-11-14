@@ -132,6 +132,11 @@ export function buildLevel(game, level) {
   finishMesh.position.set(level.finish.pos[0], level.finish.pos[1] + 0.08, level.finish.pos[2]);
   root.add(finishMesh);
 
+  const startLine = new THREE.Mesh(new THREE.BoxGeometry(4, 0.025, 0.2), routeMat);
+  startLine.name = 'start-line';
+  startLine.position.set(level.spawn.x, level.spawn.y + 0.02, level.spawn.z - 0.9);
+  root.add(startLine);
+
   const finish = level.finish.pos;
   const gateMat = new THREE.MeshStandardMaterial({
     color: 0xb51f2a,

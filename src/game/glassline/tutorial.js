@@ -5,8 +5,15 @@
 import { tutorialLevel } from '../../levels/tutorial.js';
 import { buildLevel } from '../../levels/build.js';
 import { createPlayerController } from './player.js';
+import {
+  checkpointSplit,
+  formatTime,
+  shouldAutoRespawn,
+  shouldPromptStuck,
+} from './progress.js';
 
 export const TUTORIAL_STORAGE_KEY = 'glassline.tutorial.progress.v1';
+export const TUTORIAL_BEST_KEY = 'glassline.tutorial.best.v1';
 
 /**
  * @param {import('../../../types/engine').GameContext} game
@@ -25,6 +32,8 @@ function createHud() {
     '<div id="gl-progress-fill" style="height:100%;width:0;background:#d23a39"></div></div>' +
     '<div id="gl-count" style="margin-top:9px;color:#9aa4a8"></div>' +
     '<div id="gl-time" style="margin-top:2px;color:#9aa4a8"></div>' +
+    '<div id="gl-split" style="margin-top:2px;color:#707b80"></div>' +
+    '<div id="gl-best" style="margin-top:2px;color:#9aa4a8"></div>' +
     '<div id="gl-help" style="margin-top:4px;color:#707b80">R retry · Backspace restart</div>';
   document.body.appendChild(hud);
   return hud;
@@ -71,6 +80,23 @@ function saveProgress(progress) {
   }
 }
 
+function loadBest() {
+  try {
+    const value = Number(localStorage.getItem(TUTORIAL_BEST_KEY));
+    return Number.isFinite(value) && value > 0 ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveBest(seconds) {
+  try {
+    localStorage.setItem(TUTORIAL_BEST_KEY, String(seconds));
+  } catch {
+    /* storage is optional */
+  }
+}
+
 /**
  * @param {import('../../../types/engine').GameContext} game
  */
@@ -98,16 +124,17 @@ export async function showcaseTutorial(game) {
   const promptEl = hud.querySelector('#gl-prompt');
   const countEl = hud.querySelector('#gl-count');
   const timeEl = hud.querySelector('#gl-time');
+  const splitEl = hud.querySelector('#gl-split');
+  const bestEl = hud.querySelector('#gl-best');
   const fillEl = hud.querySelector('#gl-progress-fill');
   let elapsed = 0;
   let timeAccumulator = 0;
-
-  const formatTime = (seconds) => {
-    const whole = Math.max(0, Math.floor(seconds));
-    return `${String(Math.floor(whole / 60)).padStart(2, '0')}:${String(
-      whole % 60,
-    ).padStart(2, '0')}`;
-  };
+  let lastCheckpointAt = 0;
+  let best = loadBest();
+  let idleTime = 0;
+  let stuckPrompted = false;
+  let lastPosition = null;
+  let autoRespawns = 0;
 
   const saved = loadSavedProgress(level);
   const progress = {
@@ -115,6 +142,9 @@ export async function showcaseTutorial(game) {
     respawns: saved.respawns,
     finished: saved.finished,
     message: saved.checkpoint > 0 ? 'Resumed from checkpoint.' : '',
+    splits: [],
+    best,
+    autoRespawns: 0,
   };
 
   const beaconGeometry = new game.THREE.OctahedronGeometry(0.28);
@@ -168,6 +198,15 @@ export async function showcaseTutorial(game) {
     if (timeEl) {
       timeEl.textContent = `TIME ${formatTime(elapsed)}`;
     }
+    if (splitEl) {
+      const last = progress.splits[progress.splits.length - 1];
+      splitEl.textContent = last
+        ? `SPLIT ${formatTime(last.split)} · TOTAL ${formatTime(last.total)}`
+        : 'SPLIT --:--';
+    }
+    if (bestEl) {
+      bestEl.textContent = best ? `BEST ${formatTime(best)}` : 'BEST --:--';
+    }
     if (fillEl) {
       fillEl.style.width = `${
         progress.finished
@@ -180,7 +219,7 @@ export async function showcaseTutorial(game) {
     updateRings();
   }
 
-  function respawn() {
+  function respawn(auto = false) {
     if (progress.finished) return;
     const checkpoint = level.checkpoints[progress.checkpoint];
     controller.teleport(
@@ -192,7 +231,16 @@ export async function showcaseTutorial(game) {
       checkpoint.pos[1] + 0.05,
     );
     progress.respawns += 1;
-    progress.message = 'Respawned at last checkpoint.';
+    if (auto) {
+      autoRespawns += 1;
+      progress.autoRespawns = autoRespawns;
+      progress.message = 'Auto-respawn: no movement detected.';
+    } else {
+      progress.message = 'Respawned at last checkpoint.';
+    }
+    idleTime = 0;
+    stuckPrompted = false;
+    lastPosition = null;
     saveProgress(progress);
     setHud();
   }
@@ -204,6 +252,13 @@ export async function showcaseTutorial(game) {
     progress.message = '';
     elapsed = 0;
     timeAccumulator = 0;
+    lastCheckpointAt = 0;
+    progress.splits = [];
+    idleTime = 0;
+    stuckPrompted = false;
+    lastPosition = null;
+    autoRespawns = 0;
+    progress.autoRespawns = 0;
     try {
       localStorage.removeItem(TUTORIAL_STORAGE_KEY);
     } catch {
@@ -289,12 +344,53 @@ export async function showcaseTutorial(game) {
         return;
       }
 
+      if (lastPosition) {
+        const moved =
+          Math.hypot(
+            state.pos.x - lastPosition.x,
+            state.pos.z - lastPosition.z,
+          ) > 0.15 || Math.abs(state.pos.y - lastPosition.y) > 0.25;
+        if (moved) {
+          idleTime = 0;
+          if (stuckPrompted) {
+            stuckPrompted = false;
+            progress.message = '';
+            setHud();
+          }
+        } else {
+          idleTime += dt;
+        }
+      }
+      lastPosition = {
+        x: state.pos.x,
+        y: state.pos.y,
+        z: state.pos.z,
+      };
+      if (!stuckPrompted && shouldPromptStuck(idleTime)) {
+        stuckPrompted = true;
+        progress.message = 'Stuck? Press R to retry from the checkpoint.';
+        setHud();
+      }
+      if (shouldAutoRespawn(idleTime)) {
+        respawn(true);
+        return;
+      }
+
       for (let i = level.checkpoints.length - 1; i > progress.checkpoint; i--) {
         const checkpoint = level.checkpoints[i];
         const dx = state.pos.x - checkpoint.pos[0];
         const dz = state.pos.z - checkpoint.pos[2];
         if (Math.hypot(dx, dz) <= checkpoint.radius) {
+          const previous = progress.checkpoint;
           progress.checkpoint = i;
+          const split = checkpointSplit(lastCheckpointAt, elapsed);
+          lastCheckpointAt = elapsed;
+          progress.splits.push({
+            from: previous,
+            to: i,
+            split,
+            total: elapsed,
+          });
           progress.message = '';
           saveProgress(progress);
           setHud();
@@ -309,6 +405,11 @@ export async function showcaseTutorial(game) {
       ) {
         progress.finished = true;
         progress.message = '';
+        if (best === null || elapsed < best) {
+          best = elapsed;
+          progress.best = best;
+          saveBest(best);
+        }
         saveProgress(progress);
         setHud();
       }

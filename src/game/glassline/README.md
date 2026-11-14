@@ -5,10 +5,16 @@ the agent rules are in [`AGENT.md`](../../../AGENT.md).
 
 ## Play modes
 
-Tutorial blockout:
+Tutorial:
 
 ```text
 ?show=glassline-tutorial&q=low
+```
+
+Level inspector/preview:
+
+```text
+?show=glassline-editor&q=low
 ```
 
 Sandbox for mechanic testing:
@@ -26,10 +32,12 @@ platform does not carry the player yet, and slide has no dedicated audio/animati
 rig yet.
 
 The tutorial uses `src/levels/tutorial.js` data and the shared builder in
-`src/levels/build.js`. It is a three-act ~200 m route with 21 checkpoints, a
-station for each parkour mechanic and a final rooftop sprint. Checkpoints, fall
-respawn, finish, stage HUD, timer, R retry, Backspace restart and localStorage
-progress live in `src/game/glassline/tutorial.js`.
+`src/levels/build.js`. It is a three-act 203 m route with 21 checkpoints, a station
+for each parkour mechanic and a final rooftop sprint. Checkpoints, fall respawn,
+finish, stage HUD, timer/splits/best, fail-safe respawn and localStorage progress
+live in `src/game/glassline/tutorial.js`. The inspector in
+`src/game/glassline/editor.js` provides orbit preview, checkpoint/act focus,
+validation, pacing target and JSON export.
 
 ## Commands
 

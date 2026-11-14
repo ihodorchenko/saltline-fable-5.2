@@ -8,6 +8,7 @@ export const tutorialLevel = {
   name: 'ROOFTOP INDUCTION',
   spawn: { x: 0, y: 0.05, z: 10, yaw: 0 },
   fallY: -6,
+  pacing: { targetMinutes: [10, 20] },
   palette: [0xd7d2c6, 0xc3cbca, 0xb3bdc2],
   scenery: [
     { pos: [-14, 5, 8], size: [6, 10, 8], color: 0x77838a },

@@ -94,8 +94,27 @@ test('glassline tutorial advances every checkpoint in route order', async ({ pag
   const last = await page.evaluate(() => ({
     checkpoint: window.__G.glassline.tutorial.checkpoint,
     total: window.__G.glassline.level.checkpoints.length,
+    splits: window.__G.glassline.tutorial.splits.length,
   }));
   expect(last.checkpoint).toBe(last.total - 1);
+  expect(last.splits).toBe(last.total - 1);
+});
+
+test('glassline tutorial fail-safe prompts and auto-respawns when stuck', async ({ page }) => {
+  await boot(page, '?show=glassline-tutorial&q=low');
+  await page.waitForFunction(() => window.__G.glassline.tutorial.message.includes('Stuck'), null, {
+    timeout: 10_000,
+  });
+  const before = await page.evaluate(() => window.__G.glassline.tutorial.respawns);
+  await page.waitForFunction((respawns) => window.__G.glassline.tutorial.respawns > respawns, before, {
+    timeout: 15_000,
+  });
+  const after = await page.evaluate(() => ({
+    autoRespawns: window.__G.glassline.tutorial.autoRespawns,
+    message: window.__G.glassline.tutorial.message,
+  }));
+  expect(after.autoRespawns).toBeGreaterThan(0);
+  expect(after.message).toContain('Auto-respawn');
 });
 
 test('glassline tutorial restores the last checkpoint after reload', async ({ page }) => {

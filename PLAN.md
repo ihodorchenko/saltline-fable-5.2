@@ -132,7 +132,7 @@ match reference targets within tolerance.
 
 ### Step 3 — Tutorial level and content pipeline
 
-Branch: `feat/glassline-tutorial-final` — **implemented, not merged**.
+Branch: `feat/glassline-tutorial-complete` — **implemented, not merged**.
 
 Delivered:
 

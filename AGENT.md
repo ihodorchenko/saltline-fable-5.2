@@ -12,10 +12,11 @@ and must not be merged back into `dev`.
 
 Phase 1 is complete and stabilized on `dev`. Step 0, Step 1 and all Step 2 parkour
 mechanics are merged into `project/glassline`; their feature branches are deleted.
-Step 3 implementation is complete on `feat/glassline-tutorial-final`: a three-act
-~200 m route with 21 checkpoints, respawn/finish, HUD/timer, route readability,
-act signage and saved checkpoint progress. It is **not merged**; merge only on
-command. Human 10–20 minute pacing is a Step 4 playtest item.
+Step 3 implementation is complete on `feat/glassline-tutorial-complete`: a
+three-act 203 m route with 21 checkpoints, fail-safe respawn, HUD/timer/splits,
+personal best, saved progress, route readability and a level inspector/preview
+(`?show=glassline-editor`). It is **not merged**; merge only on command. Human
+10–20 minute pacing remains a Step 4 playtest tuning item.
 
 The theme, language and platform are confirmed: **parkour in the spirit of
 Mirror's Edge with original IP**, **JS + JSDoc**, **desktop Chrome**, **60 FPS**.
@@ -95,17 +96,18 @@ map and regression tests for stuck/duplicate states.
 
 ### Step 3 — Tutorial level
 
-Branch `feat/glassline-tutorial-final` (implemented, not merged).
+Branch `feat/glassline-tutorial-complete` (implemented, not merged).
 
 - [x] data-driven layout and validator;
-- [x] three-act ~200 m route with 21 checkpoints;
-- [x] checkpoints, respawn, finish and stage HUD/timer;
-- [x] separate `?show=glassline-tutorial` mode;
+- [x] three-act 203 m route with 21 checkpoints;
+- [x] checkpoints, respawn, finish and stage HUD/timer/splits/best;
+- [x] separate `?show=glassline-tutorial` and `?show=glassline-editor` modes;
 - [x] route-order/length audit and browser coverage;
-- [x] route strips, palette, silhouettes, fog, act signage and finish gate;
-- [x] R retry, Backspace restart and localStorage checkpoint persistence;
-- [ ] human 10–20 minute pacing playtest (Step 4);
-- [ ] optional level editor/preview.
+- [x] route strips, palette, silhouettes, fog, act signage, rings and finish gate;
+- [x] R retry, Backspace restart and localStorage checkpoint/best persistence;
+- [x] stuck prompt + auto-respawn fail-safe (tested);
+- [x] level inspector/preview with orbit, focus, validation and JSON export;
+- [ ] human 10–20 minute pacing playtest (Step 4).
 
 ### Step 4 — Theme, art, audio, UI
 
