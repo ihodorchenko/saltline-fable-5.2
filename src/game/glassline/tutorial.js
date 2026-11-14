@@ -805,6 +805,7 @@ export async function showcaseTutorial(game) {
         setHud();
         if (game.camera) {
           game.camera.fov = 75;
+          game.camera.rotation.z = 0;
           game.camera.updateProjectionMatrix();
         }
         audio.updateMotion(0, true);

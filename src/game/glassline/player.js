@@ -37,6 +37,23 @@ export function targetFov(state) {
   return BASE_FOV;
 }
 
+/**
+ * Camera roll target: side input, vault/slide weight transfer, wallrun lean and
+ * a tiny running sway. Angles are radians.
+ * @param {any} state
+ * @param {number} [phase]
+ */
+export function cameraRollTarget(state, phase = 0) {
+  if (state.wallrunning) return state.rollTarget || 0;
+  if (state.vaulting) return -0.14;
+  if (state.sliding) return 0.08;
+  let target = state.tiltInput || 0;
+  if (state.onGround && (state.speed || 0) > 3) {
+    target += Math.cos((phase || 0) * 11.5) * 0.012;
+  }
+  return target;
+}
+
 import {
   COYOTE_TIME,
   coyoteActive,
@@ -124,6 +141,8 @@ export function createPlayerController(game, options = {}) {
     wallSide: null,
     roll: 0,
     rollTarget: 0,
+    rollPhase: 0,
+    tiltInput: 0,
     wallclimbing: false,
     wallclimbTime: 0,
     wallclimbs: 0,
@@ -694,10 +713,10 @@ export function createPlayerController(game, options = {}) {
         : EYE;
     state.eyeHeight +=
       (targetEye - state.eyeHeight) * (1 - Math.exp(-14 * step));
-    const targetFov = targetFov(state);
+    const fovTarget = targetFov(state);
     if (game.camera && typeof game.camera.fov === 'number') {
       const nextFov =
-        game.camera.fov + (targetFov - game.camera.fov) * (1 - Math.exp(-8 * step));
+        game.camera.fov + (fovTarget - game.camera.fov) * (1 - Math.exp(-8 * step));
       if (Math.abs(nextFov - game.camera.fov) > 0.001) {
         game.camera.fov = nextFov;
         game.camera.updateProjectionMatrix();
@@ -708,7 +727,10 @@ export function createPlayerController(game, options = {}) {
       pos.y + state.eyeHeight - state.landDip,
       pos.z,
     );
-    state.roll += (state.rollTarget - state.roll) * (1 - Math.exp(-10 * step));
+    state.rollPhase += step;
+    const targetRoll = cameraRollTarget(state, state.rollPhase);
+    state.roll += (targetRoll - state.roll) * (1 - Math.exp(-10 * step));
+    game.camera.rotation.order = 'YXZ';
     game.camera.rotation.set(state.pitch, state.yaw, state.roll, 'YXZ');
   }
 
@@ -785,6 +807,7 @@ export function createPlayerController(game, options = {}) {
     const rightInput =
       (bindings.isDown('right', keys) ? 1 : 0) -
       (bindings.isDown('left', keys) ? 1 : 0);
+    state.tiltInput = -rightInput * 0.045;
     const length = Math.hypot(forwardInput, rightInput);
     const nx = length > 1 ? rightInput / length : rightInput;
     const nz = length > 1 ? forwardInput / length : forwardInput;
