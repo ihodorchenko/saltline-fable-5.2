@@ -25,6 +25,8 @@ function materials(game) {
       color: 0x34495a,
       roughness: 0.46,
     }),
+    // Pale steel pack: the mentor is read by value against the dark jacket.
+    mentorPack: new THREE.MeshStandardMaterial({ color: 0xa9b8c1, roughness: 0.62 }),
     mentorDark: new THREE.MeshStandardMaterial({ color: 0x20262b, roughness: 0.78 }),
     shoe: new THREE.MeshStandardMaterial({ color: 0xdfe8e6, roughness: 0.68 }),
   };
@@ -100,12 +102,13 @@ export function createCourierRig(game) {
   const leftArm = makeArm(-1);
   const rightArm = makeArm(1);
   const tracker = new THREE.Mesh(
-    geometry(THREE, 'tracker', () => new THREE.CylinderGeometry(0.041, 0.041, 0.038, 12)),
+    geometry(THREE, 'tracker', () => new THREE.CylinderGeometry(0.048, 0.048, 0.05, 12)),
     mats.accent,
   );
   tracker.name = 'courier-tracker';
   tracker.rotation.z = Math.PI / 2;
-  tracker.position.set(0, -0.1, 0.02);
+  // Mid-forearm, above the hand: a wrist band at -0.1 was mostly hidden by it.
+  tracker.position.set(0, -0.075, 0.02);
   leftArm.elbow.add(tracker);
 
   const makeLeg = (side) => {
@@ -233,7 +236,7 @@ export function createMentorCharacter(game) {
   hair.position.set(0, 1.58, 0.02);
   const pack = new THREE.Mesh(
     geometry(THREE, 'mentor-pack', () => new THREE.BoxGeometry(0.24, 0.3, 0.1)),
-    mats.mentorDark,
+    mats.mentorPack,
   );
   pack.position.set(0, 1.22, 0.15);
 

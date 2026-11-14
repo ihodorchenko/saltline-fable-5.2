@@ -5,7 +5,7 @@
 const BODY_COLORS = [0xffffff, 0xf7f4ea, 0xeaf3f4, 0xf1eee4, 0xe3eef0];
 // Muted tints for the accent towers. Saturation is reserved for the red route
 // and goals (see docs/DESIGN.md), so no accent may be vivid or red-hued.
-export const ACCENT_COLORS = [0x7f97ad, 0x89a394, 0xcdbfa6, 0x9ca0b4, 0xa9b8c1];
+export const ACCENT_COLORS = [0x5e81a1, 0x629377, 0xbba681, 0x6a73a0, 0x7894a5];
 const ROOF_COLORS = [0xf5f1e7, 0xdce9eb, 0xe7e3d8, 0x78977d];
 
 function makeRng(seed) {

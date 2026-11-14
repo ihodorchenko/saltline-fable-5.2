@@ -135,7 +135,7 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
 - **Characters** are procedural capsule rigs: a first-person courier with a
   signal-red wrist tracker and shoes, plus an original mentor in a dark steel-blue jacket
   running ahead on the start roof. Red stays the runner's colour; the mentor
-  reads by value (dark on ivory), not by hue. No skinned meshes or external models are
+  reads by value (dark jacket, pale steel pack) on ivory, not by hue. No skinned meshes or external models are
   loaded; pivot groups keep elbows, hips and knees hinged correctly.
 
 Lighting: high-key warm sun, cool blue shadows, a clean blue-to-white sky dome
