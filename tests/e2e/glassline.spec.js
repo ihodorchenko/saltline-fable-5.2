@@ -21,6 +21,7 @@ test('glassline step 0 prototype boots', async ({ page }) => {
       vaultLedge: !!root?.getObjectByName('glassline-vault-ledge'),
       mantleLedge: !!root?.getObjectByName('glassline-mantle-ledge'),
       wallrunWall: !!root?.getObjectByName('glassline-wallrun-wall'),
+      wallclimbWall: !!root?.getObjectByName('glassline-wallclimb-wall'),
     };
   });
   expect(scene).toEqual({
@@ -34,6 +35,7 @@ test('glassline step 0 prototype boots', async ({ page }) => {
     vaultLedge: true,
     mantleLedge: true,
     wallrunWall: true,
+    wallclimbWall: true,
   });
   const platformY = await page.evaluate(() => window.__G.glassline.platform.position.y);
   await page.waitForTimeout(600);
@@ -150,4 +152,20 @@ test('glassline wallrun follows the wall and rolls the camera', async ({ page })
   const after = await page.evaluate(() => window.__G.glassline.controller.getState());
   expect(after.wallruns).toBeGreaterThan(before.wallruns);
   expect(after.pos.z).toBeLessThan(before.pos.z - 1);
+});
+
+test('glassline wallclimb ascends and drops after stamina', async ({ page }) => {
+  await boot(page, '?show=glassline&q=low');
+  const before = await page.evaluate(() => {
+    window.__G.glassline.controller.teleport(-7, -3.1, 0, 0, false);
+    return window.__G.glassline.controller.getState();
+  });
+  const started = await page.evaluate(() => window.__G.glassline.controller.tryWallclimb());
+  expect(started).toBe(true);
+  await page.waitForFunction(() => window.__G.glassline.controller.getState().wallclimbing === false, null, {
+    timeout: 5_000,
+  });
+  const after = await page.evaluate(() => window.__G.glassline.controller.getState());
+  expect(after.wallclimbs).toBeGreaterThan(before.wallclimbs);
+  expect(after.pos.y).toBeGreaterThan(before.pos.y + 1);
 });

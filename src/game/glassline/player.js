@@ -44,6 +44,11 @@ import {
   WALLRUN_ROLL,
   canWallrun,
 } from './wallrun.js';
+import {
+  WALLCLIMB_MAX_TIME,
+  WALLCLIMB_SPEED,
+  canWallclimb,
+} from './wallclimb.js';
 
 /**
  * @param {GameContext} game
@@ -97,6 +102,10 @@ export function createPlayerController(game) {
     wallSide: null,
     roll: 0,
     rollTarget: 0,
+    wallclimbing: false,
+    wallclimbTime: 0,
+    wallclimbs: 0,
+    climbNormal: new THREE.Vector3(),
   };
 
   /** @type {any} */
@@ -355,6 +364,67 @@ export function createPlayerController(game) {
     }
   }
 
+  function findClimbWall() {
+    if (!physics || !physics.raycast) return null;
+    const dir = forwardVector();
+    const origin = new THREE.Vector3(pos.x, pos.y + 1.0, pos.z);
+    const wall = physics.raycast(origin, dir, 0.85);
+    if (!wall || Math.abs(wall.normal.y) >= 0.5) return null;
+    const top = physics.raycast(
+      new THREE.Vector3(wall.point.x, wall.point.y + 6, wall.point.z),
+      new THREE.Vector3(0, -1, 0),
+      10,
+    );
+    const height = top ? top.point.y - pos.y : Infinity;
+    const distance = Math.hypot(
+      wall.point.x - pos.x,
+      wall.point.z - pos.z,
+    );
+    if (!canWallclimb({ distance, normalY: wall.normal.y, height })) {
+      return null;
+    }
+    return { wall, distance, height };
+  }
+
+  function startWallclimb(wall = null) {
+    if (
+      state.wallclimbing ||
+      state.wallrunning ||
+      state.vaulting ||
+      state.mantling ||
+      state.sliding
+    ) {
+      return false;
+    }
+    const found = wall || findClimbWall();
+    if (!found) return false;
+    state.climbNormal.copy(found.wall.normal);
+    state.wallclimbTime = 0;
+    state.wallclimbing = true;
+    state.crouched = false;
+    state.bodyHeight = HEIGHT;
+    state.onGround = false;
+    state.rollTarget = 0.08;
+    vel.set(0, 0, 0);
+    state.wallclimbs += 1;
+    return true;
+  }
+
+  function tryWallclimb() {
+    return startWallclimb();
+  }
+
+  function endWallclimb(jump = false) {
+    if (!state.wallclimbing) return;
+    state.wallclimbing = false;
+    state.rollTarget = 0;
+    vel.set(0, 0, 0);
+    if (jump) {
+      vel.addScaledVector(state.climbNormal, 3.5);
+      vel.y = JUMP;
+    }
+  }
+
   function teleport(x, z, yaw = 0, speed = 0, airborne = false) {
     pos.set(x, 0.05, z);
     vel.set(-Math.sin(yaw) * speed, 0, -Math.cos(yaw) * speed);
@@ -362,6 +432,7 @@ export function createPlayerController(game) {
     state.vaulting = false;
     state.mantling = false;
     state.wallrunning = false;
+    state.wallclimbing = false;
     state.roll = 0;
     state.rollTarget = 0;
     state.sliding = false;
@@ -419,6 +490,23 @@ export function createPlayerController(game) {
       state.onGround &&
       !state.sliding &&
       tryMantle()
+    ) {
+      return;
+    }
+    if (
+      event.code === 'Space' &&
+      !event.repeat &&
+      state.wallclimbing
+    ) {
+      endWallclimb(true);
+      return;
+    }
+    if (
+      event.code === 'Space' &&
+      !event.repeat &&
+      state.onGround &&
+      !state.sliding &&
+      tryWallclimb()
     ) {
       return;
     }
@@ -520,6 +608,17 @@ export function createPlayerController(game) {
    */
   function update(dt) {
     const step = Math.min(Math.max(dt || 0, 0), MAX_DT);
+    if (state.wallclimbing) {
+      state.wallclimbTime += step;
+      pos.y += WALLCLIMB_SPEED * step;
+      if (state.wallclimbTime >= WALLCLIMB_MAX_TIME) {
+        endWallclimb(false);
+      }
+      state.speed = 0;
+      state.sprinting = false;
+      applyCamera(step);
+      return state;
+    }
     if (state.wallrunning) {
       state.wallTime += step;
       pos.addScaledVector(state.wallDir, state.wallSpeed * step);
@@ -712,5 +811,6 @@ export function createPlayerController(game) {
     tryVault,
     tryMantle,
     tryWallrun,
+    tryWallclimb,
   };
 }
