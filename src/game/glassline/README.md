@@ -20,9 +20,11 @@ Level inspector/preview:
 The tutorial world uses textured platform tops, dark sides, edge lines, lit
 skyline windows and rooftop props from `src/levels/build.js`; the level data owns
 the palette, scenery and prop placements. The tutorial starts with the GLASSLINE
-title/pause/complete shell. Mouse
-sensitivity is saved under `glassline.sensitivity.v1`; `R` retries and
-`Backspace` restarts. The inspector is linked from the title screen.
+title/pause/complete shell. Audio is procedural (no samples): a wind bed and pad
+plus movement/checkpoint/finish cues; the title/pause menu has sound mute and
+volume controls saved locally. Mouse sensitivity is saved under
+`glassline.sensitivity.v1`; `R` retries and `Backspace` restarts. The inspector is
+linked from the title screen.
 
 Sandbox for mechanic testing:
 

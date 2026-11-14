@@ -29,10 +29,11 @@ function saveSensitivity(value) {
  *   onResume: () => void,
  *   onRestart: () => void,
  *   onSensitivity: (value: number) => void,
+ *   audio?: any,
  * }} options
  */
 export function createTutorialMenu(options) {
-  const { level, canvas, onStart, onResume, onRestart, onSensitivity } = options;
+  const { level, canvas, onStart, onResume, onRestart, onSensitivity, audio } = options;
   const root = document.createElement('div');
   root.id = 'glassline-menu';
   root.style.cssText =
@@ -76,6 +77,16 @@ export function createTutorialMenu(options) {
       `<span>MOUSE SENSITIVITY <span id="glm-sens-value" style="color:#eef1ef">${sensitivity.toFixed(1)}×</span></span>` +
       `<input id="glm-sens" type="range" min="0.5" max="2" step="0.1" value="${sensitivity}" style="accent-color:#d23a39">` +
       '</label>'
+    );
+  }
+
+  function audioMarkup() {
+    if (!audio) return '';
+    return (
+      `<div style="display:grid;grid-template-columns:1fr 150px;gap:12px;align-items:center;margin:0 0 18px;color:#aeb8bc">` +
+      `<button id="glm-mute" data-action="mute" style="padding:8px 10px;background:${audio.muted ? '#1a2226' : '#253036'};color:#eef1ef;border:1px solid #465258;font:700 11px 'IBM Plex Mono',monospace;cursor:pointer">SOUND ${audio.muted ? 'OFF' : 'ON'}</button>` +
+      `<input id="glm-vol" type="range" min="0" max="1" step="0.05" value="${audio.volume}" style="accent-color:#d23a39">` +
+      '</div>'
     );
   }
 
@@ -123,6 +134,7 @@ export function createTutorialMenu(options) {
         ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 22px;margin:22px 0 10px">${controls}</div>`
         : statsMarkup(stats)) +
       sensitivityMarkup() +
+      audioMarkup() +
       actionsMarkup() +
       (isPause ? '<div style="color:#707b80;margin-top:10px">Backspace restarts from the beginning.</div>' : '') +
       '</div>';
@@ -135,6 +147,10 @@ export function createTutorialMenu(options) {
       if (valueEl) valueEl.textContent = `${sensitivity.toFixed(1)}×`;
       saveSensitivity(sensitivity);
       onSensitivity(sensitivity);
+    });
+    const volumeSlider = root.querySelector('#glm-vol');
+    volumeSlider?.addEventListener('input', () => {
+      audio?.setVolume(Number(volumeSlider.value));
     });
   }
 
@@ -158,6 +174,15 @@ export function createTutorialMenu(options) {
     const button = target?.closest?.('[data-action]');
     const action = button?.getAttribute('data-action');
     if (!action) return;
+    if (action === 'mute') {
+      audio?.setMuted(!audio.muted);
+      const muteButton = root.querySelector('#glm-mute');
+      if (muteButton) {
+        muteButton.textContent = `SOUND ${audio?.muted ? 'OFF' : 'ON'}`;
+        muteButton.style.background = audio?.muted ? '#1a2226' : '#253036';
+      }
+      return;
+    }
     if (action === 'start') {
       hide();
       onStart();

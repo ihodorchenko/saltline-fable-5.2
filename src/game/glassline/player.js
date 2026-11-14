@@ -182,6 +182,7 @@ export function createPlayerController(game) {
     state.slideTime = 0;
     state.slideBuffer = 0;
     state.bodyHeight = SLIDE_HEIGHT;
+    emit('slide');
     return true;
   }
 
@@ -237,6 +238,7 @@ export function createPlayerController(game) {
       .addScaledVector(found.dir, found.distance + 1.0);
     state.vaultDir.copy(found.dir);
     state.vaultArc = Math.max(0.45, found.height + 0.2);
+    emit('vault');
     state.vaultTime = 0;
     state.vaulting = true;
     state.crouched = false;
@@ -282,6 +284,7 @@ export function createPlayerController(game) {
       .copy(pos)
       .addScaledVector(found.dir, found.distance + 0.45);
     state.mantleTo.y = found.topY + 0.02;
+    emit('mantle');
     state.mantleTime = 0;
     state.mantling = true;
     state.crouched = false;
@@ -354,6 +357,7 @@ export function createPlayerController(game) {
     state.onGround = false;
     state.rollTarget =
       found.side === 'right' ? -WALLRUN_ROLL : WALLRUN_ROLL;
+    emit('wallrun');
     vel.set(0, 0, 0);
     state.wallruns += 1;
     return true;
@@ -372,6 +376,7 @@ export function createPlayerController(game) {
     if (jump) {
       vel.addScaledVector(state.wallNormal, 3.8);
       vel.y = JUMP;
+      emit('jump', { wall: true });
     } else {
       vel.y = 0;
     }
@@ -398,6 +403,7 @@ export function createPlayerController(game) {
     state.rollSpeed = current;
     state.rolling = true;
     state.crouched = true;
+    emit('roll');
     state.bodyHeight = SLIDE_HEIGHT;
     state.onGround = true;
     vel.set(0, 0, 0);
@@ -458,6 +464,7 @@ export function createPlayerController(game) {
     state.bodyHeight = HEIGHT;
     state.onGround = false;
     state.rollTarget = 0.08;
+    emit('wallclimb');
     vel.set(0, 0, 0);
     state.wallclimbs += 1;
     return true;
@@ -475,6 +482,7 @@ export function createPlayerController(game) {
     if (jump) {
       vel.addScaledVector(state.climbNormal, 3.5);
       vel.y = JUMP;
+      emit('jump', { wall: true });
     }
   }
 
@@ -530,6 +538,7 @@ export function createPlayerController(game) {
       endRoll();
       vel.y = JUMP;
       state.onGround = false;
+      emit('jump', { roll: true });
       return;
     }
     if (
@@ -585,6 +594,7 @@ export function createPlayerController(game) {
       state.onGround = false;
       state.coyote = 0;
       state.jumps += 1;
+      emit('jump', { air: true });
     }
   }
 
@@ -600,6 +610,16 @@ export function createPlayerController(game) {
       !keys.has('ControlRight')
     ) {
       tryStand();
+    }
+  }
+
+  let stepAccum = 0;
+
+  function emit(name, payload = {}) {
+    try {
+      game.events?.emit(`glassline:${name}`, payload);
+    } catch {
+      /* audio/events are optional */
     }
   }
 
@@ -803,6 +823,8 @@ export function createPlayerController(game) {
     vel.y -= GRAVITY * step;
 
     const fallSpeed = vel.y;
+    const prevX = pos.x;
+    const prevZ = pos.z;
     const wantsCrouch =
       keys.has('KeyC') ||
       keys.has('ControlLeft') ||
@@ -820,6 +842,12 @@ export function createPlayerController(game) {
       if (justLanded && fallSpeed < -2) {
         state.landDip = Math.min(0.12, -fallSpeed * 0.012);
       }
+      if (justLanded) {
+        emit('land', {
+          impact: -fallSpeed,
+          speed: Math.hypot(vel.x, vel.z),
+        });
+      }
       if (
         justLanded &&
         wantsCrouch &&
@@ -832,8 +860,21 @@ export function createPlayerController(game) {
       }
       if (vel.y < 0) vel.y = 0;
       state.onGround = true;
+      if (
+        !state.sliding &&
+        !state.rolling &&
+        !state.wallrunning &&
+        !state.wallclimbing
+      ) {
+        stepAccum += Math.hypot(pos.x - prevX, pos.z - prevZ);
+        if (stepAccum >= (sprinting ? 1.75 : 1.35)) {
+          stepAccum = 0;
+          emit('step');
+        }
+      }
     } else {
       state.onGround = false;
+      stepAccum = 0;
     }
     if (result.hitCeil && vel.y > 0) vel.y = 0;
 

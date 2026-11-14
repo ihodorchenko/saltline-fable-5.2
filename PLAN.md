@@ -160,7 +160,7 @@ for the vertical slice.
 
 Branches: `feat/glassline-art`, `feat/glassline-ui`, `feat/glassline-audio`
 
-Status: UI shell merged. `feat/glassline-art` implemented, not merged.
+Status: UI shell and art merged. `feat/glassline-audio` implemented, not merged.
 
 - [x] original GLASSLINE title, pause and completion overlay (merged);
 - [x] start gates the timer/run and requests pointer lock;
@@ -171,9 +171,12 @@ Status: UI shell merged. `feat/glassline-art` implemented, not merged.
 - [x] original art/theme pass on the tutorial blockout: textured concrete tops,
       dark platform sides, edge lines, lit skyline windows, rooftop AC/vent/antenna/rail
       props, act-sign underline, warm/cool three-light setup and exposure lift;
-- [ ] original music/SFX and audio settings (audio branch);
+- [x] original procedural music/SFX: wind bed, three-note pad, footsteps, jump,
+      land, slide, vault, mantle, wallrun, wallclimb, roll, checkpoint, finish,
+      respawn and UI cues (audio branch, not merged);
+- [x] menu mute/volume controls with localStorage persistence;
 - [ ] full settings/controls/rebinding decision;
-- [ ] no copied IP audit.
+- [ ] no copied-IP audit and final audio QA.
 
 Acceptance: coherent vertical slice; assets documented and licensed.
 

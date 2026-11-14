@@ -6,6 +6,7 @@ import { tutorialLevel } from '../../levels/tutorial.js';
 import { buildLevel } from '../../levels/build.js';
 import { createPlayerController } from './player.js';
 import { createTutorialMenu } from './menu.js';
+import { createGlasslineAudio } from './audio.js';
 import {
   checkpointSplit,
   formatTime,
@@ -245,6 +246,11 @@ export async function showcaseTutorial(game) {
     idleTime = 0;
     stuckPrompted = false;
     lastPosition = null;
+    try {
+      game.events?.emit('glassline:respawn', { auto });
+    } catch {
+      /* events are optional */
+    }
     saveProgress(progress);
     setHud();
   }
@@ -283,20 +289,29 @@ export async function showcaseTutorial(game) {
 
   const autostart =
     game.params?.autostart === '1' || game.params?.shot === '1';
+  const audio = createGlasslineAudio();
+  audio.bind(game.events);
   menu = createTutorialMenu({
     level,
     canvas: game.renderer?.domElement || null,
+    audio,
     onStart: () => {
       started = true;
       paused = false;
+      audio.start();
+      audio.play('ui');
     },
     onResume: () => {
       paused = false;
+      audio.start();
+      audio.play('ui');
     },
     onRestart: () => {
       restart();
       started = true;
       paused = false;
+      audio.start();
+      audio.play('ui');
     },
     onSensitivity: (value) => {
       controller.setSensitivity(0.0022 * value);
@@ -362,6 +377,7 @@ export async function showcaseTutorial(game) {
     level,
     storageKey: TUTORIAL_STORAGE_KEY,
     menu,
+    audio,
   };
 
   return {
@@ -436,6 +452,15 @@ export async function showcaseTutorial(game) {
             split,
             total: elapsed,
           });
+          try {
+            game.events?.emit('glassline:checkpoint', {
+              index: i,
+              split,
+              total: elapsed,
+            });
+          } catch {
+            /* events are optional */
+          }
           progress.message = '';
           saveProgress(progress);
           setHud();
@@ -457,6 +482,11 @@ export async function showcaseTutorial(game) {
         }
         saveProgress(progress);
         setHud();
+        try {
+          game.events?.emit('glassline:finish', { time: elapsed });
+        } catch {
+          /* events are optional */
+        }
         paused = true;
         menu?.showComplete({
           time: formatTime(elapsed),
@@ -469,6 +499,7 @@ export async function showcaseTutorial(game) {
       removeEventListener('keydown', onKeyDown);
       document.removeEventListener('pointerlockchange', onPointerLockChange);
       menu?.dispose();
+      audio.dispose();
       hud.remove();
       controller.dispose();
     },

@@ -7,12 +7,19 @@ test('glassline start and pause overlays gate the run', async ({ page }) => {
   await expect(menu).toBeVisible();
   await expect(menu).toContainText('GLASSLINE');
   await expect(menu).toContainText('START RUN');
+  await expect(menu).toContainText('SOUND ON');
+  await page.locator('[data-action="mute"]').click();
+  await expect(menu).toContainText('SOUND OFF');
+  const audioStored = await page.evaluate(() => JSON.parse(localStorage.getItem('glassline.audio.v1')));
+  expect(audioStored.muted).toBe(true);
+  await page.locator('[data-action="mute"]').click();
   await expect(page.locator('#gl-time')).toHaveText('TIME 00:00');
   await page.waitForTimeout(900);
   await page.screenshot({ path: 'artifacts/glassline-menu.png' });
 
   await page.locator('[data-action="start"]').click();
   await expect(menu).toBeHidden();
+  await expect.poll(() => page.evaluate(() => window.__G.glassline.audio.started)).toBe(true);
   await page.waitForTimeout(1300);
   await expect(page.locator('#gl-time')).not.toHaveText('TIME 00:00');
 
