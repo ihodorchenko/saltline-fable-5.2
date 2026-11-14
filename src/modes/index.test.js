@@ -12,6 +12,7 @@ const modules = {
   props: moduleStub(),
   render: moduleStub(),
   glassline: moduleStub(),
+  glasslineTutorial: moduleStub(),
 };
 
 describe('modes', () => {
@@ -32,6 +33,11 @@ describe('modes', () => {
       bench: false,
       showcase: 'glassline',
     });
+    expect(modes.resolve({ show: 'glassline-tutorial' }, '')).toEqual({
+      kind: 'showcase',
+      bench: false,
+      showcase: 'glassline-tutorial',
+    });
     expect(modes.resolve({ show: 'missing' }, '').kind).toBe('campaign');
     expect(modes.resolve({ bench: '1' }, '').kind).toBe('bench');
     expect(modes.resolve({}, '#bench').kind).toBe('bench');
@@ -50,6 +56,7 @@ describe('modes', () => {
       'props',
       'render',
       'glassline',
+      'glassline-tutorial',
     ]);
     expect(modes.showcases.mats).toEqual({});
   });

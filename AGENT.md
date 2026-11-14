@@ -10,9 +10,11 @@ and must not be merged back into `dev`.
 
 ## Current gate
 
-Phase 1 is complete and stabilized on `dev`. This branch contains planning, the
-completed reference analysis and the Step 0 skeleton. The skeleton is **not yet
-merged into `project/glassline`**; wait for the owner command.
+Phase 1 is complete and stabilized on `dev`. Step 0, Step 1 and all Step 2 parkour
+mechanics are merged into `project/glassline`; their feature branches are deleted.
+Step 3 has started on `feat/glassline-tutorial`: data-driven tutorial blockout,
+checkpoints/respawn/finish and a stage HUD. It is **not merged**; merge only on
+command.
 
 The theme, language and platform are confirmed: **parkour in the spirit of
 Mirror's Edge with original IP**, **JS + JSDoc**, **desktop Chrome**, **60 FPS**.
@@ -21,15 +23,13 @@ TypeScript migration.
 
 Reference analysis is complete:
 
-- [`docs/REFERENCE.md`](docs/REFERENCE.md) — timestamps, movement/Camera observations;
+- [`docs/REFERENCE.md`](docs/REFERENCE.md) — timestamps, movement/camera observations;
 - [`docs/MOVEMENT.md`](docs/MOVEMENT.md) — movement spec and starting targets;
 - [`docs/CAMERA.md`](docs/CAMERA.md) — camera/FOV/roll/landing spec.
 
-Step 0 and Step 1 are merged into `project/glassline`; their feature branches are
-deleted. Step 2 has started on `feat/glassline-slide`: run-to-slide, friction,
-recovery, low-ceiling block, camera/FOV dip and tests. It is not merged; merge
-only on command. Other parkour moves are not started. The reference video is
-local/untracked and must not be committed.
+Step 2 status: slide, vault, mantle, wallrun, wallclimb, roll and balance are all
+implemented and merged. The Step 3 blockout is still short of the 10–20 minute
+acceptance target. The reference video is local/untracked and must not be committed.
 
 ## Hard rules
 
@@ -87,21 +87,23 @@ One branch per move, in this order:
 4. `feat/glassline-wallrun` — merged
 5. `feat/glassline-wallclimb` — merged
 6. `feat/glassline-roll` — merged
-7. `feat/glassline-balance` — implemented, not merged
+7. `feat/glassline-balance` — merged
 
 Each move needs a state machine, input buffering, camera/audio feedback, a test
 map and regression tests for stuck/duplicate states.
 
 ### Step 3 — Tutorial level
 
-Branch `feat/glassline-tutorial`.
+Branch `feat/glassline-tutorial` (blockout in progress).
 
-- data-driven layout;
-- one mechanic taught at a time;
-- checkpoints, respawn, finish;
-- readable route;
-- 10–20 minute slice;
-- optional level format validator/editor.
+- [x] data-driven layout and validator;
+- [x] one mechanic station at a time;
+- [x] checkpoints, respawn, finish and stage HUD;
+- [x] separate `?show=glassline-tutorial` mode;
+- [ ] readable full route and art pass;
+- [ ] complete 10–20 minute slice;
+- [ ] checkpoint persistence;
+- [ ] optional level editor/preview.
 
 ### Step 4 — Theme, art, audio, UI
 

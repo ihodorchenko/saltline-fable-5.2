@@ -107,9 +107,7 @@ smooth slope solver is future work.
 
 ### Step 2 — Core parkour moves
 
-One branch per mechanic. Current status: slide, vault, mantle, wallrun, wallclimb
-and roll are merged; balance is implemented on `feat/glassline-balance` (not
-merged). All Step 2 mechanics are now implemented.
+One branch per mechanic. All Step 2 mechanics are implemented and merged.
 
 1. `feat/glassline-slide` — **implemented and merged**: run-to-slide, friction,
    recovery, low-ceiling block, camera/FOV dip, unit + Playwright tests.
@@ -123,7 +121,7 @@ merged). All Step 2 mechanics are now implemented.
    stamina-limited vertical climb, Space wall-jump/drop, unit + Playwright tests.
 6. `feat/glassline-roll` — **implemented and merged**: crouch on a fast landing,
    short roll, camera dip and momentum retention, unit + Playwright tests.
-7. `feat/glassline-balance` — **implemented, not merged**: tagged beam, forward
+7. `feat/glassline-balance` — **implemented and merged**: tagged beam, forward
    balance speed, A/D lateral correction, camera lean and fall-out detection.
 
 For each: state machine, input buffer, animation/feedback, camera, audio, test map,
@@ -134,17 +132,29 @@ match reference targets within tolerance.
 
 ### Step 3 — Tutorial level and content pipeline
 
-Branch: `feat/glassline-tutorial`
+Branch: `feat/glassline-tutorial` — **blockout in progress, not merged**.
 
-- data-driven level layout;
-- blockout that teaches one mechanic at a time;
-- checkpoints, respawn, finish trigger;
-- route readability: colour, lighting, silhouettes;
-- optional simple editor/format validator;
-- one complete 10–20 minute slice.
+Delivered:
 
-Acceptance: a new player can finish without developer guidance; checkpoint
-recovery is reliable.
+- [x] data-driven level data in `src/levels/tutorial.js`;
+- [x] shared level builder in `src/levels/build.js`;
+- [x] format validator with unit tests;
+- [x] separate playable mode: `?show=glassline-tutorial`;
+- [x] checkpoints, fall respawn, finish trigger and stage HUD;
+- [x] one station for every Step 2 mechanic (jump, slide, vault, mantle, wallrun,
+      wallclimb, balance), plus roll-ready geometry;
+- [x] browser tests for boot, checkpoint advance, respawn and finish.
+
+Still needed for Step 3 acceptance:
+
+- [ ] expand the blockout to a complete 10–20 minute route;
+- [ ] tutorial pacing and fail-safe retry prompts;
+- [ ] route readability/art pass (colour, lighting, silhouettes);
+- [ ] checkpoint persistence across reloads;
+- [ ] optional editor/level-preview tooling.
+
+Acceptance remains: a new player can finish without developer guidance;
+checkpoint recovery is reliable.
 
 ### Step 4 — Theme, art, audio and UI
 

@@ -9,5 +9,5 @@
     "strict": false,
     "skipLibCheck": true
   },
-  "include": ["src/game/glassline/**/*.js", "types/**/*.d.ts"]
+  "include": ["src/game/glassline/**/*.js", "src/levels/**/*.js", "types/**/*.d.ts"]
 }

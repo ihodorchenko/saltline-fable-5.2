@@ -3,9 +3,15 @@
 Phase 2 first-person parkour project. The full plan is in [`PLAN.md`](../../../PLAN.md);
 the agent rules are in [`AGENT.md`](../../../AGENT.md).
 
-## Step 2 sandbox
+## Play modes
 
-Open:
+Tutorial blockout:
+
+```text
+?show=glassline-tutorial&q=low
+```
+
+Sandbox for mechanic testing:
 
 ```text
 ?show=glassline&q=low
@@ -18,6 +24,10 @@ engine `moveCapsule` contract; ledge/coyote queries are exposed for Step 2.
 Known limits: the ramp is a stepped collider under a smooth visual, the moving
 platform does not carry the player yet, and slide has no dedicated audio/animation
 rig yet.
+
+The tutorial uses `src/levels/tutorial.js` data and the shared builder in
+`src/levels/build.js`. Checkpoints, fall respawn, finish and the stage HUD live in
+`src/game/glassline/tutorial.js`.
 
 ## Commands
 
