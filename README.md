@@ -44,7 +44,7 @@ The title screen separates **Continue / Start over**, **Settings**, **Controls**
 - `src/levels/` — data-driven route, generated city district, builder and validator.
 - `src/engine/` — minimal shared engine: core, physics and renderer.
 - `tools/bench-glassline.mjs` — headed hardware peak-load benchmark.
-- `docs/DESIGN.md` — city concept, palette, typography, HUD and procedural characters.
+- `docs/DESIGN.md` — high-key city concept, materials, HUD and procedural characters.
 - `docs/AUDIO.md` — procedural wind, city bed, synth, parkour SFX and radio dispatch.
 - `docs/PERFORMANCE.md` — measured draw-call/frame budgets and the 60 FPS profile.
 - `docs/GLASSLINE_AUDIT.md` — QA and no-copied-IP audit.

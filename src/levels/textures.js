@@ -199,6 +199,46 @@ export function createTextureFactory(game) {
     return texture;
   };
 
+  const glassFacade = () => {
+    const key = 'glass-facade';
+    if (cache.has(key)) return cache.get(key);
+    const size = 512;
+    const canvas = canvasOf(size);
+    const context = canvas.getContext('2d');
+    const gradient = context.createLinearGradient(0, 0, 0, size);
+    gradient.addColorStop(0, '#86c6dd');
+    gradient.addColorStop(0.48, '#c8eaf2');
+    gradient.addColorStop(1, '#e9f8fa');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, size, size);
+    // Broad curtain-wall bays, not a grid of tiny punched windows.
+    for (let x = 0; x < size; x += 64) {
+      context.fillStyle = 'rgba(255, 255, 255, .5)';
+      context.fillRect(x, 0, 3, size);
+      context.fillStyle = 'rgba(40, 89, 104, .16)';
+      context.fillRect(x + 3, 0, 2, size);
+    }
+    for (let y = 0; y < size; y += 64) {
+      context.fillStyle = 'rgba(255, 255, 255, .65)';
+      context.fillRect(0, y, size, 4);
+      context.fillStyle = 'rgba(35, 78, 93, .18)';
+      context.fillRect(0, y + 4, size, 2);
+    }
+    // Soft reflected-sky streaks.
+    for (let i = 0; i < 4; i += 1) {
+      const x = 40 + i * 112;
+      const streak = context.createLinearGradient(x, 0, x + 50, size);
+      streak.addColorStop(0, 'rgba(255,255,255,0)');
+      streak.addColorStop(0.45, 'rgba(255,255,255,.22)');
+      streak.addColorStop(1, 'rgba(255,255,255,0)');
+      context.fillStyle = streak;
+      context.fillRect(x, 0, 50, size);
+    }
+    const texture = finish(canvas, [1, 1]);
+    cache.set(key, texture);
+    return texture;
+  };
+
   const roof = (hex = 0xe5e4d9) => {
     const key = `roof-${hex}`;
     if (cache.has(key)) return cache.get(key);
@@ -306,5 +346,5 @@ export function createTextureFactory(game) {
     return texture;
   };
 
-  return { concrete, side, facade, roof, metal, asphalt, red };
+  return { concrete, side, facade, glassFacade, roof, metal, asphalt, red };
 }

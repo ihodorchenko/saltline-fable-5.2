@@ -6,15 +6,17 @@ test('generated city surrounds the route without blocking it', async ({ page }, 
   const city = await page.evaluate(() => {
     const group = window.__G.scene.getObjectByName('glassline-city');
     const byName = (name) => group?.getObjectByName(name);
+    const bodies = byName('city-buildings');
     return {
       stats: window.__G.glassline.city,
       group: !!group,
-      buildings: byName('city-buildings')?.count || 0,
+      buildings: bodies?.children?.reduce((sum, child) => sum + (child.count || 0), 0) || 0,
       windows: byName('city-windows')?.count || 0,
       signs: group?.children.filter((child) => child.name === 'city-sign').length || 0,
       transit: byName('city-transit-track')?.count || 0,
+      abyss: !!byName('city-abyss'),
       street: !!byName('city-street'),
-      cityTexture: !!byName('city-buildings')?.material?.map,
+      cityTexture: !!bodies?.children?.some((child) => child.material?.map),
       spire: !!window.__G.scene.getObjectByName('city-spire'),
       backdrop: byName('city-backdrop')?.count || 0,
       roofTexture: !!window.__G.glassline.root.getObjectByName('platform-start-roof')?.material?.[2]?.map,
@@ -22,7 +24,8 @@ test('generated city surrounds the route without blocking it', async ({ page }, 
     };
   });
   expect(city.group).toBe(true);
-  expect(city.street).toBe(true);
+  expect(city.abyss).toBe(true);
+  expect(city.street).toBe(false);
   expect(city.cityTexture).toBe(true);
   expect(city.spire).toBe(true);
   expect(city.backdrop).toBeGreaterThan(100);

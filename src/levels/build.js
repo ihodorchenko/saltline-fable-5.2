@@ -515,9 +515,9 @@ export function buildLevel(game, level) {
   gateTop.castShadow = true;
   root.add(gateTop);
 
-  scene.fog = new THREE.Fog(0xcfe0e7, 95, 430);
-  const hemisphere = new THREE.HemisphereLight(0xeaf7ff, 0x7d898b, 2.6);
-  const key = new THREE.DirectionalLight(0xffe5c0, 3.5);
+  scene.fog = new THREE.Fog(0xeaf7ff, 80, 430);
+  const hemisphere = new THREE.HemisphereLight(0xffffff, 0x6699cc, 1.8);
+  const key = new THREE.DirectionalLight(0xfff4df, 3.1);
   key.position.set(-8, 12, 6);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);
@@ -525,23 +525,50 @@ export function buildLevel(game, level) {
   key.shadow.camera.right = 18;
   key.shadow.camera.top = 18;
   key.shadow.camera.bottom = -18;
-  const rim = new THREE.DirectionalLight(0xa9d9ff, 1.8);
+  const rim = new THREE.DirectionalLight(0xb9e4ff, 1.4);
   rim.position.set(14, 8, -24);
-  const warm = new THREE.DirectionalLight(0xffa56f, 0.7);
+  const warm = new THREE.DirectionalLight(0xffd0a4, 0.6);
   warm.position.set(-12, 4, -60);
   scene.add(hemisphere, key, rim, warm);
   if (game.render && game.render.exposure != null) {
-    game.render.exposure = 1.18;
+    game.render.exposure = 1.3;
   }
   const sky = game.render?.sky || game.scene?.getObjectByName?.('sky');
   if (sky?.material?.uniforms) {
     const uniforms = sky.material.uniforms;
-    uniforms.uZen?.value?.set?.(0.09, 0.34, 0.66);
-    uniforms.uHor?.value?.set?.(0.86, 0.93, 0.96);
-    uniforms.uHorAway?.value?.set?.(0.6, 0.74, 0.82);
-    uniforms.uSunCol?.value?.set?.(1, 0.82, 0.62);
+    uniforms.uZen?.value?.set?.(0.13, 0.5, 0.86);
+    uniforms.uHor?.value?.set?.(0.98, 0.99, 1);
+    uniforms.uHorAway?.value?.set?.(0.6, 0.78, 0.9);
+    uniforms.uSunCol?.value?.set?.(1, 0.94, 0.8);
     sky.material.needsUpdate = true;
   }
+  // High-key clear sky. The engine sky carries a storm-cloud layer that is not
+  // appropriate for the utopian city; hide it and use a clean gradient dome.
+  if (sky) sky.visible = false;
+  const skyDome = new THREE.Mesh(
+    new THREE.SphereGeometry(620, 32, 16),
+    new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      depthWrite: false,
+      fog: false,
+      toneMapped: false,
+      uniforms: {
+        uTop: { value: new THREE.Color(0x2b74b8) },
+        uBottom: { value: new THREE.Color(0xf3fbff) },
+        uSunDir: { value: new THREE.Vector3(-0.35, 0.55, -0.75).normalize() },
+        uSunCol: { value: new THREE.Color(0xfff4d6) },
+      },
+      vertexShader:
+        'varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader:
+        'varying vec3 vDir; uniform vec3 uTop; uniform vec3 uBottom; uniform vec3 uSunDir; uniform vec3 uSunCol; void main(){ float h = clamp(vDir.y * 1.2 + 0.08, 0.0, 1.0); vec3 col = mix(uBottom, uTop, pow(h, 0.62)); float sun = pow(max(dot(vDir, normalize(uSunDir)), 0.0), 96.0); col = mix(col, uSunCol, sun * 0.55); gl_FragColor = vec4(col, 1.0); }',
+    }),
+  );
+  skyDome.name = 'glassline-clear-sky';
+  skyDome.position.set(0, 0, -90);
+  skyDome.frustumCulled = false;
+  skyDome.renderOrder = -1000;
+  root.add(skyDome);
   // Original procedural sun glow: a soft utopian light source beyond the route.
   const sunCanvas = document.createElement('canvas');
   sunCanvas.width = 256;

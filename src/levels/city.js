@@ -21,6 +21,7 @@ export function createCityPlan(level) {
   const config = level.city || {};
   const seed = Number(config.seed) || 731;
   const streetY = Number(config.streetY) || -18;
+  const abyssY = Number(config.abyssY) || -150;
   const corridor = Number(config.corridor) || 15;
   const rng = makeRng(seed);
   const buildings = [];
@@ -28,8 +29,9 @@ export function createCityPlan(level) {
     { x: -34, z: -38, w: 14, d: 14, h: 58, color: 4, roofColor: 1 },
     { x: 35, z: -108, w: 12, d: 12, h: 74, color: 1, roofColor: 0 },
     { x: -36, z: -182, w: 15, d: 15, h: 64, color: 3, roofColor: 2 },
-  ].map((landmark) => ({
+  ].map((landmark, index) => ({
     ...landmark,
+    style: index % 3,
     streetY,
     top: streetY + landmark.h,
     keep: 0,
@@ -60,6 +62,7 @@ export function createCityPlan(level) {
     windows: true,
     roofUnit: building.h > 22,
     landmark: false,
+    style: building.style ?? (building.edge === 'start' ? 1 : 2),
   }));
   const occupied = [...landmarks, ...edgeBuildings];
   const overlaps = (candidate) =>
@@ -83,6 +86,8 @@ export function createCityPlan(level) {
       const inner = Math.abs(bx) < 44;
       const height = (inner ? 8 : 20) + rng() * (inner ? 18 : 48);
       const top = streetY + height;
+      const styleRoll = rng();
+      const style = styleRoll < 0.55 ? 0 : styleRoll < 0.84 ? 1 : 2;
       const candidate = {
         x: bx,
         z: bz,
@@ -97,6 +102,7 @@ export function createCityPlan(level) {
         windows: rng() > 0.18,
         roofUnit: rng() > 0.48,
         landmark: false,
+        style,
       };
       if (!overlaps(candidate)) {
         buildings.push(candidate);
@@ -131,6 +137,7 @@ export function createCityPlan(level) {
       roofUnit: rng() > 0.6,
       landmark: false,
       infill: true,
+      style: rng() < 0.55 ? 0 : rng() < 0.75 ? 1 : 2,
     };
     if (!overlaps(candidate)) {
       buildings.push(candidate);
@@ -239,6 +246,7 @@ export function createCityPlan(level) {
   return {
     seed,
     streetY,
+    abyssY,
     corridor,
     buildings,
     landmarks,
@@ -267,54 +275,70 @@ export function buildCity(game, level, plan, textures = null) {
   const buildings = plan.buildings.filter((building) => building.keep <= density);
   const allBuildings = [...buildings, ...plan.landmarks];
 
-  // Street plate.
-  const streetTexture = textures?.asphalt ? textures.asphalt().clone() : null;
-  if (streetTexture) {
-    streetTexture.repeat.set(16, 20);
-    streetTexture.needsUpdate = true;
-  }
-  const street = new THREE.Mesh(
-    new THREE.PlaneGeometry(1040, 1160),
-    new THREE.MeshStandardMaterial({
-      map: streetTexture,
-      color: streetTexture ? 0xffffff : 0x27363a,
-      roughness: 0.96,
-      metalness: 0.02,
-    }),
+  // Abyss: a luminous sky-lit plane below the towers instead of a street grid.
+  const abyss = new THREE.Mesh(
+    new THREE.PlaneGeometry(2200, 2200),
+    new THREE.MeshBasicMaterial({ color: 0xeaf7ff, fog: true }),
   );
-  street.name = 'city-street';
-  street.rotation.x = -Math.PI / 2;
-  street.position.set(0, plan.streetY - 0.35, -96);
-  root.add(street);
+  abyss.name = 'city-abyss';
+  abyss.rotation.x = -Math.PI / 2;
+  abyss.position.set(0, plan.abyssY - 18, -96);
+  root.add(abyss);
 
-  // One instanced body mesh for every block.
-  const bodyGeometry = new THREE.BoxGeometry(1, 1, 1);
-  const bodyMaterial = new THREE.MeshStandardMaterial({
-    map: textures?.facade ? textures.facade() : null,
-    roughness: 0.82,
-    metalness: 0.04,
-  });
-  const bodies = new THREE.InstancedMesh(bodyGeometry, bodyMaterial, allBuildings.length);
-  bodies.name = 'city-buildings';
-  bodies.castShadow = false;
-  bodies.receiveShadow = false;
   const matrix = new THREE.Matrix4();
   const quaternion = new THREE.Quaternion();
   const scale = new THREE.Vector3();
   const position = new THREE.Vector3();
   const color = new THREE.Color();
-  allBuildings.forEach((building, index) => {
-    position.set(building.x, plan.streetY + building.h / 2, building.z);
-    scale.set(building.w, building.h, building.d);
-    matrix.compose(position, quaternion, scale);
-    bodies.setMatrixAt(index, matrix);
-    color.setHex(BODY_COLORS[building.color % BODY_COLORS.length]);
-    bodies.setColorAt(index, color);
-  });
-  bodies.instanceMatrix.needsUpdate = true;
-  if (bodies.instanceColor) bodies.instanceColor.needsUpdate = true;
-  bodies.computeBoundingSphere();
-  root.add(bodies);
+  const bodyGeometry = new THREE.BoxGeometry(1, 1, 1);
+  const accentColors = [0x1e6bb8, 0x128c7b, 0xe07a24, 0x6e5bb5, 0xd23a39];
+  const bodyMaterials = [
+    new THREE.MeshStandardMaterial({
+      map: textures?.glassFacade ? textures.glassFacade() : null,
+      color: 0xffffff,
+      roughness: 0.16,
+      metalness: 0.72,
+      envMap: game.scene?.environment || null,
+      envMapIntensity: 0.85,
+    }),
+    new THREE.MeshStandardMaterial({
+      color: 0xf8fbff,
+      roughness: 0.86,
+      metalness: 0.03,
+    }),
+    new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.34,
+      metalness: 0.18,
+    }),
+  ];
+  const bodyGroup = new THREE.Group();
+  bodyGroup.name = 'city-buildings';
+  const styleCounts = [0, 0, 0];
+  for (let style = 0; style < 3; style += 1) {
+    const group = allBuildings.filter((building) => (building.style || 0) === style);
+    styleCounts[style] = group.length;
+    const mesh = new THREE.InstancedMesh(bodyGeometry, bodyMaterials[style], group.length);
+    mesh.name = `city-buildings-${style}`;
+    mesh.castShadow = false;
+    mesh.receiveShadow = false;
+    group.forEach((building, index) => {
+      const height = building.top - plan.abyssY;
+      position.set(building.x, plan.abyssY + height / 2, building.z);
+      scale.set(building.w, height, building.d);
+      matrix.compose(position, quaternion, scale);
+      mesh.setMatrixAt(index, matrix);
+      if (style === 2) {
+        color.setHex(accentColors[index % accentColors.length]);
+        mesh.setColorAt(index, color);
+      }
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    mesh.computeBoundingSphere();
+    bodyGroup.add(mesh);
+  }
+  root.add(bodyGroup);
 
   // Roof caps.
   const roofs = new THREE.InstancedMesh(
@@ -349,7 +373,7 @@ export function buildCity(game, level, plan, textures = null) {
     const faceX = building.x + side * (building.w / 2 + 0.025);
     const faceZ = building.z + building.d / 2 + 0.025;
     for (let floor = 1; floor <= building.floors; floor += 1) {
-      const y = plan.streetY + floor * 5;
+      const y = building.top - floor * 5;
       windows.push({
         x: faceX,
         y,
@@ -402,7 +426,7 @@ export function buildCity(game, level, plan, textures = null) {
     for (let floor = 2; floor <= building.floors; floor += 3) {
       balconies.push({
         x: faceX,
-        y: plan.streetY + floor * 5,
+        y: building.top - floor * 5,
         z: building.z,
         w: 0.42,
         h: 0.14,
@@ -480,8 +504,8 @@ export function buildCity(game, level, plan, textures = null) {
       supports.push({
         x: a.x,
         z: a.z,
-        y: (plan.streetY + a.y) / 2,
-        height: a.y - plan.streetY,
+        y: (plan.abyssY + a.y) / 2,
+        height: a.y - plan.abyssY,
       });
     }
   }
@@ -579,22 +603,6 @@ export function buildCity(game, level, plan, textures = null) {
   unitMesh.instanceMatrix.needsUpdate = true;
   unitMesh.computeBoundingSphere();
   root.add(unitMesh);
-
-  const lightMesh = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(0.12, 2.4, 0.12),
-    new THREE.MeshBasicMaterial({ color: 0xffe2b8 }),
-    plan.lights.length,
-  );
-  lightMesh.name = 'city-lights';
-  plan.lights.forEach((light, index) => {
-    position.set(light.x, light.y, light.z);
-    scale.set(1, 1, 1);
-    matrix.compose(position, quaternion, scale);
-    lightMesh.setMatrixAt(index, matrix);
-  });
-  lightMesh.instanceMatrix.needsUpdate = true;
-  lightMesh.computeBoundingSphere();
-  root.add(lightMesh);
 
   // Skybridges crossing the canyon above the route.
   const bridgeMesh = new THREE.InstancedMesh(
@@ -695,8 +703,10 @@ export function buildCity(game, level, plan, textures = null) {
   );
   backdropMesh.name = 'city-backdrop';
   plan.backdrop.forEach((building, index) => {
-    position.set(building.x, plan.streetY + building.h / 2, building.z);
-    scale.set(building.w, building.h, building.d);
+    const top = plan.streetY + building.h;
+    const height = top - plan.abyssY;
+    position.set(building.x, plan.abyssY + height / 2, building.z);
+    scale.set(building.w, height, building.d);
     matrix.compose(position, quaternion.identity(), scale);
     backdropMesh.setMatrixAt(index, matrix);
     color.setHex(BODY_COLORS[building.color % BODY_COLORS.length]);
@@ -715,9 +725,11 @@ export function buildCity(game, level, plan, textures = null) {
   );
   distantMesh.name = 'city-distant-skyline';
   plan.distant.forEach((building, index) => {
-    position.set(building.x, plan.streetY + building.h / 2, building.z);
-    scale.set(building.w, building.h, building.d);
-    matrix.compose(position, quaternion, scale);
+    const top = plan.streetY + building.h;
+    const height = top - plan.abyssY;
+    position.set(building.x, plan.abyssY + height / 2, building.z);
+    scale.set(building.w, height, building.d);
+    matrix.compose(position, quaternion.identity(), scale);
     distantMesh.setMatrixAt(index, matrix);
   });
   distantMesh.instanceMatrix.needsUpdate = true;
@@ -731,7 +743,7 @@ export function buildCity(game, level, plan, textures = null) {
       windows: windows.length,
       bridges: plan.bridges.length,
       landmarks: plan.landmarks.length,
-      lights: plan.lights.length,
+      lights: 0,
       trees: trees.length,
       signs: plan.signs.length,
       transitSegments: segments.length,
@@ -739,6 +751,7 @@ export function buildCity(game, level, plan, textures = null) {
       balconies: balconies.length,
       spire: !!plan.spire,
       backdrop: plan.backdrop.length,
+      styles: styleCounts,
     },
   };
 }

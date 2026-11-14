@@ -176,6 +176,8 @@ removed from `src/`; the original artifact remains at the repository root.
       act-sign underline and three-light setup;
 - [x] future-city/utopian palette pass: ivory and pale glass towers, cyan windows,
       brighter sky/fog, warm sun with cool rim light and exposure lift;
+- [x] high-key sky/lighting, three contrasting facade material families and a
+      luminous deep abyss instead of a dark street grid;
 - [x] generated city district around the route: terraced blocks, windows,
       skybridges, transit, roof gardens and signage; instanced draw calls;
 - [x] procedural first-person courier rig and mentor character using capsule

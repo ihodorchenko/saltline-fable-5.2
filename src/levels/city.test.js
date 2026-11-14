@@ -19,6 +19,7 @@ describe('GLASSLINE city plan', () => {
     expect(plan.bridges.length).toBeGreaterThan(0);
     expect(plan.spire).toBeTruthy();
     expect(plan.backdrop.length).toBeGreaterThan(100);
+    expect(plan.abyssY).toBeLessThan(-100);
     const all = [...plan.buildings, ...plan.landmarks];
     for (let i = 0; i < all.length; i += 1) {
       for (let j = i + 1; j < all.length; j += 1) {

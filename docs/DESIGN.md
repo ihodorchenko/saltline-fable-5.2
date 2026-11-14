@@ -106,6 +106,9 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
 
 - **Rooftops** are pale ceramic slabs with procedural concrete seams, stains and
   drainage detail, dark board-formed sides, metal fascia and shallow curbs.
+- **Abyss** replaces the old street deck: towers descend far below the route and
+  gaps look into a luminous white-blue plane, keeping the drop vertiginous but
+  clean instead of a gray grid.
 - **Surfaces** use a runtime Canvas atlas: concrete, side concrete, glass facade,
   roof membrane, brushed metal, asphalt/street grid and worn red route paint.
   Platform edges get metal fascia, shallow curbs, structural legs, service AC,
@@ -113,10 +116,12 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
 - **Route** is a continuous red strip; current checkpoint ring and next-checkpoint
   diamond are red.
 - **City** is a deterministic generated district: about 130 near blocks plus
-  349 perimeter-ring blocks at high quality, terraced low-rise roofs near the
-  route, taller towers behind, cyan window bands, green roofs/trees, four
-  skybridges, an elevated diagonal transit line, rooftop service units, three
-  original wayfinding signs and a central spire landmark. Explicit start/finish
+  perimeter-ring blocks at high quality, terraced low-rise roofs near the route,
+  taller towers behind, cyan window bands, green roofs/trees, four skybridges,
+  an elevated diagonal transit line, rooftop service units, three original
+  wayfinding signs and a central spire landmark. Facades are split into three
+  material families: broad-banded reflective glass, matte white concrete and
+  saturated cobalt/emerald/orange accent blocks. Explicit start/finish
   clusters frame both ends; concentric horizon rings and a far terminal tower
   close every sightline without turning the finish into a flat facade wall.
   Building footprints are collision-checked against each other, and window bands
@@ -130,9 +135,9 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
   running ahead on the start roof. No skinned meshes or external models are
   loaded; pivot groups keep elbows, hips and knees hinged correctly.
 
-Lighting: warm key + cool blue rim + bright hemisphere, light blue fog and a
-procedural sun sprite. The palette stays bright and optimistic; danger is conveyed
-by red route language, not darkness.
+Lighting: high-key warm sun, cool blue shadows and a clean blue-to-white sky
+dome, light blue fog, a luminous abyss and a procedural sun sprite. The palette
+stays bright and optimistic; danger is conveyed by red route language, not darkness.
 
 ## Motion / feedback
 
