@@ -3,6 +3,9 @@
 // The city is decorative: route collisions remain the authored level boxes.
 
 const BODY_COLORS = [0xffffff, 0xf7f4ea, 0xeaf3f4, 0xf1eee4, 0xe3eef0];
+// Muted tints for the accent towers. Saturation is reserved for the red route
+// and goals (see docs/DESIGN.md), so no accent may be vivid or red-hued.
+export const ACCENT_COLORS = [0x7f97ad, 0x89a394, 0xcdbfa6, 0x9ca0b4, 0xa9b8c1];
 const ROOF_COLORS = [0xf5f1e7, 0xdce9eb, 0xe7e3d8, 0x78977d];
 
 function makeRng(seed) {
@@ -291,7 +294,6 @@ export function buildCity(game, level, plan, textures = null) {
   const position = new THREE.Vector3();
   const color = new THREE.Color();
   const bodyGeometry = new THREE.BoxGeometry(1, 1, 1);
-  const accentColors = [0x1e6bb8, 0x128c7b, 0xe07a24, 0x6e5bb5, 0xd23a39];
   const bodyMaterials = [
     new THREE.MeshStandardMaterial({
       map: textures?.glassFacade ? textures.glassFacade() : null,
@@ -329,7 +331,7 @@ export function buildCity(game, level, plan, textures = null) {
       matrix.compose(position, quaternion, scale);
       mesh.setMatrixAt(index, matrix);
       if (style === 2) {
-        color.setHex(accentColors[index % accentColors.length]);
+        color.setHex(ACCENT_COLORS[index % ACCENT_COLORS.length]);
         mesh.setColorAt(index, color);
       }
     });

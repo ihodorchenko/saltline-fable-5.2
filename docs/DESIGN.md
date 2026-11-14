@@ -40,7 +40,9 @@ original or procedural.
 | Moss | `#78977D` | rooftop planting |
 
 Surfaces use near-white tops and desaturated blue-grey sides; the red route is
-the strongest saturation on screen.
+the strongest saturation on screen. Accent towers are muted slate, sage, sand,
+dusk and steel tints (saturation ≤ 0.30, never red-hued); this is enforced by
+`city.test.js`.
 
 ## Typography
 
@@ -121,7 +123,7 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
   an elevated diagonal transit line, rooftop service units, three original
   wayfinding signs and a central spire landmark. Facades are split into three
   material families: broad-banded reflective glass, matte white concrete and
-  saturated cobalt/emerald/orange accent blocks. Explicit start/finish
+  muted slate/sage/sand/dusk/steel accent blocks. Explicit start/finish
   clusters frame both ends; concentric horizon rings and a far terminal tower
   close every sightline without turning the finish into a flat facade wall.
   Building footprints are collision-checked against each other, and window bands
@@ -130,9 +132,10 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
 - **Acts**: ascent → descent/second pass → final sprint. Act labels are in-world
   canvas signs; the HUD names the act.
 - **Finish** is a red gate and ring on the final roof.
-- **Characters** are procedural capsule rigs: a first-person courier with an
-  orange wrist tracker and shoes, plus an original mentor in a yellow jacket
-  running ahead on the start roof. No skinned meshes or external models are
+- **Characters** are procedural capsule rigs: a first-person courier with a
+  signal-red wrist tracker and shoes, plus an original mentor in a dark steel-blue jacket
+  running ahead on the start roof. Red stays the runner's colour; the mentor
+  reads by value (dark on ivory), not by hue. No skinned meshes or external models are
   loaded; pivot groups keep elbows, hips and knees hinged correctly.
 
 Lighting: high-key warm sun, cool blue shadows, a clean blue-to-white sky dome

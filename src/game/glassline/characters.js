@@ -16,13 +16,13 @@ function materials(game) {
     cloth: new THREE.MeshStandardMaterial({ color: 0xe8ece8, roughness: 0.6 }),
     skin: new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.72 }),
     accent: new THREE.MeshStandardMaterial({
-      color: 0xff5a1f,
-      emissive: 0x571400,
+      color: 0xd23a39,
+      emissive: 0x4a0a0c,
       emissiveIntensity: 1.15,
       roughness: 0.4,
     }),
     mentorJacket: new THREE.MeshStandardMaterial({
-      color: 0xe6b93c,
+      color: 0x34495a,
       roughness: 0.46,
     }),
     mentorDark: new THREE.MeshStandardMaterial({ color: 0x20262b, roughness: 0.78 }),
