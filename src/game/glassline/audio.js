@@ -12,6 +12,30 @@ export function clampVolume(value) {
   return Math.max(0, Math.min(1, Number(value) || 0));
 }
 
+/**
+ * Map run speed/finale state to the procedural mix. Pure so it can be tested
+ * without an AudioContext.
+ * @param {number} speed
+ * @param {boolean} [finale]
+ */
+export function audioMotion(speed, finale = false) {
+  const ratio = Math.max(0, Math.min(1, Number(speed) / 12 || 0));
+  if (finale) {
+    return {
+      windGain: 0.052,
+      windFrequency: 520,
+      musicCutoff: 330,
+      musicGain: 0.022,
+    };
+  }
+  return {
+    windGain: 0.013 + ratio * 0.033,
+    windFrequency: 300 + ratio * 430,
+    musicCutoff: 420 + ratio * 1250,
+    musicGain: 0.018 + ratio * 0.01,
+  };
+}
+
 function loadSettings() {
   try {
     const data = JSON.parse(localStorage.getItem(AUDIO_KEY) || '{}');
@@ -32,7 +56,10 @@ export function createGlasslineAudio() {
   let master = null;
   let musicGain = null;
   let windGain = null;
+  let windFilter = null;
+  let musicFilter = null;
   let noiseBuffer = null;
+  let introPlayed = false;
   let started = false;
   let disposed = false;
   const sources = [];
@@ -67,12 +94,12 @@ export function createGlasslineAudio() {
     const wind = context.createBufferSource();
     wind.buffer = noiseBuffer;
     wind.loop = true;
-    const windFilter = context.createBiquadFilter();
-    windFilter.type = 'lowpass';
-    windFilter.frequency.value = 380;
-    windFilter.Q.value = 0.7;
+    windFilter = context.createBiquadFilter();
+    windFilter.type = 'bandpass';
+    windFilter.frequency.value = 320;
+    windFilter.Q.value = 1.4;
     windGain = context.createGain();
-    windGain.gain.value = 0.018;
+    windGain.gain.value = 0.014;
     wind.connect(windFilter).connect(windGain).connect(master);
     wind.start();
     sources.push(wind);
@@ -80,9 +107,9 @@ export function createGlasslineAudio() {
     // Original slow pad: A2 / E3 / A3 with a breathing filter.
     musicGain = context.createGain();
     musicGain.gain.value = 0.026;
-    const musicFilter = context.createBiquadFilter();
+    musicFilter = context.createBiquadFilter();
     musicFilter.type = 'lowpass';
-    musicFilter.frequency.value = 620;
+    musicFilter.frequency.value = 520;
     musicGain.connect(master);
     musicFilter.connect(musicGain);
     const lfo = context.createOscillator();
@@ -93,15 +120,18 @@ export function createGlasslineAudio() {
     lfo.connect(lfoGain).connect(musicFilter.frequency);
     lfo.start();
     sources.push(lfo);
-    for (const [frequency, gainValue] of [
-      [110, 0.5],
-      [164.81, 0.28],
-      [220, 0.22],
-      [329.63, 0.08],
+    for (const [frequency, gainValue, type] of [
+      [55, 0.22, 'sawtooth'],
+      [82.41, 0.11, 'triangle'],
+      [110, 0.42, 'sine'],
+      [164.81, 0.24, 'triangle'],
+      [220, 0.18, 'triangle'],
+      [329.63, 0.07, 'triangle'],
     ]) {
       const oscillator = context.createOscillator();
-      oscillator.type = frequency === 110 ? 'sine' : 'triangle';
+      oscillator.type = type;
       oscillator.frequency.value = frequency;
+      oscillator.detune.value = frequency < 100 ? 3 : -2;
       const gain = context.createGain();
       gain.gain.value = gainValue;
       oscillator.connect(gain).connect(musicFilter);
@@ -177,6 +207,41 @@ export function createGlasslineAudio() {
     source.stop(now + duration + 0.02);
   }
 
+  function updateMotion(speed = 0, finale = false) {
+    if (!context || !started) return;
+    const mix = audioMotion(speed, finale);
+    const now = context.currentTime;
+    windGain?.gain.setTargetAtTime(mix.windGain, now, 0.25);
+    windFilter?.frequency.setTargetAtTime(mix.windFrequency, now, 0.25);
+    musicFilter?.frequency.setTargetAtTime(mix.musicCutoff, now, 0.35);
+    musicGain?.gain.setTargetAtTime(mix.musicGain, now, 0.4);
+  }
+
+  function speakIntro() {
+    if (!started || muted || introPlayed) return;
+    introPlayed = true;
+    play('radio');
+    const synth = globalThis.speechSynthesis;
+    const Utterance = globalThis.SpeechSynthesisUtterance;
+    if (!synth || !Utterance) return;
+    globalThis.setTimeout(() => {
+      if (!started || muted) return;
+      try {
+        synth.cancel();
+        const line = new Utterance(
+          'Courier. Rooftop line is open. Follow the red thread. Do not look down.',
+        );
+        line.lang = 'en-US';
+        line.pitch = 0.92;
+        line.rate = 0.96;
+        line.volume = Math.min(1, volume * 0.82);
+        synth.speak(line);
+      } catch {
+        /* speech synthesis is optional */
+      }
+    }, 520);
+  }
+
   function play(name, payload = {}) {
     if (!started || muted) return;
     switch (name) {
@@ -185,6 +250,12 @@ export function createGlasslineAudio() {
         break;
       case 'step':
         noise({ duration: 0.055, cutoff: 1800, gain: 0.018, type: 'highpass' });
+        tone({
+          frequency: 95 + Math.random() * 18,
+          endFrequency: 42,
+          duration: 0.09,
+          gain: 0.014,
+        });
         break;
       case 'jump':
         tone({ frequency: 220, endFrequency: 520, duration: 0.16, gain: 0.055 });
@@ -197,8 +268,9 @@ export function createGlasslineAudio() {
         break;
       }
       case 'slide':
-        noise({ duration: 0.38, cutoff: 1400, gain: 0.06, q: 1.2 });
-        tone({ frequency: 170, endFrequency: 120, duration: 0.32, gain: 0.028 });
+        noise({ duration: 0.58, cutoff: 1500, gain: 0.055, q: 1.05 });
+        noise({ duration: 0.5, cutoff: 420, gain: 0.022, delay: 0.04 });
+        tone({ frequency: 170, endFrequency: 100, duration: 0.45, gain: 0.026 });
         break;
       case 'vault':
         noise({ duration: 0.2, cutoff: 1600, gain: 0.045 });
@@ -230,6 +302,10 @@ export function createGlasslineAudio() {
         break;
       case 'respawn':
         tone({ frequency: 180, endFrequency: 120, duration: 0.3, gain: 0.035 });
+        break;
+      case 'radio':
+        tone({ frequency: 520, endFrequency: 760, duration: 0.07, gain: 0.028 });
+        tone({ frequency: 760, endFrequency: 640, duration: 0.1, gain: 0.02, delay: 0.06 });
         break;
       default:
         break;
@@ -270,6 +346,13 @@ export function createGlasslineAudio() {
 
   function setMuted(value) {
     muted = !!value;
+    if (muted) {
+      try {
+        globalThis.speechSynthesis?.cancel?.();
+      } catch {
+        /* speech synthesis is optional */
+      }
+    }
     if (master) {
       master.gain.setTargetAtTime(muted ? 0 : volume, context.currentTime, 0.03);
     }
@@ -286,6 +369,11 @@ export function createGlasslineAudio() {
       }
     }
     for (const off of offs.splice(0)) off();
+    try {
+      globalThis.speechSynthesis?.cancel?.();
+    } catch {
+      /* speech synthesis is optional */
+    }
     context?.close?.().catch?.(() => {});
     context = null;
     started = false;
@@ -297,6 +385,8 @@ export function createGlasslineAudio() {
     bind,
     setVolume,
     setMuted,
+    updateMotion,
+    speakIntro,
     dispose,
     get volume() {
       return volume;

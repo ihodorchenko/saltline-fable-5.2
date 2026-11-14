@@ -365,6 +365,7 @@ export async function showcaseTutorial(game) {
     controller.setEnabled(true);
     audio.start();
     audio.play('ui');
+    audio.updateMotion(0, false);
   }
 
   const autostart =
@@ -392,6 +393,8 @@ export async function showcaseTutorial(game) {
       controller.setEnabled(true);
       audio.start();
       audio.play('ui');
+      audio.updateMotion(0, false);
+      audio.speakIntro();
     },
     onResume: () => {
       paused = false;
@@ -399,6 +402,7 @@ export async function showcaseTutorial(game) {
       controller.setEnabled(true);
       audio.start();
       audio.play('ui');
+      audio.updateMotion(0, false);
     },
     onRestart: () => {
       restart();
@@ -408,6 +412,7 @@ export async function showcaseTutorial(game) {
       controller.setEnabled(true);
       audio.start();
       audio.play('ui');
+      audio.updateMotion(0, false);
     },
     onStartOver: () => {
       startOver();
@@ -675,6 +680,7 @@ export async function showcaseTutorial(game) {
       }
       controller.update(dt);
       const state = controller.getState();
+      audio.updateMotion(state.speed, state.pos.z < -174);
 
       if (state.pos.y < level.fallY) {
         respawn();
@@ -764,6 +770,7 @@ export async function showcaseTutorial(game) {
         }
         saveProgress(progress);
         setHud();
+        audio.updateMotion(0, true);
         try {
           game.events?.emit('glassline:finish', { time: elapsed });
         } catch {
