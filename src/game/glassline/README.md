@@ -3,7 +3,7 @@
 Phase 2 first-person parkour project. The full plan is in [`PLAN.md`](../../../PLAN.md);
 the agent rules are in [`AGENT.md`](../../../AGENT.md).
 
-## Step 1a sandbox
+## Step 2 sandbox
 
 Open:
 
@@ -12,11 +12,12 @@ Open:
 ```
 
 Click the view to capture the mouse. Controls: **WASD** move, **Shift** sprint,
-**Space** jump, **Esc** release the mouse. The scene has a rooftop deck, a step,
+**Space** jump, **C/Ctrl** slide/crouch, **Esc** release the mouse. The scene has a rooftop deck, a step,
 an obstacle block, a wall, a stepped ramp and a moving platform. Movement uses the
 engine `moveCapsule` contract; ledge/coyote queries are exposed for Step 2.
-Known limits: the ramp is a stepped collider under a smooth visual, and the
-moving platform does not carry the player yet.
+Known limits: the ramp is a stepped collider under a smooth visual, the moving
+platform does not carry the player yet, and slide has no dedicated audio/animation
+rig yet.
 
 ## Commands
 

@@ -198,6 +198,17 @@ function createPrototype(game) {
   edge.receiveShadow = true;
   root.add(edge);
 
+  // Low overhang: high enough to slide under, too low to stand.
+  const overhang = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 0.5, 4),
+    whiteMaterial,
+  );
+  overhang.name = 'glassline-low-ceiling';
+  overhang.position.set(-4, 1.8, -7.5);
+  overhang.castShadow = true;
+  overhang.receiveShadow = true;
+  root.add(overhang);
+
   for (const light of createLights(game)) scene.add(light);
   scene.add(root);
 
@@ -208,6 +219,9 @@ function createPrototype(game) {
     game.physics.addBox([-9.5, 0, -15], [-0.5, 0.25, -1], { surface: 'concrete' });
     game.physics.addBox([0, 0, -2.6], [1.6, 0.9, -1], { surface: 'metal' });
     game.physics.addBox([-9.5, 0.25, -15], [-9.1, 1.5, -1], { surface: 'metal' });
+    game.physics.addBox([-5, 1.55, -9.5], [-3, 2.05, -5.5], {
+      surface: 'concrete',
+    });
     root.userData.glasslinePlatformBox = game.physics.addBox(
       [1, 1.075, -6],
       [3, 1.325, -4],

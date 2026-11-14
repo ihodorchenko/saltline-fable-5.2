@@ -25,11 +25,11 @@ Reference analysis is complete:
 - [`docs/MOVEMENT.md`](docs/MOVEMENT.md) — movement spec and starting targets;
 - [`docs/CAMERA.md`](docs/CAMERA.md) — camera/FOV/roll/landing spec.
 
-Step 0 is merged into `project/glassline`; its feature branch is deleted. Step 1a
-(`feat/glassline-physics`) is in progress: capsule movement, colliders, WASD,
-pointer lock, jump and landing dip. Step 1b still needs slopes, ledges, moving
-platforms and camera collision. The reference video is local/untracked and must
-not be committed.
+Step 0 and Step 1 are merged into `project/glassline`; their feature branches are
+deleted. Step 2 has started on `feat/glassline-slide`: run-to-slide, friction,
+recovery, low-ceiling block, camera/FOV dip and tests. It is not merged; merge
+only on command. Other parkour moves are not started. The reference video is
+local/untracked and must not be committed.
 
 ## Hard rules
 

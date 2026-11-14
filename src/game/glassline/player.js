@@ -18,6 +18,10 @@ const ACCEL = 32;
 const AIR_ACCEL = 8;
 const JUMP = 6.2;
 const MAX_DT = 0.05;
+const SLIDE_HEIGHT = 1.15;
+const SLIDE_EYE = 0.82;
+const CROUCH_EYE = 1.02;
+const BASE_FOV = 74;
 
 import {
   COYOTE_TIME,
@@ -25,6 +29,14 @@ import {
   isWalkableGround,
   ledgeInfo,
 } from './queries.js';
+import {
+  SLIDE_MAX_TIME,
+  SLIDE_MIN_SPEED,
+  canStartSlide,
+  canStand,
+  slideEntrySpeed,
+  slideSpeed,
+} from './slide.js';
 
 /**
  * @param {GameContext} game
@@ -50,6 +62,13 @@ export function createPlayerController(game) {
     coyote: 0,
     walkable: true,
     ledge: null,
+    sliding: false,
+    crouched: false,
+    slideTime: 0,
+    slideBuffer: 0,
+    bodyHeight: HEIGHT,
+    eyeHeight: EYE,
+    ceilingClearance: Infinity,
   };
 
   /** @type {any} */
@@ -70,6 +89,58 @@ export function createPlayerController(game) {
     if (hint) hint.textContent = text;
   }
 
+  function ceilingClearance() {
+    if (!physics || !physics.raycast) return Infinity;
+    const origin = new THREE.Vector3(pos.x, pos.y + SLIDE_HEIGHT, pos.z);
+    const hit = physics.raycast(
+      origin,
+      new THREE.Vector3(0, 1, 0),
+      HEIGHT - SLIDE_HEIGHT + 0.1,
+    );
+    return hit ? hit.dist : Infinity;
+  }
+
+  function tryStand() {
+    const clearance = ceilingClearance();
+    state.ceilingClearance = clearance;
+    if (!canStand(clearance, HEIGHT, SLIDE_HEIGHT)) {
+      state.crouched = true;
+      state.bodyHeight = SLIDE_HEIGHT;
+      return false;
+    }
+    state.crouched = false;
+    state.bodyHeight = HEIGHT;
+    return true;
+  }
+
+  function startSlide() {
+    if (state.sliding) return true;
+    const speed = Math.hypot(vel.x, vel.z);
+    if (!canStartSlide({ onGround: state.onGround, speed })) {
+      state.crouched = true;
+      state.bodyHeight = SLIDE_HEIGHT;
+      return false;
+    }
+    const dirX = vel.x / speed;
+    const dirZ = vel.z / speed;
+    const entry = slideEntrySpeed(speed);
+    vel.x = dirX * entry;
+    vel.z = dirZ * entry;
+    vel.y = 0;
+    state.sliding = true;
+    state.crouched = true;
+    state.slideTime = 0;
+    state.slideBuffer = 0;
+    state.bodyHeight = SLIDE_HEIGHT;
+    return true;
+  }
+
+  function endSlide() {
+    state.sliding = false;
+    state.slideTime = 0;
+    tryStand();
+  }
+
   function onKeyDown(event) {
     if (
       event.code === 'Space' ||
@@ -80,10 +151,23 @@ export function createPlayerController(game) {
     }
     keys.add(event.code);
     if (
+      (event.code === 'KeyC' ||
+        event.code === 'ControlLeft' ||
+        event.code === 'ControlRight') &&
+      !event.repeat
+    ) {
+      state.slideBuffer = 0.15;
+      if (state.onGround && !startSlide()) {
+        state.crouched = true;
+        state.bodyHeight = SLIDE_HEIGHT;
+      }
+    }
+    if (
       event.code === 'Space' &&
       !event.repeat &&
       (state.onGround || coyoteActive(state.coyote))
     ) {
+      if (state.sliding) endSlide();
       vel.y = JUMP;
       state.onGround = false;
       state.coyote = 0;
@@ -93,6 +177,17 @@ export function createPlayerController(game) {
 
   function onKeyUp(event) {
     keys.delete(event.code);
+    if (
+      !state.sliding &&
+      (event.code === 'KeyC' ||
+        event.code === 'ControlLeft' ||
+        event.code === 'ControlRight') &&
+      !keys.has('KeyC') &&
+      !keys.has('ControlLeft') &&
+      !keys.has('ControlRight')
+    ) {
+      tryStand();
+    }
   }
 
   function onMouseMove(event) {
@@ -149,17 +244,53 @@ export function createPlayerController(game) {
     const rightX = Math.cos(state.yaw);
     const rightZ = -Math.sin(state.yaw);
     const sprinting = keys.has('ShiftLeft') || keys.has('ShiftRight');
-    const maxSpeed = sprinting ? SPRINT : RUN;
-    const wantX = (forwardX * nz + rightX * nx) * maxSpeed;
-    const wantZ = (forwardZ * nz + rightZ * nx) * maxSpeed;
-    const rate = state.onGround ? ACCEL : AIR_ACCEL;
-    const blend = 1 - Math.exp(-rate * step);
-    vel.x += (wantX - vel.x) * blend;
-    vel.z += (wantZ - vel.z) * blend;
+    state.slideBuffer = Math.max(0, state.slideBuffer - step);
+
+    if (!state.sliding && state.slideBuffer > 0) {
+      const bufferedSpeed = Math.hypot(vel.x, vel.z);
+      if (
+        state.onGround &&
+        canStartSlide({ onGround: true, speed: bufferedSpeed })
+      ) {
+        startSlide();
+      }
+    }
+
+    if (state.sliding) {
+      state.slideTime += step;
+      const currentSpeed = Math.hypot(vel.x, vel.z);
+      const nextSpeed = slideSpeed(currentSpeed, step);
+      if (currentSpeed > 0.001) {
+        const scale = nextSpeed / currentSpeed;
+        vel.x *= scale;
+        vel.z *= scale;
+      }
+      if (
+        state.slideTime >= SLIDE_MAX_TIME ||
+        nextSpeed < SLIDE_MIN_SPEED
+      ) {
+        endSlide();
+      }
+    } else {
+      const maxSpeed = sprinting ? SPRINT : RUN;
+      const wantX = (forwardX * nz + rightX * nx) * maxSpeed;
+      const wantZ = (forwardZ * nz + rightZ * nx) * maxSpeed;
+      const rate = state.onGround ? ACCEL : AIR_ACCEL;
+      const blend = 1 - Math.exp(-rate * step);
+      vel.x += (wantX - vel.x) * blend;
+      vel.z += (wantZ - vel.z) * blend;
+    }
     vel.y -= GRAVITY * step;
 
     const fallSpeed = vel.y;
-    const result = physics.moveCapsule(pos, vel, step, RADIUS, HEIGHT, true);
+    const result = physics.moveCapsule(
+      pos,
+      vel,
+      step,
+      RADIUS,
+      state.bodyHeight,
+      true,
+    );
     if (result.onGround) {
       if (!state.onGround && fallSpeed < -2) {
         state.landDip = Math.min(0.12, -fallSpeed * 0.012);
@@ -212,9 +343,29 @@ export function createPlayerController(game) {
     }
 
     state.landDip *= Math.exp(-8 * step);
-    state.sprinting = sprinting && length > 0;
+    state.sprinting = sprinting && length > 0 && !state.sliding;
     state.speed = Math.hypot(vel.x, vel.z);
-    game.camera.position.set(pos.x, pos.y + EYE - state.landDip, pos.z);
+    const targetEye = state.sliding
+      ? SLIDE_EYE
+      : state.crouched
+        ? CROUCH_EYE
+        : EYE;
+    state.eyeHeight +=
+      (targetEye - state.eyeHeight) * (1 - Math.exp(-14 * step));
+    const targetFov =
+      BASE_FOV + (state.sliding ? 4 : 0) + (state.sprinting ? 2 : 0);
+    if (game.camera && typeof game.camera.fov === 'number') {
+      game.camera.fov +=
+        (targetFov - game.camera.fov) * (1 - Math.exp(-8 * step));
+      if (Math.abs(game.camera.fov - targetFov) > 0.01) {
+        game.camera.updateProjectionMatrix();
+      }
+    }
+    game.camera.position.set(
+      pos.x,
+      pos.y + state.eyeHeight - state.landDip,
+      pos.z,
+    );
     game.camera.rotation.set(state.pitch, state.yaw, 0, 'YXZ');
     return state;
   }

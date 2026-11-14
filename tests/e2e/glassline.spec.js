@@ -17,6 +17,7 @@ test('glassline step 0 prototype boots', async ({ page }) => {
       beam: !!root?.getObjectByName('glassline-route-beam'),
       ramp: !!root?.getObjectByName('glassline-ramp'),
       platform: !!root?.getObjectByName('glassline-moving-platform'),
+      ceiling: !!root?.getObjectByName('glassline-low-ceiling'),
     };
   });
   expect(scene).toEqual({
@@ -26,6 +27,7 @@ test('glassline step 0 prototype boots', async ({ page }) => {
     beam: true,
     ramp: true,
     platform: true,
+    ceiling: true,
   });
   const platformY = await page.evaluate(() => window.__G.glassline.platform.position.y);
   await page.waitForTimeout(600);
@@ -57,4 +59,20 @@ test('glassline capsule jumps from the ground', async ({ page }) => {
   const after = await page.evaluate(() => window.__G.glassline.controller.getState());
   expect(after.jumps).toBeGreaterThan(before.jumps);
   expect(after.pos.y).toBeGreaterThan(before.pos.y + 0.1);
+});
+
+test('glassline slide starts from a run and recovers', async ({ page }) => {
+  await boot(page, '?show=glassline&q=low');
+  await page.keyboard.down('w');
+  await page.waitForTimeout(650);
+  await page.keyboard.press('c');
+  await page.waitForTimeout(120);
+  const sliding = await page.evaluate(() => window.__G.glassline.controller.getState());
+  expect(sliding.sliding).toBe(true);
+  expect(sliding.eyeHeight).toBeLessThan(1.2);
+  await page.waitForTimeout(750);
+  const recovered = await page.evaluate(() => window.__G.glassline.controller.getState());
+  await page.keyboard.up('w');
+  expect(recovered.sliding).toBe(false);
+  expect(recovered.eyeHeight).toBeGreaterThan(1.3);
 });
