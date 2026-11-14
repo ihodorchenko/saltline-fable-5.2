@@ -102,7 +102,8 @@
 - [x] **Core (P1.2):** event bus, frame-time helpers and deterministic mulberry32 RNG extracted to `src/engine/core/` (`createEvents`, `createTime`/`advanceTime`, `createRng`).
 - [ ] `src/game/saltline`: уровни, правила, враги, оружие, HUD-геймплей.
 - [x] **Game state machine (P1.2):** `createSaltlineGame` вынесен в `src/game/saltline/game.js`; flow/radio/compass — в `content.js`. Уровни, оружие и враги пока в `src/game/main.js`.
-- [ ] **Game content (P1.2, отдельный узел):** вынос уровней, оружия, врагов и HUD-геймплея в `src/game/saltline/`; levels/enemies/weapon готовы, HUD-геймплей остаётся в `src/game/main.js`.
+- [x] **Game content (P1.2, отдельный узел):** уровни, оружие, враги и HUD-геймплей вынесены в `src/game/saltline/`.
+- [x] **HUD gameplay (P1.2):** `createGameHud` в `src/game/saltline/hud.js` — objective text, relay markers/sync, interaction prompt, compass contact warnings и безопасные вызовы HUD; DOM остаётся в `src/engine/ui/`.
 - [x] **Enemies (P1.2):** `createEnemySystem` вынесен в `src/game/saltline/enemies.js`; Three.js-классы и Saltline-хелперы передаются через `deps`, showcase enemies остаётся в игре. Уровни, оружие и HUD-геймплей ещё в `src/game/main.js`.
 - [x] **Weapon (P1.2):** `createWeapon` вынесен в `src/game/saltline/weapon.js`; Three.js-классы берутся из контекста, модель/тюнинг и анимационные хелперы — через `deps`; weapon showcase остаётся в игре. Уровень и HUD-геймплей ещё в `src/game/main.js`.
 - [x] **Level (P1.2):** `createLevel` вынесен в `src/game/saltline/level.js`; геометрия/пропы/декали и showcase остаются в игре, layout получает хелперы через `deps`. HUD-геймплей ещё в `src/game/main.js`.
