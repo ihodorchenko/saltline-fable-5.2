@@ -95,7 +95,7 @@ Source layout:
 - `src/engine/core/` — event bus, time and deterministic RNG;
 - `src/engine/input/`, `ui/`, `audio/`, `materials/`, `physics/`, `render/`, `melee/`, `settings/` — runtime modules;
 - `src/ui/styles.css` — all UI styles;
-- `vitest.config.js`, `src/**/*.test.js` — unit tests for core/input/settings/modes;
+- `vitest.config.js`, `src/**/*.test.js` — unit tests for core math/RNG/time, input/settings/modes;
 - `playwright.config.js`, `tests/e2e/` — browser boot/title/gameplay/level tests;
 - `docs/` — expansion plan, [architecture](docs/ARCHITECTURE.md), ADRs and toolchain;
 - `.github/workflows/ci.yml` — CI: install, lint, unit tests, build, Playwright browser tests on `dev`/`feat/**` and PRs; report artifact uploaded.

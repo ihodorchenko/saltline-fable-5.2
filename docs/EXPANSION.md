@@ -118,7 +118,7 @@
 
 #### P1.3 — тесты, CI, производительность (1 неделя)
 
-- [x] **Vitest foundation (P1.3):** 19 тестов для RNG, event bus, time, bindings, settings и modes; `npm test` добавлен в CI. Математика и физические запросы ещё не покрыты.
+- [x] **Tests (P1.3):** 23 Vitest-теста для RNG, event bus, time, math, bindings, settings и modes + Playwright-тест физического `addBox/raycast/lineOfSight`; `npm test` и браузерные тесты в CI.
 - [x] **Playwright foundation (P1.3):** `@playwright/test` + `tests/e2e` — boot без `__errors`/fatal, title, `?autostart=1` до состояния `playing`, `?show=level`; отчёт и скриншоты в artifact. Golden screenshots ещё отдельным пунктом.
 - [ ] Golden screenshots с фиксированными `seed/cam/q`.
 - [ ] CI: install → lint → test → build → smoke; артефакты скриншотов. Сейчас: install → lint/format → unit tests → build → Playwright boot tests; отчёт Playwright — artifact. Smoke и golden-сравнение ещё не в CI.
