@@ -115,8 +115,11 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
 - **City** is a deterministic generated district: 128 blocks at high quality,
   terraced low-rise roofs near the route, taller towers behind, cyan window
   bands, green roofs/trees, four skybridges, an elevated diagonal transit line,
-  rooftop service units and two original wayfinding signs. All city geometry is
-  instanced into roughly a dozen draw calls and kept out of the route corridor.
+  rooftop service units, two original wayfinding signs and a central spire
+  landmark. Building footprints are collision-checked against each other, and
+  window bands are geometric so they do not stretch with the facade atlas. All
+  city geometry is instanced into roughly a dozen draw calls and kept out of the
+  route corridor.
 - **Acts**: ascent → descent/second pass → final sprint. Act labels are in-world
   canvas signs; the HUD names the act.
 - **Finish** is a red gate and ring on the final roof.

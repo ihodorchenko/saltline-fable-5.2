@@ -17,6 +17,17 @@ describe('GLASSLINE city plan', () => {
     }
     expect(plan.landmarks.length).toBeGreaterThan(0);
     expect(plan.bridges.length).toBeGreaterThan(0);
+    expect(plan.spire).toBeTruthy();
+    const all = [...plan.buildings, ...plan.landmarks];
+    for (let i = 0; i < all.length; i += 1) {
+      for (let j = i + 1; j < all.length; j += 1) {
+        const a = all[i];
+        const b = all[j];
+        const ox = (a.w + b.w) / 2 - Math.abs(a.x - b.x);
+        const oz = (a.d + b.d) / 2 - Math.abs(a.z - b.z);
+        expect(ox <= 0 || oz <= 0).toBe(true);
+      }
+    }
   });
 
   it('has enough mass for a city district', () => {

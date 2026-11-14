@@ -24,6 +24,27 @@ export function createCityPlan(level) {
   const corridor = Number(config.corridor) || 15;
   const rng = makeRng(seed);
   const buildings = [];
+  const landmarks = [
+    { x: -34, z: -38, w: 14, d: 14, h: 58, color: 4, roofColor: 1 },
+    { x: 35, z: -108, w: 12, d: 12, h: 74, color: 1, roofColor: 0 },
+    { x: -36, z: -182, w: 15, d: 15, h: 64, color: 3, roofColor: 2 },
+  ].map((landmark) => ({
+    ...landmark,
+    streetY,
+    top: streetY + landmark.h,
+    keep: 0,
+    floors: Math.max(4, Math.floor((landmark.h - 4) / 5)),
+    windows: true,
+    roofUnit: false,
+    landmark: true,
+  }));
+  const occupied = [...landmarks];
+  const overlaps = (candidate) =>
+    occupied.some((other) => {
+      const ox = (candidate.w + other.w) / 2 - Math.abs(candidate.x - other.x);
+      const oz = (candidate.d + other.d) / 2 - Math.abs(candidate.z - other.z);
+      return ox > -1.2 && oz > -1.2;
+    });
 
   for (let z = 22; z >= -224; z -= 18) {
     for (let x = -88; x <= 88; x += 16) {
@@ -39,7 +60,7 @@ export function createCityPlan(level) {
       const inner = Math.abs(bx) < 44;
       const height = (inner ? 8 : 20) + rng() * (inner ? 18 : 48);
       const top = streetY + height;
-      buildings.push({
+      const candidate = {
         x: bx,
         z: bz,
         w: width,
@@ -53,24 +74,21 @@ export function createCityPlan(level) {
         windows: rng() > 0.18,
         roofUnit: rng() > 0.48,
         landmark: false,
-      });
+      };
+      if (!overlaps(candidate)) {
+        buildings.push(candidate);
+        occupied.push(candidate);
+      }
     }
   }
 
-  const landmarks = [
-    { x: -34, z: -38, w: 14, d: 14, h: 58, color: 4, roofColor: 1 },
-    { x: 35, z: -108, w: 12, d: 12, h: 74, color: 1, roofColor: 0 },
-    { x: -36, z: -182, w: 15, d: 15, h: 64, color: 3, roofColor: 2 },
-  ].map((landmark) => ({
-    ...landmark,
-    streetY,
-    top: streetY + landmark.h,
-    keep: 0,
-    floors: Math.max(4, Math.floor((landmark.h - 4) / 5)),
-    windows: true,
-    roofUnit: false,
-    landmark: true,
-  }));
+  const spire = {
+    x: 0,
+    z: -238,
+    height: 132,
+    baseY: streetY,
+    radius: 7,
+  };
 
   const bridges = [
     { x: -18, z: -44, w: 64, y: 16, d: 1.4, color: 0xb9cdd2 },
@@ -127,6 +145,7 @@ export function createCityPlan(level) {
     lights,
     transit,
     signs,
+    spire,
     distant,
   };
 }
@@ -214,39 +233,56 @@ export function buildCity(game, level, plan, textures = null) {
   roofs.computeBoundingSphere();
   root.add(roofs);
 
-  // Cyan window bands on the faces that point toward the route.
+  // Scale-correct window bands: inner faces plus the front faces visible from
+  // the route. These are geometry, not stretched into the facade texture.
   const windows = [];
   for (const building of allBuildings) {
     if (!building.windows) continue;
     const side = building.x > 0 ? -1 : 1;
     const faceX = building.x + side * (building.w / 2 + 0.025);
+    const faceZ = building.z + building.d / 2 + 0.025;
     for (let floor = 1; floor <= building.floors; floor += 1) {
+      const y = plan.streetY + floor * 5;
       windows.push({
         x: faceX,
-        y: plan.streetY + floor * 5,
+        y,
         z: building.z,
-        w: 0.04,
-        h: 0.14,
-        d: building.d * 0.66,
+        rotY: side > 0 ? -Math.PI / 2 : Math.PI / 2,
+        width: building.d * 0.7,
+        height: 0.2,
+      });
+      windows.push({
+        x: building.x,
+        y,
+        z: faceZ,
+        rotY: 0,
+        width: building.w * 0.68,
+        height: 0.2,
       });
     }
   }
   const windowMesh = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.PlaneGeometry(1, 1),
     new THREE.MeshBasicMaterial({
-      color: 0xc8edf5,
+      color: 0xffffff,
       transparent: true,
-      opacity: 0.46,
+      opacity: 0.72,
+      side: THREE.DoubleSide,
     }),
     windows.length,
   );
   windowMesh.name = 'city-windows';
+  const windowColor = new THREE.Color();
   windows.forEach((window, index) => {
     position.set(window.x, window.y, window.z);
-    scale.set(window.w, window.h, window.d);
+    scale.set(window.width, window.height, 1);
+    quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), window.rotY);
     matrix.compose(position, quaternion, scale);
     windowMesh.setMatrixAt(index, matrix);
+    windowColor.setHex(index % 5 === 0 ? 0xe1fbf7 : 0x4f8b99);
+    windowMesh.setColorAt(index, windowColor);
   });
+  if (windowMesh.instanceColor) windowMesh.instanceColor.needsUpdate = true;
   windowMesh.instanceMatrix.needsUpdate = true;
   windowMesh.computeBoundingSphere();
   root.add(windowMesh);
@@ -487,6 +523,59 @@ export function buildCity(game, level, plan, textures = null) {
   beaconMesh.computeBoundingSphere();
   root.add(beaconMesh);
 
+  // Central spire: the skyline landmark that resolves the route's vanishing point.
+  if (plan.spire) {
+    const spire = new THREE.Group();
+    spire.name = 'city-spire';
+    spire.position.set(plan.spire.x, plan.spire.baseY, plan.spire.z);
+    const baseHeight = plan.spire.height * 0.78;
+    const base = new THREE.Mesh(
+      new THREE.CylinderGeometry(3.4, 10.5, baseHeight, 8),
+      new THREE.MeshStandardMaterial({
+        color: 0xf4f1e8,
+        roughness: 0.34,
+        metalness: 0.45,
+      }),
+    );
+    base.position.y = baseHeight / 2;
+    spire.add(base);
+    const crownHeight = plan.spire.height * 0.28;
+    const crown = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.7, 3.4, crownHeight, 8),
+      new THREE.MeshStandardMaterial({
+        color: 0xd8ecee,
+        emissive: 0x0c4f5c,
+        emissiveIntensity: 0.4,
+        roughness: 0.28,
+        metalness: 0.55,
+      }),
+    );
+    crown.position.y = baseHeight + crownHeight / 2;
+    spire.add(crown);
+    for (let i = 0; i < 3; i += 1) {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(6.2 - i * 1.2, 0.12, 6, 32),
+        new THREE.MeshBasicMaterial({ color: 0x9fe3e8 }),
+      );
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = baseHeight * 0.32 + i * 18;
+      spire.add(ring);
+    }
+    const antenna = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.18, 0.55, 24, 8),
+      new THREE.MeshStandardMaterial({ color: 0x6c7e83, metalness: 0.7, roughness: 0.3 }),
+    );
+    antenna.position.y = plan.spire.height + 10;
+    spire.add(antenna);
+    const beacon = new THREE.Mesh(
+      new THREE.SphereGeometry(0.5, 10, 8),
+      new THREE.MeshBasicMaterial({ color: 0xd23a39 }),
+    );
+    beacon.position.y = plan.spire.height + 22;
+    spire.add(beacon);
+    root.add(spire);
+  }
+
   // Distant low-detail skyline; fades into fog.
   const distantMesh = new THREE.InstancedMesh(
     new THREE.BoxGeometry(1, 1, 1),
@@ -517,6 +606,7 @@ export function buildCity(game, level, plan, textures = null) {
       transitSegments: segments.length,
       transitSupports: supports.length,
       balconies: balconies.length,
+      spire: !!plan.spire,
     },
   };
 }

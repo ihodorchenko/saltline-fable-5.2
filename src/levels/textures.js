@@ -161,7 +161,7 @@ export function createTextureFactory(game) {
     const random = mulberry(hex + 57);
     context.fillStyle = `#${hex.toString(16).padStart(6, '0')}`;
     context.fillRect(0, 0, size, size);
-    addNoise(context, size, random, 14);
+    addNoise(context, size, random, 10);
     const cols = 6;
     const rows = 9;
     const cellW = size / cols;
@@ -170,33 +170,30 @@ export function createTextureFactory(game) {
       for (let col = 0; col < cols; col += 1) {
         const x = col * cellW;
         const y = row * cellH;
-        context.fillStyle = 'rgba(24, 42, 49, .2)';
-        context.fillRect(x + 7, y + 7, cellW - 14, cellH - 14);
-        // Glass panes with a cyan sky reflection.
+        // Broad curtain-wall panes; real window bands are geometric in city.js,
+        // so the texture must not bake a second, differently-scaled window grid.
+        const tint = random() > 0.78 ? 'rgba(38, 73, 84, .42)' : 'rgba(164, 210, 216, .26)';
         const glass = context.createLinearGradient(x, y, x + cellW, y + cellH);
-        glass.addColorStop(0, 'rgba(88, 136, 148, .62)');
-        glass.addColorStop(0.5, 'rgba(186, 226, 232, .72)');
-        glass.addColorStop(1, 'rgba(58, 94, 106, .58)');
+        glass.addColorStop(0, 'rgba(118, 172, 181, .34)');
+        glass.addColorStop(0.52, tint);
+        glass.addColorStop(1, 'rgba(50, 93, 104, .36)');
         context.fillStyle = glass;
-        context.fillRect(x + 10, y + 10, cellW - 20, cellH - 20);
-        context.fillStyle = 'rgba(230, 245, 246, .3)';
-        context.fillRect(x + 10, y + 10, cellW - 20, 4);
-        context.fillStyle = 'rgba(230, 245, 246, .2)';
-        context.fillRect(x + 10, y + 10, 4, cellH - 20);
+        context.fillRect(x + 3, y + 3, cellW - 6, cellH - 6);
+        context.fillStyle = 'rgba(240, 249, 248, .12)';
+        context.fillRect(x + 4, y + 4, cellW - 8, 2);
       }
     }
-    // Floor slabs and mullions.
     for (let row = 0; row <= rows; row += 1) {
-      context.fillStyle = 'rgba(32, 48, 52, .35)';
-      context.fillRect(0, row * cellH - 3, size, 6);
-      context.fillStyle = 'rgba(244, 240, 228, .35)';
-      context.fillRect(0, row * cellH - 1, size, 2);
+      context.fillStyle = 'rgba(58, 80, 84, .34)';
+      context.fillRect(0, row * cellH - 2, size, 4);
+      context.fillStyle = 'rgba(248, 244, 232, .28)';
+      context.fillRect(0, row * cellH, size, 1);
     }
     for (let col = 0; col <= cols; col += 1) {
-      context.fillStyle = 'rgba(244, 240, 228, .34)';
-      context.fillRect(col * cellW - 2, 0, 4, size);
+      context.fillStyle = 'rgba(248, 244, 232, .3)';
+      context.fillRect(col * cellW - 1, 0, 3, size);
     }
-    stain(context, size * 0.2, size * 0.8, 120, '30, 45, 48', 0.1);
+    stain(context, size * 0.2, size * 0.8, 120, '30, 45, 48', 0.08);
     const texture = finish(canvas, [1, 1]);
     cache.set(key, texture);
     return texture;
