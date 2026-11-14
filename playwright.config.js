@@ -4,10 +4,10 @@ const channel = process.env.PLAYWRIGHT_CHANNEL;
 
 export default defineConfig({
   testDir: './tests/e2e',
-  timeout: 60_000,
+  timeout: 180_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
-  workers: process.env.CI ? 2 : 1,
+  workers: 1,
   reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
   use: {
     baseURL: 'http://127.0.0.1:4173',

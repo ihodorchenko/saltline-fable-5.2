@@ -18,6 +18,6 @@ export async function boot(page, query = '?q=low') {
 }
 
 export async function attachScreenshot(page, testInfo, name) {
-  const body = await page.screenshot();
+  const body = await page.screenshot({ animations: 'disabled' });
   await testInfo.attach(name, { body, contentType: 'image/png' });
 }
