@@ -98,20 +98,23 @@
 
 #### P1.2 — движок, игра, режимы (1–2 недели)
 
-- [ ] `src/engine/*`: render, materials, audio, fx, ui, input, physics, core.
+- [x] `src/engine/*`: render, materials, audio, fx, ui, input, physics, core — все модули вынесены.
 - [x] **Core (P1.2):** event bus, frame-time helpers and deterministic mulberry32 RNG extracted to `src/engine/core/` (`createEvents`, `createTime`/`advanceTime`, `createRng`).
-- [ ] `src/game/saltline`: уровни, правила, враги, оружие, HUD-геймплей.
-- [x] **Game state machine (P1.2):** `createSaltlineGame` вынесен в `src/game/saltline/game.js`; flow/radio/compass — в `content.js`. Уровни, оружие и враги пока в `src/game/main.js`.
+- [x] `src/game/saltline`: state machine, flow/content, уровни, враги, оружие, HUD-геймплей.
+- [x] **Game state machine (P1.2):** `createSaltlineGame` вынесен в `src/game/saltline/game.js`; flow/radio/compass — в `content.js`.
 - [x] **Game content (P1.2, отдельный узел):** уровни, оружие, враги и HUD-геймплей вынесены в `src/game/saltline/`.
 - [x] **HUD gameplay (P1.2):** `createGameHud` в `src/game/saltline/hud.js` — objective text, relay markers/sync, interaction prompt, compass contact warnings и безопасные вызовы HUD; DOM остаётся в `src/engine/ui/`.
-- [x] **Enemies (P1.2):** `createEnemySystem` вынесен в `src/game/saltline/enemies.js`; Three.js-классы и Saltline-хелперы передаются через `deps`, showcase enemies остаётся в игре. Уровни, оружие и HUD-геймплей ещё в `src/game/main.js`.
-- [x] **Weapon (P1.2):** `createWeapon` вынесен в `src/game/saltline/weapon.js`; Three.js-классы берутся из контекста, модель/тюнинг и анимационные хелперы — через `deps`; weapon showcase остаётся в игре. Уровень и HUD-геймплей ещё в `src/game/main.js`.
-- [x] **Level (P1.2):** `createLevel` вынесен в `src/game/saltline/level.js`; геометрия/пропы/декали и showcase остаются в игре, layout получает хелперы через `deps`. HUD-геймплей ещё в `src/game/main.js`.
+- [x] **Enemies (P1.2):** `createEnemySystem` вынесен в `src/game/saltline/enemies.js`; Three.js-классы и Saltline-хелперы передаются через `deps`, showcase enemies остаётся в игре.
+- [x] **Weapon (P1.2):** `createWeapon` вынесен в `src/game/saltline/weapon.js`; Three.js-классы берутся из контекста, модель/тюнинг и анимационные хелперы — через `deps`; weapon showcase остаётся в игре.
+- [x] **Level (P1.2):** `createLevel` вынесен в `src/game/saltline/level.js`; геометрия/пропы/декали и showcase остаются в игре, layout получает хелперы через `deps`.
 - [x] **Modes (P1.2):** `createModes` в `src/modes/index.js` — реестр showcase-модулей и разрешение `campaign` / `showcase` / `bench` по query/hash; query-алиасы сохранены. Title/campaign по-прежнему реализуются state machine игры.
-- [ ] Event bus, время, детерминированный RNG.
+- [x] Event bus, время, детерминированный RNG.
 - [x] **Bindings (P1.2):** `src/engine/input/bindings.js` содержит единый `keyBindings` и `actionMeta`; HUD prompt, reload-подсказка и controls legend берут клавиши через `actionKey`/`actionLegend`.
 - [x] **Settings (P1.2):** `src/engine/settings/index.js` — `SETTINGS_VERSION`, defaults, validation, v0→v1 migration и load/save; ключ `saltline.settings.v1` сохранён, новые записи содержат `version: 1`.
+- [x] **FX (P1.2):** `createFxSystem` вынесен в `src/engine/fx/index.js`; Three.js-классы и Saltline material/geometry хелперы передаются через `deps`; fx showcase остаётся в игре.
 - [x] **Architecture (P1.2):** `docs/ARCHITECTURE.md` — слои, boot/loop, контракты, правила зависимостей, добавление режима, извлечение legacy-кода и portability checklist; ADR — `docs/adr/0001`–`0004`.
+
+**P1.2 завершён.** Все перечисленные узлы вынесены; дальше — P1.3 (тесты, CI, производительность).
 
 #### P1.3 — тесты, CI, производительность (1 неделя)
 
