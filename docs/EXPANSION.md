@@ -109,7 +109,7 @@
 - [x] **Level (P1.2):** `createLevel` вынесен в `src/game/saltline/level.js`; геометрия/пропы/декали и showcase остаются в игре, layout получает хелперы через `deps`. HUD-геймплей ещё в `src/game/main.js`.
 - [x] **Modes (P1.2):** `createModes` в `src/modes/index.js` — реестр showcase-модулей и разрешение `campaign` / `showcase` / `bench` по query/hash; query-алиасы сохранены. Title/campaign по-прежнему реализуются state machine игры.
 - [ ] Event bus, время, детерминированный RNG.
-- [ ] Биндинги действий в одном месте; HUD-подсказки берут клавишу оттуда.
+- [x] **Bindings (P1.2):** `src/engine/input/bindings.js` содержит единый `keyBindings` и `actionMeta`; HUD prompt, reload-подсказка и controls legend берут клавиши через `actionKey`/`actionLegend`.
 - [ ] Схема настроек с версией и миграциями.
 - [ ] `docs/ARCHITECTURE.md`: границы engine/game и пример добавления режима.
 
