@@ -32,6 +32,59 @@ export const tutorialLevel = {
     { id: 'act2', title: 'ACT II — DESCENT', pos: [2, 5.2, -64] },
     { id: 'act3', title: 'ACT III — FINAL RUN', pos: [2, 5.2, -126] },
   ],
+  props: [
+    {
+      id: 'ac-start',
+      type: 'ac',
+      pos: [-4.1, 0.65, 8.4],
+      size: [1.8, 1.3, 2.2],
+      color: 0x68747b,
+    },
+    {
+      id: 'vent-jump',
+      type: 'vent',
+      pos: [-3, 0.55, 2],
+      radius: 0.35,
+      height: 1.1,
+      color: 0x7d888e,
+    },
+    {
+      id: 'antenna-start',
+      type: 'antenna',
+      pos: [-4.4, 0, 10.3],
+      height: 4.6,
+      color: 0x9aa4a8,
+    },
+    {
+      id: 'ac-act2',
+      type: 'ac',
+      pos: [5, 2.3, -68],
+      size: [1.6, 1.2, 2],
+      color: 0x68747b,
+    },
+    {
+      id: 'vent-act2',
+      type: 'vent',
+      pos: [-1, 4.05, -86],
+      radius: 0.32,
+      height: 1.1,
+      color: 0x7d888e,
+    },
+    {
+      id: 'antenna-final',
+      type: 'antenna',
+      pos: [-2, 1.7, -193],
+      height: 5,
+      color: 0x9aa4a8,
+    },
+    {
+      id: 'rail-final',
+      type: 'rail',
+      pos: [-2.8, 2.55, -191],
+      size: [4.5, 0.12, 0.12],
+      color: 0x9aa4a8,
+    },
+  ],
   platforms: [
     // 01 — start roof, jump across the first gap.
     {

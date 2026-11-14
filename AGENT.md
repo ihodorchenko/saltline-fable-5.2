@@ -12,11 +12,11 @@ and must not be merged back into `dev`.
 
 Phase 1 is complete and stabilized on `dev`. Step 0, Step 1 and all Step 2 parkour
 mechanics are merged into `project/glassline`; their feature branches are deleted.
-Step 3 is merged into `project/glassline`. Step 4 has started on `feat/glassline-ui`:
-original GLASSLINE title/pause/complete overlays, run gating, pointer-lock pause,
-sensitivity persistence and inspector access. It is **not merged**; merge only on
-command. Art/audio/settings branches remain. Human 10–20 minute pacing is still a
-playtest tuning item.
+Step 3 and the Step 4 UI shell are merged into `project/glassline`. Step 4 art is
+in progress on `feat/glassline-art`: textured concrete, dark platform sides, edge
+lines, lit windows, rooftop props, act accents and a warm/cool three-light setup.
+It is **not merged**; merge only on command. Audio/settings branches remain. Human
+10–20 minute pacing is still a playtest tuning item.
 
 The theme, language and platform are confirmed: **parkour in the spirit of
 Mirror's Edge with original IP**, **JS + JSDoc**, **desktop Chrome**, **60 FPS**.
@@ -113,13 +113,14 @@ Branch `feat/glassline-tutorial-complete` (implemented, not merged).
 
 Branches `feat/glassline-art`, `feat/glassline-ui`, `feat/glassline-audio`.
 
-- [x] original title/pause/complete shell (`feat/glassline-ui`, not merged);
+- [x] original title/pause/complete shell (merged);
 - [x] start/pause gating and pointer-lock resume;
 - [x] sensitivity setting with persistence;
-- [ ] original visual language/art pass beyond tutorial blockout;
-- [ ] original/generated/licensed assets;
-- [ ] settings/controls/rebinding completion;
-- [ ] original music/SFX.
+- [x] art/theme pass on tutorial (`feat/glassline-art`, not merged):
+      materials, edges, windows, props, lighting and accents;
+- [ ] audio branch: original music/SFX;
+- [ ] full settings/controls/rebinding completion;
+- [ ] final art QA and no-copied-IP audit.
 
 ### Step 5 — Performance and reliability
 

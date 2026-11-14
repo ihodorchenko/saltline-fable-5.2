@@ -160,15 +160,17 @@ for the vertical slice.
 
 Branches: `feat/glassline-art`, `feat/glassline-ui`, `feat/glassline-audio`
 
-Status: `feat/glassline-ui` implemented, not merged.
+Status: UI shell merged. `feat/glassline-art` implemented, not merged.
 
-- [x] original GLASSLINE title, pause and completion overlay;
+- [x] original GLASSLINE title, pause and completion overlay (merged);
 - [x] start gates the timer/run and requests pointer lock;
 - [x] pause on pointer-lock loss, resume/restart actions;
 - [x] mouse sensitivity setting with localStorage persistence;
 - [x] tutorial HUD already covers objective, checkpoint, timer/splits/best;
 - [x] level inspector linked from the menu;
-- [ ] original art/theme pass beyond the tutorial blockout (art branch);
+- [x] original art/theme pass on the tutorial blockout: textured concrete tops,
+      dark platform sides, edge lines, lit skyline windows, rooftop AC/vent/antenna/rail
+      props, act-sign underline, warm/cool three-light setup and exposure lift;
 - [ ] original music/SFX and audio settings (audio branch);
 - [ ] full settings/controls/rebinding decision;
 - [ ] no copied IP audit.
