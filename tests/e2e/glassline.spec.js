@@ -34,8 +34,8 @@ test('glassline capsule moves with WASD', async ({ page }) => {
   const before = await page.evaluate(() => window.__G.glassline.controller.getState());
   await page.keyboard.down('w');
   await page.waitForTimeout(700);
-  await page.keyboard.up('w');
   const after = await page.evaluate(() => window.__G.glassline.controller.getState());
+  await page.keyboard.up('w');
   expect(after.pos.z).toBeLessThan(before.pos.z - 0.2);
   expect(after.pos.y).toBeGreaterThan(-0.5);
   expect(after.speed).toBeGreaterThan(0.2);
