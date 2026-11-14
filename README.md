@@ -25,6 +25,8 @@ The original root `index.html` is kept as the legacy baseline for parity checks.
 
 **Melee v1** is in `dev` as an intermediate release before Phase 2 (merged from `feat/melee`): **Q**, 1.8 m raycast, 40 damage, 0.8 s cooldown, with a wind-up/strike/recovery rifle-butt animation and fire lockout. See [docs/MELEE.md](docs/MELEE.md).
 
+Phase 1.2 continues on `dev`: core primitives, game state/content, modes, the gameplay HUD adapter, action bindings and versioned settings are extracted. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ## Controls
 
 | Action          | Binding                      |
@@ -85,10 +87,13 @@ Node 22 LTS is pinned in `.nvmrc`; system packages are in `Brewfile`; npm versio
 Source layout:
 
 - `src/index.html` — HTML shell;
-- `src/game/main.js` — game entry that remains the legacy minified core;
-- `src/engine/input/`, `ui/`, `audio/`, `materials/`, `physics/`, `render/`, `melee/` — runtime modules;
+- `src/game/main.js` — boot, URL/mode wiring and the retained legacy minified core;
+- `src/game/saltline/` — game state machine, flow/content, level, weapon, enemies and gameplay HUD rules;
+- `src/modes/` — campaign/showcase/bench resolution and showcase registry;
+- `src/engine/core/` — event bus, time and deterministic RNG;
+- `src/engine/input/`, `ui/`, `audio/`, `materials/`, `physics/`, `render/`, `melee/`, `settings/` — runtime modules;
 - `src/ui/styles.css` — all UI styles;
-- `docs/` — expansion plan, architecture notes and toolchain;
+- `docs/` — expansion plan, [architecture](docs/ARCHITECTURE.md), ADRs and toolchain;
 - `.github/workflows/ci.yml` — CI: `npm ci`, `npm run check`, `npm run build` on `dev`/`feat/**` and PRs.
 
 ESLint/Prettier cover handwritten JS and config; minified legacy modules, CSS and docs are excluded (see `eslint.config.js` and `.prettierignore`).
@@ -96,7 +101,7 @@ ESLint/Prettier cover handwritten JS and config; minified legacy modules, CSS an
 ## What changed from the artifact
 
 - The claude.ai frame-runtime scripts were removed from `<head>`, and a doctype, charset and viewport tag were added so the file runs as a plain web page.
-- Local control remaps: sprint moved from `Shift` to `X`, fire is on `LMB` or `Shift`, aim is on `RMB` or `E`, and cut relay moved from `E` to `F`; `Q` is no longer bound.
+- Local control remaps: sprint moved from `Shift` to `X`, fire is on `LMB` or `Shift`, aim is on `RMB` or `E`, cut relay moved from `E` to `F`, and melee is on `Q`.
 - Phase 1: Vite single-file build, extracted engine modules, split CSS, parity checks, ESLint/Prettier and minimal CI. Title, gameplay and level screenshots match the legacy file at 0.0% diff.
 - Melee v1 in `dev`: Q, 1.8 m center raycast, 40 damage, 0.8 s cooldown, 0.48 s rifle-butt state-machine animation, fire lockout, hitmarker/audio/camera kick; no combos yet.
 
@@ -109,3 +114,4 @@ The original Saltline game code, art and audio are mirrored from the original ar
 ## Project notes
 
 Technical overview (in Russian): [`docs/OVERVIEW.md`](docs/OVERVIEW.md) — file anatomy, gameplay constants, rendering and audio pipelines, dev hooks, measured numbers, known gaps.
+Architecture and decisions: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/adr/`](docs/adr/).
