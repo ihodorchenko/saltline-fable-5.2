@@ -104,7 +104,12 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
 
 ## World language
 
-- **Rooftops** are pale ceramic slabs with blue-grey sides and thin edge lines.
+- **Rooftops** are pale ceramic slabs with procedural concrete seams, stains and
+  drainage detail, dark board-formed sides, metal fascia and shallow curbs.
+- **Surfaces** use a runtime Canvas atlas: concrete, side concrete, glass facade,
+  roof membrane, brushed metal, asphalt/street grid and worn red route paint.
+  Platform edges get metal fascia, shallow curbs, structural legs, service AC,
+  vents, huts, pipes, guard rails, solar arrays and access doors.
 - **Route** is a continuous red strip; current checkpoint ring and next-checkpoint
   diamond are red.
 - **City** is a deterministic generated district: 128 blocks at high quality,

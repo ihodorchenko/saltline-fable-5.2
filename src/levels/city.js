@@ -2,7 +2,7 @@
 // Deterministic procedural city district around the hand-authored route.
 // The city is decorative: route collisions remain the authored level boxes.
 
-const BODY_COLORS = [0xe8e4d8, 0xd7e5e8, 0xc9dde3, 0xf0ece2, 0xbdd6dd];
+const BODY_COLORS = [0xffffff, 0xf7f4ea, 0xeaf3f4, 0xf1eee4, 0xe3eef0];
 const ROOF_COLORS = [0xf5f1e7, 0xdce9eb, 0xe7e3d8, 0x78977d];
 
 function makeRng(seed) {
@@ -131,40 +131,12 @@ export function createCityPlan(level) {
   };
 }
 
-function makeStreetTexture(game) {
-  const { THREE } = game;
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 256;
-  const context = canvas.getContext('2d');
-  context.fillStyle = '#243237';
-  context.fillRect(0, 0, 256, 256);
-  context.strokeStyle = 'rgba(185, 205, 210, .22)';
-  context.lineWidth = 2;
-  for (let i = 0; i < 256; i += 48) {
-    context.beginPath();
-    context.moveTo(i, 0);
-    context.lineTo(i, 256);
-    context.stroke();
-    context.beginPath();
-    context.moveTo(0, i);
-    context.lineTo(256, i);
-    context.stroke();
-  }
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(5, 7);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
-}
-
 /**
  * @param {any} game
  * @param {any} level
  * @param {ReturnType<typeof createCityPlan>} plan
  */
-export function buildCity(game, level, plan) {
+export function buildCity(game, level, plan, textures = null) {
   const { THREE } = game;
   const root = new THREE.Group();
   root.name = 'glassline-city';
@@ -177,7 +149,12 @@ export function buildCity(game, level, plan) {
   // Street plate.
   const street = new THREE.Mesh(
     new THREE.PlaneGeometry(300, 360),
-    new THREE.MeshBasicMaterial({ map: makeStreetTexture(game), fog: true }),
+    new THREE.MeshStandardMaterial({
+      map: textures?.asphalt ? textures.asphalt() : null,
+      color: textures?.asphalt ? 0xffffff : 0x27363a,
+      roughness: 0.96,
+      metalness: 0.02,
+    }),
   );
   street.name = 'city-street';
   street.rotation.x = -Math.PI / 2;
@@ -187,8 +164,9 @@ export function buildCity(game, level, plan) {
   // One instanced body mesh for every block.
   const bodyGeometry = new THREE.BoxGeometry(1, 1, 1);
   const bodyMaterial = new THREE.MeshStandardMaterial({
-    roughness: 0.92,
-    metalness: 0.03,
+    map: textures?.facade ? textures.facade() : null,
+    roughness: 0.82,
+    metalness: 0.04,
   });
   const bodies = new THREE.InstancedMesh(bodyGeometry, bodyMaterial, allBuildings.length);
   bodies.name = 'city-buildings';
@@ -215,7 +193,11 @@ export function buildCity(game, level, plan) {
   // Roof caps.
   const roofs = new THREE.InstancedMesh(
     new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.02 }),
+    new THREE.MeshStandardMaterial({
+      map: textures?.roof ? textures.roof() : null,
+      roughness: 0.9,
+      metalness: 0.02,
+    }),
     allBuildings.length,
   );
   roofs.name = 'city-roofs';
@@ -268,6 +250,41 @@ export function buildCity(game, level, plan) {
   windowMesh.instanceMatrix.needsUpdate = true;
   windowMesh.computeBoundingSphere();
   root.add(windowMesh);
+
+  // Balcony bands break up the flat instanced facades.
+  const balconies = [];
+  for (const building of allBuildings) {
+    const side = building.x > 0 ? -1 : 1;
+    const faceX = building.x + side * (building.w / 2 + 0.2);
+    for (let floor = 2; floor <= building.floors; floor += 3) {
+      balconies.push({
+        x: faceX,
+        y: plan.streetY + floor * 5,
+        z: building.z,
+        w: 0.42,
+        h: 0.14,
+        d: building.d * 0.72,
+      });
+    }
+  }
+  const balconyMesh = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshStandardMaterial({
+      color: 0xf0ece1,
+      roughness: 0.86,
+    }),
+    balconies.length,
+  );
+  balconyMesh.name = 'city-balconies';
+  balconies.forEach((balcony, index) => {
+    position.set(balcony.x, balcony.y, balcony.z);
+    scale.set(balcony.w, balcony.h, balcony.d);
+    matrix.compose(position, quaternion.identity(), scale);
+    balconyMesh.setMatrixAt(index, matrix);
+  });
+  balconyMesh.instanceMatrix.needsUpdate = true;
+  balconyMesh.computeBoundingSphere();
+  root.add(balconyMesh);
 
   // Rooftop planting on the green roofs.
   const trees = [];
@@ -327,7 +344,7 @@ export function buildCity(game, level, plan) {
   }
   const trackMesh = new THREE.InstancedMesh(
     new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshStandardMaterial({ color: 0xc8dadd, roughness: 0.55 }),
+    new THREE.MeshStandardMaterial({ color: 0xc8dadd, map: textures?.metal?.() || null, roughness: 0.55 }),
     segments.length,
   );
   trackMesh.name = 'city-transit-track';
@@ -344,7 +361,7 @@ export function buildCity(game, level, plan) {
 
   const supportMesh = new THREE.InstancedMesh(
     new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshStandardMaterial({ color: 0x9fb3b8, roughness: 0.8 }),
+    new THREE.MeshStandardMaterial({ color: 0x9fb3b8, map: textures?.metal?.() || null, roughness: 0.8 }),
     supports.length,
   );
   supportMesh.name = 'city-transit-supports';
@@ -406,7 +423,7 @@ export function buildCity(game, level, plan) {
   }
   const unitMesh = new THREE.InstancedMesh(
     new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshStandardMaterial({ color: 0x71858c, roughness: 0.8 }),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, map: textures?.metal?.() || null, roughness: 0.8 }),
     units.length,
   );
   unitMesh.name = 'city-roof-units';
@@ -439,7 +456,7 @@ export function buildCity(game, level, plan) {
   // Skybridges crossing the canyon above the route.
   const bridgeMesh = new THREE.InstancedMesh(
     new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshStandardMaterial({ color: 0xc4d6da, roughness: 0.7 }),
+    new THREE.MeshStandardMaterial({ color: 0xc4d6da, map: textures?.metal?.() || null, roughness: 0.7 }),
     plan.bridges.length,
   );
   bridgeMesh.name = 'city-skybridges';
@@ -499,6 +516,7 @@ export function buildCity(game, level, plan) {
       signs: plan.signs.length,
       transitSegments: segments.length,
       transitSupports: supports.length,
+      balconies: balconies.length,
     },
   };
 }

@@ -20,7 +20,9 @@ test('glassline performance overlay reports a sane low-quality budget', async ({
     return samples.reduce((best, sample) => (sample.calls < best.calls ? sample : best), samples[0]);
   });
   expect(stats.calls).toBeLessThan(300);
-  expect(stats.tris).toBeLessThan(20000);
+  // The generated city, roof fascia and textured service kits add geometry at
+  // low quality; 30k triangles is still a light frame for the 60 FPS target.
+  expect(stats.tris).toBeLessThan(30000);
   expect(stats.geos).toBeLessThan(150);
   expect(stats.fps).toBeGreaterThan(20);
 

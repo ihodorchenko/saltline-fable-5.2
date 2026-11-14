@@ -14,11 +14,15 @@ test('generated city surrounds the route without blocking it', async ({ page }, 
       signs: group?.children.filter((child) => child.name === 'city-sign').length || 0,
       transit: byName('city-transit-track')?.count || 0,
       street: !!byName('city-street'),
+      cityTexture: !!byName('city-buildings')?.material?.map,
+      roofTexture: !!window.__G.glassline.root.getObjectByName('platform-start-roof')?.material?.[2]?.map,
       routeZ: window.__G.glassline.controller.getState().pos.z,
     };
   });
   expect(city.group).toBe(true);
   expect(city.street).toBe(true);
+  expect(city.cityTexture).toBe(true);
+  expect(city.roofTexture).toBe(true);
   expect(city.stats.buildings).toBeGreaterThan(50);
   expect(city.buildings).toBeGreaterThan(50);
   expect(city.windows).toBeGreaterThan(200);

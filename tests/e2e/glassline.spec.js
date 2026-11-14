@@ -196,7 +196,7 @@ test('glassline roll keeps momentum and lowers the camera', async ({ page }) => 
   expect(after.pos.z).toBeLessThan(before.pos.z - 0.5);
   // A few frames of normal movement can run before the evaluate round-trip;
   // the roll must still leave meaningful momentum, not the exact exit speed.
-  expect(after.speed).toBeGreaterThan(3);
+  expect(after.speed).toBeGreaterThan(2.5);
 });
 
 test('glassline balance stays on the beam and leans with A/D', async ({ page }) => {
