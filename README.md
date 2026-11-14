@@ -45,7 +45,7 @@ The title screen separates **Continue / Start over**, **Settings**, **Controls**
 - `src/engine/` — minimal shared engine: core, physics and renderer.
 - `tools/bench-glassline.mjs` — headed hardware peak-load benchmark.
 - `docs/DESIGN.md` — city concept, palette, typography and HUD/screen language.
-- `docs/AUDIO.md` — procedural wind, synth, parkour SFX and dispatch voice.
+- `docs/AUDIO.md` — procedural wind, city bed, synth, parkour SFX and radio dispatch.
 - `docs/PERFORMANCE.md` — measured draw-call/frame budgets and the 60 FPS profile.
 - `docs/GLASSLINE_AUDIT.md` — QA and no-copied-IP audit.
 - `docs/THIRD_PARTY.md` — engine/font/dependency notices.

@@ -120,3 +120,21 @@ html[data-show="glassline"] .boot-mark::after {
   .gl-hud__prompt { bottom: 54px; }
 }
 .gl-hud__act { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gl-dispatch {
+  position: absolute; top: clamp(18px, 3vw, 30px); left: 50%;
+  transform: translate(-50%, -6px); width: min(390px, 32vw);
+  display: flex; gap: 10px; align-items: baseline;
+  padding: 9px 12px; opacity: 0; pointer-events: none;
+  color: #d9e4e2; background: rgba(5, 10, 13, .78);
+  border-top: 1px solid rgba(159, 227, 232, .5);
+  transition: opacity .25s ease, transform .25s ease;
+}
+.gl-dispatch.on { opacity: 1; transform: translate(-50%, 0); }
+.gl-dispatch__tag {
+  flex: none; color: #9fe3e8; font: 700 9px/1.4 var(--f-mono);
+  letter-spacing: .14em;
+}
+.gl-dispatch__text { font: 500 11px/1.45 var(--f-mono); letter-spacing: .02em; }
+@media (max-width: 900px) {
+  .gl-dispatch { top: auto; bottom: 112px; width: min(420px, 78vw); }
+}

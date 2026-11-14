@@ -26,6 +26,7 @@ export function audioMotion(speed, finale = false) {
       windFrequency: 520,
       musicCutoff: 330,
       musicGain: 0.022,
+      cityGain: 0.018,
     };
   }
   return {
@@ -33,6 +34,7 @@ export function audioMotion(speed, finale = false) {
     windFrequency: 300 + ratio * 430,
     musicCutoff: 420 + ratio * 1250,
     musicGain: 0.018 + ratio * 0.01,
+    cityGain: 0.022 + ratio * 0.006,
   };
 }
 
@@ -58,8 +60,9 @@ export function createGlasslineAudio() {
   let windGain = null;
   let windFilter = null;
   let musicFilter = null;
+  let cityFilter = null;
+  let cityGain = null;
   let noiseBuffer = null;
-  let introPlayed = false;
   let started = false;
   let disposed = false;
   const sources = [];
@@ -103,6 +106,29 @@ export function createGlasslineAudio() {
     wind.connect(windFilter).connect(windGain).connect(master);
     wind.start();
     sources.push(wind);
+
+    // City bed: low-passed traffic/HVAC rumble, with a very slow swell.
+    const city = context.createBufferSource();
+    city.buffer = noiseBuffer;
+    city.loop = true;
+    city.playbackRate.value = 0.62;
+    cityFilter = context.createBiquadFilter();
+    cityFilter.type = 'lowpass';
+    cityFilter.frequency.value = 190;
+    cityFilter.Q.value = 0.5;
+    cityGain = context.createGain();
+    cityGain.gain.value = 0.024;
+    city.connect(cityFilter).connect(cityGain).connect(master);
+    city.start();
+    sources.push(city);
+    const cityLfo = context.createOscillator();
+    cityLfo.type = 'sine';
+    cityLfo.frequency.value = 0.045;
+    const cityLfoGain = context.createGain();
+    cityLfoGain.gain.value = 0.006;
+    cityLfo.connect(cityLfoGain).connect(cityGain.gain);
+    cityLfo.start();
+    sources.push(cityLfo);
 
     // Original slow pad: A2 / E3 / A3 with a breathing filter.
     musicGain = context.createGain();
@@ -159,6 +185,7 @@ export function createGlasslineAudio() {
     type = 'sine',
     gain = 0.06,
     delay = 0,
+    pan = 0,
   } = {}) {
     if (!started || muted || !context || !master) return;
     const now = context.currentTime + delay;
@@ -173,7 +200,14 @@ export function createGlasslineAudio() {
     envelope.gain.setValueAtTime(0.0001, now);
     envelope.gain.exponentialRampToValueAtTime(gain, now + 0.012);
     envelope.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-    oscillator.connect(envelope).connect(master);
+    oscillator.connect(envelope);
+    if (context.createStereoPanner) {
+      const panner = context.createStereoPanner();
+      panner.pan.value = pan;
+      envelope.connect(panner).connect(master);
+    } else {
+      envelope.connect(master);
+    }
     oscillator.start(now);
     oscillator.stop(now + duration + 0.02);
   }
@@ -185,6 +219,7 @@ export function createGlasslineAudio() {
     type = 'lowpass',
     q = 0.8,
     delay = 0,
+    pan = 0,
   } = {}) {
     if (!started || muted || !context || !master || !noiseBuffer) return;
     const now = context.currentTime + delay;
@@ -202,7 +237,14 @@ export function createGlasslineAudio() {
     envelope.gain.setValueAtTime(0.0001, now);
     envelope.gain.exponentialRampToValueAtTime(gain, now + 0.01);
     envelope.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-    source.connect(filter).connect(envelope).connect(master);
+    source.connect(filter).connect(envelope);
+    if (context.createStereoPanner) {
+      const panner = context.createStereoPanner();
+      panner.pan.value = pan;
+      envelope.connect(panner).connect(master);
+    } else {
+      envelope.connect(master);
+    }
     source.start(now);
     source.stop(now + duration + 0.02);
   }
@@ -215,31 +257,14 @@ export function createGlasslineAudio() {
     windFilter?.frequency.setTargetAtTime(mix.windFrequency, now, 0.25);
     musicFilter?.frequency.setTargetAtTime(mix.musicCutoff, now, 0.35);
     musicGain?.gain.setTargetAtTime(mix.musicGain, now, 0.4);
+    cityGain?.gain.setTargetAtTime(mix.cityGain, now, 0.5);
   }
 
-  function speakIntro() {
-    if (!started || muted || introPlayed) return;
-    introPlayed = true;
+  let stepSide = 1;
+
+  function playDispatch() {
+    if (!started || muted) return;
     play('radio');
-    const synth = globalThis.speechSynthesis;
-    const Utterance = globalThis.SpeechSynthesisUtterance;
-    if (!synth || !Utterance) return;
-    globalThis.setTimeout(() => {
-      if (!started || muted) return;
-      try {
-        synth.cancel();
-        const line = new Utterance(
-          'Courier. Rooftop line is open. Follow the red thread. Do not look down.',
-        );
-        line.lang = 'en-US';
-        line.pitch = 0.92;
-        line.rate = 0.96;
-        line.volume = Math.min(1, volume * 0.82);
-        synth.speak(line);
-      } catch {
-        /* speech synthesis is optional */
-      }
-    }, 520);
   }
 
   function play(name, payload = {}) {
@@ -248,18 +273,37 @@ export function createGlasslineAudio() {
       case 'ui':
         tone({ frequency: 720, endFrequency: 520, duration: 0.06, gain: 0.035 });
         break;
-      case 'step':
-        noise({ duration: 0.055, cutoff: 1800, gain: 0.018, type: 'highpass' });
+      case 'step': {
+        const heel = 68 + Math.random() * 16;
+        stepSide *= -1;
         tone({
-          frequency: 95 + Math.random() * 18,
-          endFrequency: 42,
-          duration: 0.09,
-          gain: 0.014,
+          frequency: heel,
+          endFrequency: 38,
+          duration: 0.11,
+          gain: 0.028,
+          pan: stepSide * 0.22,
+        });
+        noise({
+          duration: 0.07,
+          cutoff: 900,
+          gain: 0.02,
+          type: 'lowpass',
+          q: 0.6,
+          pan: stepSide * 0.18,
+        });
+        noise({
+          duration: 0.035,
+          cutoff: 2600,
+          gain: 0.009,
+          type: 'highpass',
+          pan: stepSide * 0.12,
         });
         break;
+      }
       case 'jump':
-        tone({ frequency: 220, endFrequency: 520, duration: 0.16, gain: 0.055 });
-        noise({ duration: 0.09, cutoff: 1200, gain: 0.025 });
+        noise({ duration: 0.14, cutoff: 700, gain: 0.035, type: 'bandpass', q: 0.7 });
+        noise({ duration: 0.07, cutoff: 2400, gain: 0.012, type: 'highpass' });
+        tone({ frequency: 110, endFrequency: 50, duration: 0.12, gain: 0.032 });
         break;
       case 'land': {
         const impact = Math.min(1, Math.abs(payload.impact || 0) / 8);
@@ -273,12 +317,13 @@ export function createGlasslineAudio() {
         tone({ frequency: 170, endFrequency: 100, duration: 0.45, gain: 0.026 });
         break;
       case 'vault':
-        noise({ duration: 0.2, cutoff: 1600, gain: 0.045 });
-        tone({ frequency: 300, endFrequency: 440, duration: 0.16, gain: 0.035 });
+        noise({ duration: 0.16, cutoff: 900, gain: 0.04, type: 'bandpass', q: 0.8 });
+        noise({ duration: 0.1, cutoff: 2500, gain: 0.012, type: 'highpass', delay: 0.02 });
+        tone({ frequency: 100, endFrequency: 55, duration: 0.14, gain: 0.03 });
         break;
       case 'mantle':
         noise({ duration: 0.24, cutoff: 700, gain: 0.04 });
-        tone({ frequency: 180, endFrequency: 290, duration: 0.22, gain: 0.04 });
+        tone({ frequency: 120, endFrequency: 60, duration: 0.22, gain: 0.035 });
         break;
       case 'wallrun':
         noise({ duration: 0.55, cutoff: 1100, gain: 0.05, q: 1.4 });
@@ -346,13 +391,6 @@ export function createGlasslineAudio() {
 
   function setMuted(value) {
     muted = !!value;
-    if (muted) {
-      try {
-        globalThis.speechSynthesis?.cancel?.();
-      } catch {
-        /* speech synthesis is optional */
-      }
-    }
     if (master) {
       master.gain.setTargetAtTime(muted ? 0 : volume, context.currentTime, 0.03);
     }
@@ -369,11 +407,6 @@ export function createGlasslineAudio() {
       }
     }
     for (const off of offs.splice(0)) off();
-    try {
-      globalThis.speechSynthesis?.cancel?.();
-    } catch {
-      /* speech synthesis is optional */
-    }
     context?.close?.().catch?.(() => {});
     context = null;
     started = false;
@@ -386,7 +419,7 @@ export function createGlasslineAudio() {
     setVolume,
     setMuted,
     updateMotion,
-    speakIntro,
+    playDispatch,
     dispose,
     get volume() {
       return volume;

@@ -5,9 +5,9 @@ recordings or third-party music are shipped.
 
 ## Layers
 
-1. **Wind bed** — looping filtered noise, band-passed around 300–730 Hz.
-   Speed opens the band and raises its level; the final roof moves it to a
-   broader, louder gust while the pad softens.
+1. **Wind bed + city bed** — looping band-passed wind plus a low-passed
+   traffic/HVAC rumble with a slow swell. Speed opens the wind band and raises
+   its level; the final roof moves it to a broader, louder gust while the pad softens.
 2. **Ambient synth** — detuned low saw/triangle drone plus A2/E3/A3 pad voices,
    low-pass filtered and subtly modulated by an LFO. Speed opens the low-pass
    filter for a brighter, more propulsive run.
@@ -15,10 +15,10 @@ recordings or third-party music are shipped.
    jump, land, slide, vault, mantle, wallrun, wallclimb, roll, checkpoint,
    finish and respawn. Footsteps add a low body thump; slides use a longer
    layered friction tail.
-4. **Intro dispatch** — browser `speechSynthesis` says an original courier line
-   after the first Start click, preceded by a short synthesized radio chirp.
-   No downloaded voice files. If speech synthesis is unavailable, the chirp
-   still plays and the game continues silently.
+4. **Intro dispatch** — a short synthesized radio chirp plus a readable
+   on-screen dispatch line after the first Start click. Browser speech synthesis
+   was removed because its voice, accent and intelligibility vary by OS; the
+   subtitle carries the line reliably without downloaded voice files.
 5. **UI cues** — short synthesized confirmation tones.
 
 ## Controls
@@ -27,7 +27,7 @@ recordings or third-party music are shipped.
   autoplay policy.
 - Settings exposes sound on/off and master volume; both persist in
   `glassline.audio.v1`.
-- Muting cancels a speaking dispatch line.
+- Muting silences the radio chirp and all music/SFX.
 - `audioMotion(speed, finale)` is a pure mixing function with unit coverage.
 
 ## Files
@@ -40,5 +40,5 @@ recordings or third-party music are shipped.
 
 - No Mirror’s Edge audio, music or character voice is reproduced.
 - The dispatch line is an original GLASSLINE courier instruction.
-- Browser voice availability, accent and quality vary by OS; it is optional
-  atmosphere, not a story dependency.
+- Dispatch is text + radio cue; no unpredictable TTS voice is required for
+  narrative clarity.

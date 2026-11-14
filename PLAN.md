@@ -189,8 +189,8 @@ removed from `src/`; the original artifact remains at the repository root.
 - [x] menu mute/volume controls with localStorage persistence;
 - [x] settings view with dynamic controls, rebinding and reset (settings branch);
 - [x] keyboard bindings model with conflict rejection and localStorage persistence;
-- [x] speed-reactive wind/synth layers, longer slide/footstep transients and an
-      original procedural dispatch voice for the first start;
+- [x] speed-reactive wind/synth layers, city hum, grounded footstep/jump
+      transients and a readable radio dispatch caption;
 - [x] final QA and no-copied-IP audit — see [`docs/GLASSLINE_AUDIT.md`](docs/GLASSLINE_AUDIT.md)
       and [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md); no copied assets found.
 - [ ] human audio QA and 10–20 minute pacing playtest.

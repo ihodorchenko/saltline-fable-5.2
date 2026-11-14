@@ -41,7 +41,8 @@ function createHud() {
     '</div>' +
     '<div class="gl-hud__prompt" id="gl-prompt"></div>' +
     '<div class="gl-hud__help" id="gl-help">R retry · Backspace restart</div>' +
-    '<div class="gl-toast" id="gl-toast"><div class="gl-toast__title" id="gl-toast-title"></div><div class="gl-toast__sub" id="gl-toast-sub"></div></div>';
+    '<div class="gl-toast" id="gl-toast"><div class="gl-toast__title" id="gl-toast-title"></div><div class="gl-toast__sub" id="gl-toast-sub"></div></div>' +
+    '<div class="gl-dispatch" id="gl-dispatch"><span class="gl-dispatch__tag">DISPATCH</span><span class="gl-dispatch__text" id="gl-dispatch-text"></span></div>';
   document.body.appendChild(hud);
   return hud;
 }
@@ -150,7 +151,21 @@ export async function showcaseTutorial(game) {
   const toastEl = hud.querySelector('#gl-toast');
   const toastTitle = hud.querySelector('#gl-toast-title');
   const toastSub = hud.querySelector('#gl-toast-sub');
+  const dispatchEl = hud.querySelector('#gl-dispatch');
+  const dispatchText = hud.querySelector('#gl-dispatch-text');
   let toastTimer = 0;
+  let dispatchTimer = 0;
+
+  function showDispatch(text) {
+    if (!dispatchEl || !dispatchText) return;
+    dispatchText.textContent = text;
+    dispatchEl.classList.add('on');
+    window.clearTimeout(dispatchTimer);
+    dispatchTimer = window.setTimeout(
+      () => dispatchEl.classList.remove('on'),
+      7000,
+    );
+  }
   const hintEl = document.querySelector('#glassline-hint');
   if (helpEl) {
     helpEl.textContent = `${bindings.label('retry')} retry · ${bindings.label('restart')} restart · click view to look`;
@@ -394,7 +409,10 @@ export async function showcaseTutorial(game) {
       audio.start();
       audio.play('ui');
       audio.updateMotion(0, false);
-      audio.speakIntro();
+      audio.playDispatch();
+      showDispatch(
+        'Rooftop line is open. Follow the red thread. Do not look down.',
+      );
     },
     onResume: () => {
       paused = false;
@@ -788,6 +806,7 @@ export async function showcaseTutorial(game) {
     },
     dispose() {
       bootObserver?.disconnect();
+      window.clearTimeout(dispatchTimer);
       removeEventListener('keydown', onKeyDown);
       document.removeEventListener('pointerlockchange', onPointerLockChange);
       menu?.dispose();

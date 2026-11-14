@@ -27,6 +27,8 @@ test('glassline start and pause overlays gate the run', async ({ page }) => {
   await page.locator('[data-action="start"]').click();
   await expect(menu).toBeHidden();
   await expect.poll(() => page.evaluate(() => window.__G.glassline.audio.started)).toBe(true);
+  await expect(page.locator('#gl-dispatch')).toHaveClass(/on/);
+  await expect(page.locator('#gl-dispatch-text')).toContainText('Follow the red thread');
   await page.waitForTimeout(1300);
   await expect(page.locator('#gl-time')).not.toHaveText('TIME 00:00');
 

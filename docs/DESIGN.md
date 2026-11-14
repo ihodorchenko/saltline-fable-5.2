@@ -139,8 +139,9 @@ by red route language, not darkness.
 - brief checkpoint/respawn toast;
 - procedural SFX for steps, jump, land, slide, vault, mantle, wallrun, wallclimb,
   roll, checkpoint, finish and respawn;
-- speed-driven wind/synth layers and an original browser-synthesized dispatch
-  line after the first Start click (see [`AUDIO.md`](AUDIO.md)).
+- speed-driven wind/synth layers, a low city hum, grounded footstep/jump
+  transients and a radio dispatch caption after the first Start click (see
+  [`AUDIO.md`](AUDIO.md)).
 
 ## Implementation map
 
