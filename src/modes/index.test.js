@@ -11,6 +11,7 @@ const modules = {
   enemies: moduleStub(),
   props: moduleStub(),
   render: moduleStub(),
+  glassline: moduleStub(),
 };
 
 describe('modes', () => {
@@ -25,6 +26,11 @@ describe('modes', () => {
       kind: 'showcase',
       bench: false,
       showcase: 'level',
+    });
+    expect(modes.resolve({ show: 'glassline' }, '')).toEqual({
+      kind: 'showcase',
+      bench: false,
+      showcase: 'glassline',
     });
     expect(modes.resolve({ show: 'missing' }, '').kind).toBe('campaign');
     expect(modes.resolve({ bench: '1' }, '').kind).toBe('bench');
@@ -43,6 +49,7 @@ describe('modes', () => {
       'enemies',
       'props',
       'render',
+      'glassline',
     ]);
     expect(modes.showcases.mats).toEqual({});
   });

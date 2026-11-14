@@ -10,8 +10,9 @@ and must not be merged back into `dev`.
 
 ## Current gate
 
-Phase 1 is complete and stabilized on `dev`. This branch currently contains
-planning plus the completed reference analysis. **Step 0 has not started.**
+Phase 1 is complete and stabilized on `dev`. This branch contains planning, the
+completed reference analysis and the Step 0 skeleton. The skeleton is **not yet
+merged into `project/glassline`**; wait for the owner command.
 
 The theme, language and platform are confirmed: **parkour in the spirit of
 Mirror's Edge with original IP**, **JS + JSDoc**, **desktop Chrome**, **60 FPS**.
@@ -24,8 +25,9 @@ Reference analysis is complete:
 - [`docs/MOVEMENT.md`](docs/MOVEMENT.md) — movement spec and starting targets;
 - [`docs/CAMERA.md`](docs/CAMERA.md) — camera/FOV/roll/landing spec.
 
-Start Step 0 only when the owner explicitly says to proceed. The reference video
-is local/untracked and must not be committed.
+Step 0 is implemented on `feat/glassline-skeleton`: prototype mode `?show=glassline`,
+minimal scene, jsconfig/JSDoc contract, boot test and dedicated CI. Merge only on
+owner command. The reference video is local/untracked and must not be committed.
 
 ## Hard rules
 

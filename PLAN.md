@@ -70,17 +70,19 @@ Still open:
 
 ### Step 0 — Bootstrap and guardrails
 
-Branch: `feat/glassline-skeleton`
+Branch: `feat/glassline-skeleton` — **in progress, not merged**.
 
-- create `src/game/glassline/`, `src/levels/`, `src/assets/`, `src/prototypes/`;
-- register a new mode in `src/modes/`;
-- set up `jsconfig.json` / `checkJs` and a thin `types/engine.d.ts` for the game context;
-- minimal scene: ground, camera, player capsule, exit to menu;
-- project-specific README/commands;
-- boot test with empty `__errors`/`__fatal`;
-- a `project/glassline` CI path separate from Saltline.
+- [x] create `src/game/glassline/`, `src/levels/`, `src/assets/`, `src/prototypes/`;
+- [x] register a new mode in `src/modes/` (`?show=glassline`);
+- [x] set up `jsconfig.json` / `checkJs` and a thin `types/engine.d.ts` for the game context;
+- [x] minimal scene: rooftop deck, skyline blocks, camera, player capsule, red route beam;
+- [x] project-specific README/commands;
+- [x] boot test with empty `__errors`/`__fatal`;
+- [x] dedicated `.github/workflows/glassline.yml` CI path separate from Saltline;
+- [ ] merge into `project/glassline` after the owner's command.
 
 Acceptance: `npm run dev` opens a clean scene; build and boot test pass.
+Screenshot: `artifacts/glassline-step0.png` (ignored local/CI artifact).
 
 ### Step 1 — Engine contract and capsule physics
 

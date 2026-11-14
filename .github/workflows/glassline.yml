@@ -1,0 +1,53 @@
+name: GLASSLINE
+
+on:
+  push:
+    branches: [project/glassline, 'feat/glassline-*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: glassline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  skeleton:
+    name: GLASSLINE skeleton
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint and format check
+        run: npm run check
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build single-file bundle
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: GLASSLINE boot test
+        run: npx playwright test tests/e2e/glassline.spec.js
+
+      - name: Upload GLASSLINE screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: glassline-step0
+          path: artifacts/glassline-step0.png
+          retention-days: 7

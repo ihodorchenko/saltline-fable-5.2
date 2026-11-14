@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [dev, 'feat/**']
+    branches: [dev, 'feat/**', '!feat/glassline-*']
   pull_request:
   workflow_dispatch:
 

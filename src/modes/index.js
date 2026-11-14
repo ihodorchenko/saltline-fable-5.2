@@ -4,7 +4,8 @@
 
 /**
  * @param {{level: Function, backdrop: Function, ground: Function, fx: Function,
- *          weapon: Function, enemies: Function, props: Function, render: Function}} modules
+ *          weapon: Function, enemies: Function, props: Function, render: Function,
+ *          glassline?: {create: Function, showcase: Function}}} modules
  * @returns {{showcases: object, resolve: Function}}
  */
 export function createModes(modules) {
@@ -18,6 +19,7 @@ export function createModes(modules) {
     enemies: modules.enemies,
     props: modules.props,
     render: modules.render,
+    glassline: modules.glassline,
   };
 
   /**
