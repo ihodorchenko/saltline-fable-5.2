@@ -1,5 +1,50 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html lang="en"><head><meta charset="utf-8">
+<script>
+(function () {
+  var show = new URLSearchParams(location.search).get("show") || "";
+  if (show.indexOf("glassline") !== 0) return;
+  document.documentElement.dataset.show = "glassline";
+  document.title = "GLASSLINE — Rooftop Induction";
+  var copy = {
+    "Raising the terminal": "BOOTING ROOFTOP SYSTEMS",
+    "Waking the renderer": "INITIALIZING CITY LIGHT",
+    "Mixing paint, rust and rain": "POLISHING GLASS AND CONCRETE",
+    "Stacking containers": "ASSEMBLING ROOFTOPS",
+    "Raising the cranes": "BUILDING SKYLINE",
+    "Flooding the apron": "SETTING THE SKY",
+    "Loading tracers and smoke": "TUNING AIR AND LIGHT",
+    "Checking the rifle": "SYNCING MOVEMENT",
+    "Waking the Harbormaster": "CALIBRATING THE COURSE",
+    "Waiting for first light": "WAITING FOR THE SUN",
+    "Ready": "READY TO RUN"
+  };
+  function apply() {
+    var mark = document.querySelector(".boot-mark");
+    if (mark) mark.textContent = "GLASSLINE";
+    var sub = document.querySelector("#boot-msg");
+    if (sub && copy[sub.textContent]) sub.textContent = copy[sub.textContent];
+    var boot = document.querySelector("#boot");
+    if (boot && !boot.querySelector(".gl-boot-tag")) {
+      var tag = document.createElement("div");
+      tag.className = "gl-boot-tag";
+      tag.textContent = "CITY OF LIGHT / ROOFTOP INDUCTION";
+      boot.appendChild(tag);
+    }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      apply();
+      var sub = document.querySelector("#boot-msg");
+      if (sub) {
+        new MutationObserver(apply).observe(sub, { childList: true, characterData: true, subtree: true });
+      }
+    }, { once: true });
+  } else {
+    apply();
+  }
+})();
+</script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Saltline</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">

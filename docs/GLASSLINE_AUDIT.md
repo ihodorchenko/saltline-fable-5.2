@@ -32,8 +32,8 @@ automatic runs remain intentionally disabled during prototyping.
 | Level layout | Data-authored blockout in `src/levels/tutorial.js`; no imported or reconstructed Mirror's Edge layout. |
 | Textures/models | No tracked image/model files. Surface textures are runtime Canvas noise/panel patterns. |
 | Audio/music | Fully procedural Web Audio; no samples, recordings or third-party tracks. |
-| Fonts | System font stacks only; no font binaries bundled. |
-| External assets | No remote URLs or external asset imports in GLASSLINE source. |
+| Fonts | Big Shoulders Display, IBM Plex Mono and Barlow Condensed are loaded from Google Fonts under SIL OFL 1.1; no font binaries are bundled. System fallbacks are used offline. |
+| External assets | GLASSLINE game source has no remote image/audio/model imports. `src/index.html` requests Google Fonts (OFL, not game art) for the shell typography. |
 | Reference video | Local/untracked/ignored (`docs/reference/*.mp4`); absent from git and from the build. |
 | Saltline imports | GLASSLINE does not import `src/game/saltline`; the app bundle still contains the Phase 1 Saltline mode because both modes ship in the same build. |
 

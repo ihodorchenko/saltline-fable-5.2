@@ -12,12 +12,12 @@ and must not be merged back into `dev`.
 
 Phase 1 is complete and stabilized on `dev`. Step 0, Step 1 and all Step 2 parkour
 mechanics are merged into `project/glassline`; their feature branches are deleted.
-Step 3, Step 4 UI/art/audio/settings and the final QA/no-copied-IP audit are merged
-into `project/glassline`. Step 5 is in progress on `feat/glassline-polish`:
-instanced static geometry, merged edges, quality profiles, stats overlay,
-performance budget, hardware 60 FPS peak-load profile and repeated-reload
-reliability. It is **not merged**; merge only on command. Human pacing/audio
-acceptance remains.
+Step 3, Step 4 UI/art/audio/settings, the final QA/no-copied-IP audit and Step 5
+performance/reliability are merged into `project/glassline`. The city-shell refresh
+is in progress on `feat/glassline-city-shell`: GLASSLINE boot branding, future-city
+menu with separate Continue/Start over, Settings, Controls and Level Inspector,
+plus the utopian white/glass/red palette. It is **not merged**; merge only on
+command. Human pacing/audio acceptance remains.
 
 The theme, language and platform are confirmed: **parkour in the spirit of
 Mirror's Edge with original IP**, **JS + JSDoc**, **desktop Chrome**, **60 FPS**.

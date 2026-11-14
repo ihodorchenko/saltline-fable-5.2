@@ -48,7 +48,7 @@ export function buildLevel(game, level) {
 
   const palette = level.palette || [0xd7d2c6, 0xc3cbca, 0xb3bdc2];
   const routeMat = new THREE.MeshBasicMaterial({ color: 0xb51f2a });
-  const sideMat = standard(0x3d4a52, 0.95);
+  const sideMat = standard(0x5b6b72, 0.92);
   const edgeMat = new THREE.LineBasicMaterial({
     color: 0xa8b4b7,
     transparent: true,
@@ -62,9 +62,9 @@ export function buildLevel(game, level) {
   const stripGeometry = new THREE.BoxGeometry(1, 1, 1);
   const windowGeometry = new THREE.BoxGeometry(0.05, 0.75, 0.42);
   const windowMaterial = new THREE.MeshBasicMaterial({
-    color: 0xe0b06a,
+    color: 0xc8edf5,
     transparent: true,
-    opacity: 0.55,
+    opacity: 0.78,
   });
 
   const makeSurfaceTexture = (hex) => {
@@ -271,6 +271,26 @@ export function buildLevel(game, level) {
         post.position.set((prop.size[0] / 2) * side, -0.45, 0);
         group.add(post);
       }
+    } else if (prop.type === 'planter') {
+      const size = prop.size || [1.4, 0.6, 0.7];
+      const base = new THREE.Mesh(new THREE.BoxGeometry(...size), standard(0x879398, 0.92));
+      base.castShadow = true;
+      base.receiveShadow = true;
+      group.add(base);
+      const leaves = new THREE.Mesh(
+        new THREE.BoxGeometry(size[0] * 0.84, 0.12, size[2] * 0.78),
+        standard(prop.color || 0x78977d, 0.95),
+      );
+      leaves.position.y = size[1] / 2 + 0.06;
+      group.add(leaves);
+      for (const side of [-1, 0, 1]) {
+        const tuft = new THREE.Mesh(
+          new THREE.ConeGeometry(0.24, 0.6, 7),
+          standard(prop.color || 0x78977d, 1),
+        );
+        tuft.position.set(side * size[0] * 0.22, size[1] / 2 + 0.34, 0);
+        group.add(tuft);
+      }
     }
     root.add(group);
   }
@@ -329,9 +349,9 @@ export function buildLevel(game, level) {
   gateTop.castShadow = true;
   root.add(gateTop);
 
-  scene.fog = new THREE.Fog(0x87939b, 34, 125);
-  const hemisphere = new THREE.HemisphereLight(0xcfe6ff, 0x30343a, 2.0);
-  const key = new THREE.DirectionalLight(0xffe2b8, 3.0);
+  scene.fog = new THREE.Fog(0xcfe0e7, 62, 240);
+  const hemisphere = new THREE.HemisphereLight(0xeaf7ff, 0x7d898b, 2.6);
+  const key = new THREE.DirectionalLight(0xffe5c0, 3.5);
   key.position.set(-8, 12, 6);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);
@@ -339,12 +359,51 @@ export function buildLevel(game, level) {
   key.shadow.camera.right = 18;
   key.shadow.camera.top = 18;
   key.shadow.camera.bottom = -18;
-  const rim = new THREE.DirectionalLight(0x86b7d4, 1.6);
+  const rim = new THREE.DirectionalLight(0xa9d9ff, 1.8);
   rim.position.set(14, 8, -24);
-  const warm = new THREE.DirectionalLight(0xff7a4d, 0.8);
+  const warm = new THREE.DirectionalLight(0xffa56f, 0.7);
   warm.position.set(-12, 4, -60);
   scene.add(hemisphere, key, rim, warm);
-  if (game.render && game.render.exposure != null) game.render.exposure = 1.06;
+  if (game.render && game.render.exposure != null) {
+    game.render.exposure = 1.18;
+  }
+  const sky = game.render?.sky || game.scene?.getObjectByName?.('sky');
+  if (sky?.material?.uniforms) {
+    const uniforms = sky.material.uniforms;
+    uniforms.uZen?.value?.set?.(0.09, 0.34, 0.66);
+    uniforms.uHor?.value?.set?.(0.86, 0.93, 0.96);
+    uniforms.uHorAway?.value?.set?.(0.6, 0.74, 0.82);
+    uniforms.uSunCol?.value?.set?.(1, 0.82, 0.62);
+    sky.material.needsUpdate = true;
+  }
+  // Original procedural sun glow: a soft utopian light source beyond the route.
+  const sunCanvas = document.createElement('canvas');
+  sunCanvas.width = 256;
+  sunCanvas.height = 256;
+  const sunContext = sunCanvas.getContext('2d');
+  const sunGradient = sunContext.createRadialGradient(128, 128, 0, 128, 128, 128);
+  sunGradient.addColorStop(0, 'rgba(255, 246, 218, 0.95)');
+  sunGradient.addColorStop(0.12, 'rgba(255, 225, 174, 0.72)');
+  sunGradient.addColorStop(0.42, 'rgba(255, 184, 122, 0.2)');
+  sunGradient.addColorStop(1, 'rgba(255, 184, 122, 0)');
+  sunContext.fillStyle = sunGradient;
+  sunContext.fillRect(0, 0, 256, 256);
+  const sunTexture = new THREE.CanvasTexture(sunCanvas);
+  sunTexture.colorSpace = THREE.SRGBColorSpace;
+  const sunSprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: sunTexture,
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  sunSprite.name = 'glassline-sun';
+  sunSprite.position.set(34, 58, -190);
+  sunSprite.scale.set(110, 110, 1);
+  sunSprite.renderOrder = -1;
+  root.add(sunSprite);
   game.physics?.build?.();
   scene.add(root);
   return { root, checkpointMeshes, finishMesh };

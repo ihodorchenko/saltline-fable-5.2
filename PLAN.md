@@ -160,18 +160,23 @@ for the vertical slice.
 
 Branches: `feat/glassline-art`, `feat/glassline-ui`, `feat/glassline-audio`
 
-Status: UI shell, art and audio merged. `feat/glassline-settings` implemented, not merged.
+Status: UI shell, art and audio merged. City-shell refresh is in progress on
+`feat/glassline-city-shell` (not merged).
 
+- [x] original GLASSLINE boot/loading screen replaces Saltline branding;
 - [x] original GLASSLINE title, pause and completion overlay (merged);
 - [x] start gates the timer/run and requests pointer lock;
 - [x] in-progress start screen offers **Continue** or **Start over**;
+- [x] Settings, Controls and Level Inspector are separate menu destinations;
 - [x] pause on pointer-lock loss, resume/restart actions;
 - [x] mouse sensitivity setting with localStorage persistence;
 - [x] tutorial HUD already covers objective, checkpoint, timer/splits/best;
 - [x] level inspector linked from the menu;
 - [x] original art/theme pass on the tutorial blockout: textured concrete tops,
-      dark platform sides, edge lines, lit skyline windows, rooftop AC/vent/antenna/rail
-      props, act-sign underline, warm/cool three-light setup and exposure lift;
+      platform edge lines, lit skyline windows, rooftop AC/vent/antenna/rail props,
+      act-sign underline and three-light setup;
+- [x] future-city/utopian palette pass: ivory and pale glass towers, cyan windows,
+      brighter sky/fog, warm sun with cool rim light and exposure lift;
 - [x] original procedural music/SFX: wind bed, three-note pad, footsteps, jump,
       land, slide, vault, mantle, wallrun, wallclimb, roll, checkpoint, finish,
       respawn and UI cues (audio branch, not merged);

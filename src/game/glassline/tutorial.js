@@ -143,8 +143,17 @@ export async function showcaseTutorial(game) {
   const bestEl = hud.querySelector('#gl-best');
   const fillEl = hud.querySelector('#gl-progress-fill');
   const helpEl = hud.querySelector('#gl-help');
+  const hintEl = document.querySelector('#glassline-hint');
   if (helpEl) {
     helpEl.textContent = `${bindings.label('retry')} retry · ${bindings.label('restart')} restart`;
+  }
+  function showHud() {
+    hud.style.display = 'block';
+    if (hintEl) hintEl.style.display = 'block';
+  }
+  function hideHud() {
+    hud.style.display = 'none';
+    if (hintEl) hintEl.style.display = 'none';
   }
   let elapsed = 0;
   let timeAccumulator = 0;
@@ -307,6 +316,7 @@ export async function showcaseTutorial(game) {
     saveProgress(progress);
     paused = false;
     started = true;
+    showHud();
     setHud();
   }
 
@@ -314,6 +324,7 @@ export async function showcaseTutorial(game) {
     restart();
     started = true;
     paused = false;
+    showHud();
     controller.setEnabled(true);
     audio.start();
     audio.play('ui');
@@ -340,12 +351,14 @@ export async function showcaseTutorial(game) {
       paused = false;
       progress.started = true;
       saveProgress(progress);
+      showHud();
       controller.setEnabled(true);
       audio.start();
       audio.play('ui');
     },
     onResume: () => {
       paused = false;
+      showHud();
       controller.setEnabled(true);
       audio.start();
       audio.play('ui');
@@ -354,6 +367,7 @@ export async function showcaseTutorial(game) {
       restart();
       started = true;
       paused = false;
+      showHud();
       controller.setEnabled(true);
       audio.start();
       audio.play('ui');
@@ -371,11 +385,17 @@ export async function showcaseTutorial(game) {
     paused = false;
     progress.started = true;
     saveProgress(progress);
+    showHud();
     controller.setEnabled(true);
   }
-
   const benchMode = game.params?.peak === '1';
+  if (!autostart && !benchMode) {
+    menu.hide();
+    hideHud();
+    paused = true;
+  }
   let bench = null;
+  let bootObserver = null;
   if (benchMode) {
     menu.hide();
     hud.style.display = 'none';
@@ -508,15 +528,47 @@ export async function showcaseTutorial(game) {
   setHud();
   saveProgress(progress);
 
-  if (progress.finished && !benchMode) {
-    paused = true;
-    started = false;
-    controller.setEnabled(false);
-    menu?.showComplete({
-      time: '--:--',
-      best: best ? formatTime(best) : '--:--',
-      respawns: progress.respawns,
-    });
+  function revealMenu() {
+    hideHud();
+    if (progress.finished) {
+      paused = true;
+      started = false;
+      controller.setEnabled(false);
+      menu?.showComplete({
+        time: '--:--',
+        best: best ? formatTime(best) : '--:--',
+        respawns: progress.respawns,
+      });
+    } else {
+      paused = true;
+      started = false;
+      controller.setEnabled(false);
+      menu?.showStart();
+    }
+  }
+
+  if (!benchMode && (progress.finished || !autostart)) {
+    const bootEl = document.querySelector('#boot');
+    const bootDone = () =>
+      !bootEl ||
+      bootEl.hidden ||
+      bootEl.classList.contains('done') ||
+      getComputedStyle(bootEl).opacity === '0';
+    if (bootDone()) {
+      revealMenu();
+    } else if (bootEl) {
+      bootObserver = new MutationObserver(() => {
+        if (bootDone()) {
+          bootObserver?.disconnect();
+          bootObserver = null;
+          revealMenu();
+        }
+      });
+      bootObserver.observe(bootEl, {
+        attributes: true,
+        attributeFilter: ['class', 'hidden', 'style'],
+      });
+    }
   }
 
   function onKeyDown(event) {
@@ -540,6 +592,7 @@ export async function showcaseTutorial(game) {
     if (!started || progress.finished || paused) return;
     if (document.pointerLockElement !== canvas) {
       paused = true;
+      hideHud();
       controller.setEnabled(false);
       menu?.showPause();
     }
@@ -673,6 +726,7 @@ export async function showcaseTutorial(game) {
           /* events are optional */
         }
         paused = true;
+        hideHud();
         controller.setEnabled(false);
         menu?.showComplete({
           time: formatTime(elapsed),
@@ -682,6 +736,7 @@ export async function showcaseTutorial(game) {
       }
     },
     dispose() {
+      bootObserver?.disconnect();
       removeEventListener('keydown', onKeyDown);
       document.removeEventListener('pointerlockchange', onPointerLockChange);
       menu?.dispose();

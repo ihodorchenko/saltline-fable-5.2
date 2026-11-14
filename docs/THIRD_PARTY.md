@@ -47,6 +47,8 @@ AGPL or unknown-license packages were found.
 - Level geometry, palette, props and signage: authored in this repository.
 - Surface textures: generated at runtime with Canvas 2D.
 - Audio: generated at runtime with Web Audio oscillators and filtered noise.
-- Fonts: system font stacks (`IBM Plex Mono`, `Arial Narrow`, `Helvetica Neue`);
-  no font files are bundled.
+- Fonts: Big Shoulders Display, IBM Plex Mono and Barlow Condensed are requested
+  from Google Fonts by `src/index.html` under the SIL Open Font License 1.1.
+  No font binaries are bundled; local fallbacks are used offline. `Arial Narrow`
+  and `Helvetica Neue` are system fallback stacks.
 - No third-party images, models, music, sound samples or logos are shipped.

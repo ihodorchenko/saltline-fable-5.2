@@ -24,6 +24,48 @@ body { background: var(--ink); color: var(--bone); overflow: hidden; font-family
 #boot { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: var(--ink); transition: opacity .6s ease; z-index: 50;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 #boot.done { opacity: 0; pointer-events: none; }
+html[data-show="glassline"] #boot {
+  z-index: 100;
+  background:
+    radial-gradient(ellipse at 50% 36%, rgba(126, 156, 165, .24), transparent 52%),
+    linear-gradient(180deg, #11181d 0%, #182329 48%, #0b0e11 100%);
+}
+html[data-show="glassline"] #boot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .18;
+  background-image: linear-gradient(rgba(210, 58, 57, .28) 1px, transparent 1px), linear-gradient(90deg, rgba(210, 58, 57, .18) 1px, transparent 1px);
+  background-size: 80px 80px;
+  mask-image: linear-gradient(180deg, transparent, #000 45%, transparent);
+}
+html[data-show="glassline"] .boot-mark {
+  color: #f2eee3;
+  letter-spacing: .06em;
+  margin-right: -.06em;
+  text-shadow: 0 10px 40px rgba(0, 0, 0, .45);
+}
+html[data-show="glassline"] .boot-mark::after {
+  content: '';
+  display: block;
+  width: 64px;
+  height: 4px;
+  margin: 16px auto 0;
+  background: #d23a39;
+}
+html[data-show="glassline"] .boot-sub {
+  color: #d7b8a3;
+  letter-spacing: .22em;
+}
+html[data-show="glassline"] .boot-bar { background: #2c373c; }
+html[data-show="glassline"] .boot-bar i { background: #d23a39; }
+html[data-show="glassline"] .gl-boot-tag {
+  margin-top: 8px;
+  color: #77878d;
+  font: 500 10px/1.4 var(--f-mono);
+  letter-spacing: .16em;
+}
 .boot-mark { font-family: var(--f-display); font-weight: 900; font-size: clamp(40px, 9vw, 96px); letter-spacing: .16em; margin-right: -.16em; color: var(--bone); line-height: 1; }
 .boot-sub { font-family: var(--f-mono); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--steel); text-align: center; }
 .boot-bar { width: min(320px, 70vw); height: 2px; background: #23282c; }
