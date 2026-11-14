@@ -42,7 +42,6 @@ acceptance target. The reference video is local/untracked and must not be commit
 - Engine fixes are separate `fix/engine-*` branches from `dev`; merge them into
   `dev` only by owner command, then rebase/cherry-pick into GLASSLINE.
 - Do not import `src/game/saltline/` into engine modules.
-- Do not reformat the retained minified Saltline core.
 - Do not copy reference-video frames, assets, audio, level data or other
   third-party IP. Observations are text only.
 - Preserve `NOTICE.md`; original Saltline rights remain with its author.
@@ -165,12 +164,9 @@ AGENT.md                        this operational contract
 docs/REFERENCE.md               video observations and starting targets
 docs/MOVEMENT.md                movement spec
 docs/CAMERA.md                  camera spec
-docs/ARCHITECTURE.md            engine/game boundaries
-docs/ENGINE_REUSE.md            engine portability checklist
 src/engine/                     shared engine
-src/modes/                      mode registry
-src/game/glassline/             new game (to be created)
-src/levels/                     new level content (to be created)
+src/game/glassline/             GLASSLINE modes/controller/UI
+src/levels/                     data-driven level and builder
 src/assets/                     original/licensed assets only
 ```
 

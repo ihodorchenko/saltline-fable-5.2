@@ -60,7 +60,6 @@ Still open:
 - Saltline stays in `dev`; GLASSLINE stays in `project/glassline`.
 - Shared engine fixes go through `fix/engine-*` and reach `dev` only by owner command.
 - Phase 2 feature branches merge into `project/glassline` only by owner command.
-- Do not reformat the retained minified Saltline core.
 - New GLASSLINE modules are JS + JSDoc; do not introduce a TS migration or a second toolchain.
 - No third-party IP assets; preserve `NOTICE.md` and the license scope.
 - Every step has tests, a smoke path and a rollback point.
@@ -224,7 +223,7 @@ packaged as one HTML file.
 ## 6. Branch workflow
 
 ```text
-dev (Saltline, Phase 1 complete)
+dev (Phase 1 history)
 └── project/glassline (GLASSLINE, long-lived)
     ├── feat/glassline-skeleton
     ├── feat/glassline-physics

@@ -2,7 +2,7 @@
 
 An original first-person rooftop parkour vertical slice: a three-act tutorial route through a bright, vertical future city, built on the project’s extracted browser engine.
 
-The original Saltline artifact is intentionally preserved at [`index.html`](index.html) as a legacy reference and remains playable. It is not the active build. Its attribution lives in [`docs/legacy/SALTLINE_README.md`](docs/legacy/SALTLINE_README.md).
+The original Saltline artifact is intentionally preserved at [`index.html`](index.html) as a legacy reference and remains playable. It is not the active build. Its attribution is preserved in [`NOTICE.md`](NOTICE.md).
 
 ## Run
 

@@ -35,7 +35,7 @@ automatic runs remain intentionally disabled during prototyping.
 | Fonts | Big Shoulders Display, IBM Plex Mono and Barlow Condensed are loaded from Google Fonts under SIL OFL 1.1; no font binaries are bundled. System fallbacks are used offline. |
 | External assets | GLASSLINE game source has no remote image/audio/model imports. `src/index.html` requests Google Fonts (OFL, not game art) for the shell typography. |
 | Reference video | Local/untracked/ignored (`docs/reference/*.mp4`); absent from git and from the build. |
-| Saltline imports | GLASSLINE does not import `src/game/saltline`; the app bundle still contains the Phase 1 Saltline mode because both modes ship in the same build. |
+| Saltline source | Removed from `src/`; only the original root `index.html` artifact remains. |
 
 ## Dependencies and licenses
 
@@ -66,19 +66,16 @@ No copied asset, license blocker, boot failure or data-loss issue found.
 
 ### P3 — polish/notes
 
-1. The single-file bundle still includes the Phase 1 Saltline mode; this is
-   project-original code/assets, not copied IP, but release packaging should
-   decide whether to tree-shake it.
-2. `package.json` still describes the Phase 1 Saltline shell; rename/description
-   cleanup can happen at release packaging.
-3. The mirrored/inspiration terminology in docs is intentional and clearly
-   marked as reference-only; do not ship those docs as game content.
+1. The legacy root `index.html` is intentionally retained; do not ship it inside
+   the active GLASSLINE bundle.
+2. The mirrored/inspiration terminology in reference docs is intentional and
+   clearly marked as reference-only; do not ship those docs as game content.
 
 ## Evidence
 
 - Asset scan: no tracked `.mp4/.png/.jpg/.wav/.mp3/.glb/.gltf/.ttf` files.
-- IP scan: matches only in `docs/EXPANSION.md`, `docs/REFERENCE.md`,
-  `docs/CONTRIBUTING.md`, `docs/MOVEMENT.md`, all as warnings/reference.
+- IP scan: matches only in `docs/REFERENCE.md` and `docs/MOVEMENT.md`, as
+  warnings/reference. Active source has no such terms.
 - Ignore rules: `docs/reference/*.mp4`, `dist/`, `artifacts/` are ignored.
 - Tests: `src/game/glassline/*.test.js`, `src/levels/validate.test.js`,
   `tests/e2e/glassline*.spec.js`.

@@ -120,5 +120,4 @@ hardware benchmark. Hardware 60 FPS validation remains a release check.
 - Headless software WebGL numbers are not a substitute for hardware profiling.
 - Human 10–20 minute pacing and audio QA remain open.
 - Gamepad/touch are out of scope for this desktop-keyboard slice.
-- The single-file bundle still carries the Phase 1 Saltline mode; release
-  packaging/tree-shaking is a separate decision.
+- The legacy root `index.html` is not part of the active single-file build.

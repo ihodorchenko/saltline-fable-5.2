@@ -1,5 +1,5 @@
-// GLASSLINE-only browser entry. The original Saltline single-file game remains
-// at /index.html; this entry boots only the shared engine and GLASSLINE modes.
+// GLASSLINE-only browser entry. The legacy original remains at /index.html;
+// this entry boots only the shared engine and GLASSLINE modes.
 import * as THREE from 'three';
 import { installRender } from '../engine/render/index.js';
 import { createPhysics } from '../engine/physics/index.js';
