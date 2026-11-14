@@ -521,7 +521,7 @@ export function buildLevel(game, level) {
   gateTop.castShadow = true;
   root.add(gateTop);
 
-  scene.fog = new THREE.FogExp2(0xe3f2f9, 0.0018);
+  scene.fog = new THREE.FogExp2(0xe3f2f9, 0.0014);
   const sunDirection = new THREE.Vector3(...SUN_DIRECTION).normalize();
   const lighting = createLighting(game);
   lighting.update({ x: level.spawn.x, y: level.spawn.y, z: level.spawn.z });

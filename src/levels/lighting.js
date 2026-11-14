@@ -10,17 +10,17 @@
 export const SUN_DIRECTION = Object.freeze([0.3, 0.45, -0.85]);
 
 export const LIGHTING = {
-  hemisphere: { sky: 0xffffff, ground: 0x6699cc, intensity: 1.45 },
+  hemisphere: { sky: 0xffffff, ground: 0x7d93a8, intensity: 0.85 },
   // The engine sun already owns a fitted shadow frustum, so `distance` is only
   // used by the private fallback light.
-  key: { color: 0xfff4df, intensity: 3.1, distance: 40 },
-  rim: { color: 0xb9e4ff, intensity: 1.4, offset: [28, 16, -48] },
-  warm: { color: 0xffd0a4, intensity: 0.6, offset: [-24, 8, -120] },
+  key: { color: 0xfff1d6, intensity: 3.4, distance: 40 },
+  rim: { color: 0xb9e4ff, intensity: 1.0, offset: [28, 16, -48] },
+  warm: { color: 0xffd0a4, intensity: 0.5, offset: [-24, 8, -120] },
   // Fallback shadow camera only. The engine's soft-shadow shader bakes its
   // frustum size and depth at renderer start-up, so the engine sun must keep
   // its own camera bounds and near/far.
   shadow: { half: 36, near: 1, far: 120, bias: -0.00012, normalBias: 0.03 },
-  exposure: 1.08,
+  exposure: 1.0,
 };
 
 /**
