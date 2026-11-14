@@ -23,7 +23,19 @@ const MAX_DT = 0.05;
 const SLIDE_HEIGHT = 1.15;
 const SLIDE_EYE = 0.82;
 const CROUCH_EYE = 1.02;
-const BASE_FOV = 74;
+const BASE_FOV = 75;
+const SPRINT_FOV = 84;
+const SLIDE_FOV = 88;
+
+/**
+ * Camera FOV target for the current parkour state.
+ * @param {{sliding?: boolean, sprinting?: boolean, speed?: number}} state
+ */
+export function targetFov(state) {
+  if (state.sliding) return SLIDE_FOV;
+  if (state.sprinting && (state.speed || 0) > 5.5) return SPRINT_FOV;
+  return BASE_FOV;
+}
 
 import {
   COYOTE_TIME,
@@ -682,12 +694,12 @@ export function createPlayerController(game, options = {}) {
         : EYE;
     state.eyeHeight +=
       (targetEye - state.eyeHeight) * (1 - Math.exp(-14 * step));
-    const targetFov =
-      BASE_FOV + (state.sliding ? 4 : 0) + (state.sprinting ? 2 : 0);
+    const targetFov = targetFov(state);
     if (game.camera && typeof game.camera.fov === 'number') {
-      game.camera.fov +=
-        (targetFov - game.camera.fov) * (1 - Math.exp(-8 * step));
-      if (Math.abs(game.camera.fov - targetFov) > 0.01) {
+      const nextFov =
+        game.camera.fov + (targetFov - game.camera.fov) * (1 - Math.exp(-8 * step));
+      if (Math.abs(nextFov - game.camera.fov) > 0.001) {
+        game.camera.fov = nextFov;
         game.camera.updateProjectionMatrix();
       }
     }

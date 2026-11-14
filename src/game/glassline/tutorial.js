@@ -803,6 +803,10 @@ export async function showcaseTutorial(game) {
         }
         saveProgress(progress);
         setHud();
+        if (game.camera) {
+          game.camera.fov = 75;
+          game.camera.updateProjectionMatrix();
+        }
         audio.updateMotion(0, true);
         try {
           game.events?.emit('glassline:finish', { time: elapsed });

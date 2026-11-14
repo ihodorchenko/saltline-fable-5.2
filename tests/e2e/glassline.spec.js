@@ -223,3 +223,26 @@ test('glassline balance stays on the beam and leans with A/D', async ({ page }) 
   expect(Math.abs(during.roll)).toBeGreaterThan(0.01);
   expect(during.pos.x).toBeGreaterThan(before.pos.x);
 });
+
+test('sprint widens the camera FOV', async ({ page }) => {
+  await boot(page, '?show=glassline&q=low');
+  const base = await page.evaluate(() => window.__G.camera.fov);
+  expect(base).toBeGreaterThan(73);
+  expect(base).toBeLessThan(77);
+
+  await page.keyboard.down('w');
+  await page.keyboard.down('Shift');
+  await page.waitForFunction(
+    () => {
+      const state = window.__G.glassline.controller.getState();
+      return state.sprinting && state.speed > 5;
+    },
+    null,
+    { timeout: 3_000 },
+  );
+  await page.waitForTimeout(550);
+  const sprintFov = await page.evaluate(() => window.__G.camera.fov);
+  expect(sprintFov).toBeGreaterThan(79);
+
+  await page.keyboard.up('w');
+});
