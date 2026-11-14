@@ -25,20 +25,23 @@ export const TUTORIAL_BEST_KEY = 'glassline.tutorial.best.v1';
 function createHud() {
   const hud = document.createElement('div');
   hud.id = 'glassline-tutorial';
-  hud.style.cssText =
-    'position:fixed;left:22px;top:22px;z-index:40;width:330px;padding:14px 16px;' +
-    'background:rgba(8,12,16,.8);border:1px solid rgba(255,255,255,.36);color:#eef1ef;' +
-    'font:12px/1.5 "IBM Plex Mono",monospace;letter-spacing:.05em;';
+  hud.className = 'gl-hud';
   hud.innerHTML =
-    '<div id="gl-stage" style="color:#d23a39;font-weight:700;letter-spacing:.12em"></div>' +
-    '<div id="gl-prompt" style="margin-top:6px;min-height:36px"></div>' +
-    '<div id="gl-progress" style="height:3px;margin-top:10px;background:#30383c">' +
-    '<div id="gl-progress-fill" style="height:100%;width:0;background:#d23a39"></div></div>' +
-    '<div id="gl-count" style="margin-top:9px;color:#9aa4a8"></div>' +
-    '<div id="gl-time" style="margin-top:2px;color:#9aa4a8"></div>' +
-    '<div id="gl-split" style="margin-top:2px;color:#707b80"></div>' +
-    '<div id="gl-best" style="margin-top:2px;color:#9aa4a8"></div>' +
-    '<div id="gl-help" style="margin-top:4px;color:#707b80">R retry · Backspace restart</div>';
+    '<div class="gl-hud__left">' +
+    '<div class="gl-hud__brand"><span class="gl-hud__mark">GLASSLINE</span><span class="gl-hud__sub">ROOFTOP INDUCTION</span></div>' +
+    '<div class="gl-hud__act" id="gl-act">ACT I / III</div>' +
+    '<div class="gl-hud__stage" id="gl-stage"></div>' +
+    '<div class="gl-progress" id="gl-progress"><i id="gl-progress-fill"></i></div>' +
+    '<div class="gl-hud__count" id="gl-count"></div>' +
+    '</div>' +
+    '<div class="gl-hud__right">' +
+    '<div class="gl-hud__time" id="gl-time">TIME 00:00</div>' +
+    '<div class="gl-hud__best" id="gl-best">BEST --:--</div>' +
+    '<div class="gl-hud__split" id="gl-split">SPLIT --:--</div>' +
+    '</div>' +
+    '<div class="gl-hud__prompt" id="gl-prompt"></div>' +
+    '<div class="gl-hud__help" id="gl-help">R retry · Backspace restart</div>' +
+    '<div class="gl-toast" id="gl-toast"><div class="gl-toast__title" id="gl-toast-title"></div><div class="gl-toast__sub" id="gl-toast-sub"></div></div>';
   document.body.appendChild(hud);
   return hud;
 }
@@ -135,6 +138,7 @@ export async function showcaseTutorial(game) {
   controller.setEnabled(false);
   const perf = createPerfHud(game);
   const hud = createHud();
+  const actEl = hud.querySelector('#gl-act');
   const stageEl = hud.querySelector('#gl-stage');
   const promptEl = hud.querySelector('#gl-prompt');
   const countEl = hud.querySelector('#gl-count');
@@ -143,17 +147,22 @@ export async function showcaseTutorial(game) {
   const bestEl = hud.querySelector('#gl-best');
   const fillEl = hud.querySelector('#gl-progress-fill');
   const helpEl = hud.querySelector('#gl-help');
+  const toastEl = hud.querySelector('#gl-toast');
+  const toastTitle = hud.querySelector('#gl-toast-title');
+  const toastSub = hud.querySelector('#gl-toast-sub');
+  let toastTimer = 0;
   const hintEl = document.querySelector('#glassline-hint');
   if (helpEl) {
-    helpEl.textContent = `${bindings.label('retry')} retry · ${bindings.label('restart')} restart`;
+    helpEl.textContent = `${bindings.label('retry')} retry · ${bindings.label('restart')} restart · click view to look`;
   }
+  // The stage HUD owns the tutorial's on-screen copy. Keep the controller's
+  // generic hint out of the scene; the title screen explains pointer lock.
+  if (hintEl) hintEl.style.display = 'none';
   function showHud() {
     hud.style.display = 'block';
-    if (hintEl) hintEl.style.display = 'block';
   }
   function hideHud() {
     hud.style.display = 'none';
-    if (hintEl) hintEl.style.display = 'none';
   }
   let elapsed = 0;
   let timeAccumulator = 0;
@@ -210,12 +219,37 @@ export async function showcaseTutorial(game) {
     beacon.rotation.y += 0.015;
   }
 
+  function actForCheckpoint(index) {
+    if (index >= 17) return { index: 2, roman: 'III' };
+    if (index >= 10) return { index: 1, roman: 'II' };
+    return { index: 0, roman: 'I' };
+  }
+
+  function showToast(title, sub) {
+    if (!toastEl) return;
+    if (toastTitle) toastTitle.textContent = title;
+    if (toastSub) toastSub.textContent = sub;
+    toastEl.classList.add('on');
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => toastEl.classList.remove('on'), 2200);
+  }
+
   function setHud() {
     const checkpoint = level.checkpoints[progress.checkpoint];
+    const act = actForCheckpoint(progress.checkpoint);
+    if (actEl) {
+      const actTitle = (level.acts[act.index]?.title || '')
+        .split('—')
+        .pop()
+        .trim();
+      actEl.textContent = progress.finished
+        ? 'RUN COMPLETE / III ACTS'
+        : `ACT ${act.roman} / III · ${actTitle}`;
+    }
     if (stageEl) {
       stageEl.textContent = progress.finished
         ? 'COURSE COMPLETE'
-        : `${String(progress.checkpoint + 1).padStart(2, '0')} · ${checkpoint.stage}`;
+        : `${String(progress.checkpoint + 1).padStart(2, '0')} / 21 · ${checkpoint.stage}`;
     }
     if (promptEl) {
       promptEl.textContent = progress.finished
@@ -224,8 +258,9 @@ export async function showcaseTutorial(game) {
     }
     if (countEl) {
       countEl.textContent =
-        `${progress.checkpoint}/${level.checkpoints.length - 1} CHECKPOINTS · ` +
-        `${progress.respawns} RESPAWNS`;
+        `${String(progress.checkpoint).padStart(2, '0')} / ${String(
+          level.checkpoints.length - 1,
+        ).padStart(2, '0')} CHECKPOINTS   ·   ${progress.respawns} RESPAWNS`;
     }
     if (timeEl) {
       timeEl.textContent =
@@ -283,6 +318,7 @@ export async function showcaseTutorial(game) {
     }
     saveProgress(progress);
     setHud();
+    showToast('RESPAWNED', `CHECKPOINT ${String(progress.checkpoint).padStart(2, '0')} · ${progress.respawns} TOTAL`);
   }
 
   function restart() {
@@ -290,6 +326,7 @@ export async function showcaseTutorial(game) {
     progress.respawns = 0;
     progress.finished = false;
     progress.message = '';
+    if (toastEl) toastEl.classList.remove('on');
     elapsed = 0;
     timeAccumulator = 0;
     lastCheckpointAt = 0;
@@ -702,6 +739,12 @@ export async function showcaseTutorial(game) {
           progress.message = '';
           saveProgress(progress);
           setHud();
+          showToast(
+            `CHECKPOINT ${String(i).padStart(2, '0')} / ${String(
+              level.checkpoints.length - 1,
+            ).padStart(2, '0')}`,
+            `${checkpoint.stage}  ·  +${formatTime(split)}`,
+          );
           break;
         }
       }

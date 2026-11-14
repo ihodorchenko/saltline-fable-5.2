@@ -176,6 +176,8 @@ removed from `src/`; the original artifact remains at the repository root.
       act-sign underline and three-light setup;
 - [x] future-city/utopian palette pass: ivory and pale glass towers, cyan windows,
       brighter sky/fog, warm sun with cool rim light and exposure lift;
+- [x] design system document and redesigned instrument-style HUD with checkpoint
+      toast (see [`docs/DESIGN.md`](docs/DESIGN.md));
 - [x] original procedural music/SFX: wind bed, three-note pad, footsteps, jump,
       land, slide, vault, mantle, wallrun, wallclimb, roll, checkpoint, finish,
       respawn and UI cues (audio branch, not merged);

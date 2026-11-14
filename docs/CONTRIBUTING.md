@@ -63,6 +63,7 @@ PLAYWRIGHT_CHANNEL=msedge npx playwright test
 
 - User-facing setup: [`README.md`](../README.md).
 - Phase 2 plan and agent contract: [`PLAN.md`](../PLAN.md), [`AGENT.md`](../AGENT.md).
+- Visual language and screen system: [`DESIGN.md`](DESIGN.md).
 - QA/IP audit: [`GLASSLINE_AUDIT.md`](GLASSLINE_AUDIT.md).
 - Performance profile: [`PERFORMANCE.md`](PERFORMANCE.md).
 - Level inspector: `?show=glassline-editor&q=high`.
