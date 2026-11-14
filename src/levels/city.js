@@ -567,7 +567,7 @@ export function buildCity(game, level, plan, textures = null) {
       new THREE.MeshBasicMaterial({
         map: texture,
         transparent: true,
-        side: THREE.DoubleSide,
+        side: THREE.FrontSide,
       }),
     );
     board.name = 'city-sign';

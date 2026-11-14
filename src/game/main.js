@@ -26,11 +26,11 @@ const QUALITY = {
     ao: true, bloom: true, motionBlur: false, planar: 0, rain: 0.25,
   },
   high: {
-    name: 'high', scale: 1, shadow: 2048, msaa: 4, volSteps: 16,
+    name: 'high', scale: 1.1, shadow: 2048, msaa: 4, volSteps: 16,
     ao: true, bloom: true, motionBlur: true, planar: 0, rain: 0.5,
   },
   ultra: {
-    name: 'ultra', scale: 1, shadow: 2048, msaa: 4, volSteps: 20,
+    name: 'ultra', scale: 1.1, shadow: 2048, msaa: 4, volSteps: 20,
     ao: true, bloom: true, motionBlur: true, planar: 0, rain: 0.7,
   },
 };

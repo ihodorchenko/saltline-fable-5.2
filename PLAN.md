@@ -180,6 +180,8 @@ removed from `src/`; the original artifact remains at the repository root.
       facade material families and a luminous deep abyss instead of a dark street grid;
 - [x] selective HDR bloom threshold in the existing post chain and emissive route
       accents, without a duplicate EffectComposer;
+- [x] polish pass: side-mounted bent-arm idle/run pose, FrontSide wayfinding
+      signs, high-quality 1.1 supersampling with final FXAA;
 - [x] generated city district around the route: terraced blocks, windows,
       skybridges, transit, roof gardens and signage; instanced draw calls;
 - [x] procedural first-person courier rig and mentor character using capsule

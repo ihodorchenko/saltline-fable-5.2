@@ -67,18 +67,18 @@ export function createCourierRig(game) {
   root.visible = false;
 
   const arms = new THREE.Group();
-  arms.position.set(0, -0.36, -0.46);
+  arms.position.set(0, -0.3, -0.42);
   const legs = new THREE.Group();
   legs.position.set(0, -1.02, -0.12);
 
   const makeArm = (side) => {
     const shoulder = createLimb(THREE, 0.03, 0.17, mats.cloth);
-    shoulder.position.set(side * 0.25, 0, 0);
-    shoulder.rotation.x = 1.32;
-    shoulder.rotation.z = side * 0.16;
+    shoulder.position.set(side * 0.29, 0, 0);
+    shoulder.rotation.x = 0.55;
+    shoulder.rotation.z = side * 0.4;
     const elbow = new THREE.Group();
     elbow.position.y = -0.22;
-    elbow.rotation.x = 0.38;
+    elbow.rotation.x = 1.32;
     const forearm = new THREE.Mesh(
       geometry(THREE, 'capsule:0.022:0.13', () => new THREE.CapsuleGeometry(0.022, 0.13, 4, 8)),
       mats.skin,
@@ -187,12 +187,12 @@ export function createCourierRig(game) {
         ease(j.rightKnee, 'x', -0.9);
       } else {
         const armSwing = swing * amp;
-        ease(j.leftShoulder, 'x', 1.32 + armSwing * 0.55);
-        ease(j.rightShoulder, 'x', 1.32 - armSwing * 0.55);
-        ease(j.leftShoulder, 'z', -0.16 - (moving ? side * 0.04 : 0));
-        ease(j.rightShoulder, 'z', 0.16 + (moving ? side * 0.04 : 0));
-        ease(j.leftElbow, 'x', 0.38 + (moving ? Math.max(0, swing) * 0.12 : 0));
-        ease(j.rightElbow, 'x', 0.38 + (moving ? Math.max(0, -swing) * 0.12 : 0));
+        ease(j.leftShoulder, 'x', 0.55 + armSwing * 0.24);
+        ease(j.rightShoulder, 'x', 0.55 - armSwing * 0.24);
+        ease(j.leftShoulder, 'z', -0.4 - (moving ? side * 0.03 : 0));
+        ease(j.rightShoulder, 'z', 0.4 + (moving ? side * 0.03 : 0));
+        ease(j.leftElbow, 'x', 1.32 + (moving ? Math.max(0, swing) * 0.1 : 0));
+        ease(j.rightElbow, 'x', 1.32 + (moving ? Math.max(0, -swing) * 0.1 : 0));
         ease(j.leftHip, 'x', moving ? swing * amp * 0.9 : 0);
         ease(j.rightHip, 'x', moving ? -swing * amp * 0.9 : 0);
         ease(j.leftKnee, 'x', moving ? Math.max(0, -swing) * amp * 1.4 : 0);

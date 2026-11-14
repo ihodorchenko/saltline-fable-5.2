@@ -145,6 +145,9 @@ Bloom is part of the engine's existing HDR post chain rather than a second
 `EffectComposer`: the first bloom downsample applies a threshold of 1.8 in HDR
 space, with strength 0.09. Only the sun, sky glare and bright emissive route
 accents bloom; white roofs do not turn the whole frame into a glowing wash.
+The final pass already includes FXAA; high/ultra use a 1.1 render scale for extra
+edge coverage on thin railings and cables. Wayfinding signs render FrontSide to
+avoid mirrored copy.
 
 ## Motion / feedback
 
