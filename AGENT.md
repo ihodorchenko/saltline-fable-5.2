@@ -10,19 +10,22 @@ and must not be merged back into `dev`.
 
 ## Current gate
 
-Phase 1 is complete and stabilized on `dev`. This branch currently contains only
-planning. The owner will add a reference video from the target game.
+Phase 1 is complete and stabilized on `dev`. This branch currently contains
+planning plus the completed reference analysis. **Step 0 has not started.**
 
 The theme, language and platform are confirmed: **parkour in the spirit of
 Mirror's Edge with original IP**, **JS + JSDoc**, **desktop Chrome**, **60 FPS**.
 Use `// @ts-check` and a thin engine type declaration where useful; do not start a
 TypeScript migration.
 
-**Do not start implementation until:**
+Reference analysis is complete:
 
-1. the reference video is available;
-2. it has been analyzed for movement, camera, level language and UI;
-3. `docs/REFERENCE.md` contains the observations and measurable targets.
+- [`docs/REFERENCE.md`](docs/REFERENCE.md) — timestamps, movement/Camera observations;
+- [`docs/MOVEMENT.md`](docs/MOVEMENT.md) — movement spec and starting targets;
+- [`docs/CAMERA.md`](docs/CAMERA.md) — camera/FOV/roll/landing spec.
+
+Start Step 0 only when the owner explicitly says to proceed. The reference video
+is local/untracked and must not be committed.
 
 ## Hard rules
 
@@ -38,6 +41,7 @@ TypeScript migration.
 - Preserve `NOTICE.md`; original Saltline rights remain with its author.
 - Every step must include tests and a smoke path.
 - Language: JS + JSDoc; target: desktop Chrome at 60 FPS; no TS migration of the legacy engine.
+- The reference combat/disarm segment is out of scope for the first parkour slice.
 
 ## Plan mirrored from PLAN.md
 
@@ -138,7 +142,9 @@ Branch `feat/glassline-release`.
 ```text
 PLAN.md                         Phase 2 plan and status
 AGENT.md                        this operational contract
-docs/REFERENCE.md               video observations (to be created)
+docs/REFERENCE.md               video observations and starting targets
+docs/MOVEMENT.md                movement spec
+docs/CAMERA.md                  camera spec
 docs/ARCHITECTURE.md            engine/game boundaries
 docs/ENGINE_REUSE.md            engine portability checklist
 src/engine/                     shared engine

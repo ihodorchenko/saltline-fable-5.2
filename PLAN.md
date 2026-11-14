@@ -2,8 +2,8 @@
 
 **Codename:** GLASSLINE  
 **Branch:** `project/glassline` (long-lived, separate from Saltline)  
-**Status:** decisions confirmed; **waiting for the owner's reference video**. No
-implementation starts before the reference is analyzed.
+**Status:** decisions confirmed; **reference analyzed 2026-11-14**. Implementation
+has not started; Step 0 begins on the owner's go.
 
 GLASSLINE is a new first-person parkour project built on the Phase 1 engine. It
 does not preserve Saltline gameplay and does not merge back into `dev`.
@@ -19,13 +19,17 @@ timing and level language are calibrated against the owner's reference video.
 
 The owner will add a reference video from the target game.
 
-- [ ] Owner provides the video path/link.
-- [ ] Watch and analyze: movement set, input timing, camera, level language,
+- [x] Owner provides the video path/link.
+- [x] Watch and analyze: movement set, input timing, camera, level language,
       visual/audio references, UI, failure/respawn loop.
-- [ ] Write observations to `docs/REFERENCE.md` (text only; no copied frames).
-- [ ] Translate observations into measurable targets: speed, jump height,
+- [x] Write observations to `docs/REFERENCE.md` (text only; no copied frames).
+- [x] Translate observations into measurable targets: speed, jump height,
       vault height, wall-run duration, camera roll/FOV, checkpoint spacing.
-- [ ] Only then start Step 0.
+- [ ] Start Step 0 after the owner's go.
+
+Analysis lives in [`docs/REFERENCE.md`](docs/REFERENCE.md),
+[`docs/MOVEMENT.md`](docs/MOVEMENT.md) and [`docs/CAMERA.md`](docs/CAMERA.md).
+The video is a local, untracked reference and is not redistributed.
 
 Rules: use the video for analysis, not for redistributing assets, textures,
 audio, level data or frames. No Mirror's Edge files in the repository.
@@ -60,6 +64,7 @@ Still open:
 - New GLASSLINE modules are JS + JSDoc; do not introduce a TS migration or a second toolchain.
 - No third-party IP assets; preserve `NOTICE.md` and the license scope.
 - Every step has tests, a smoke path and a rollback point.
+- The combat/disarm tutorial in the reference is **out of scope** for the first parkour slice; no weapons or copied combat.
 
 ## 5. Step-by-step plan
 
@@ -190,7 +195,14 @@ dev (Saltline, Phase 1 complete)
 - [ ] `dist/index.html` builds and is served over HTTP;
 - [ ] `project/glassline` contains the plan, observations and release notes.
 
-## 8. Timeline
+## 8. Reference documents
+
+- [`docs/REFERENCE.md`](docs/REFERENCE.md) — timestamped observations and starting targets;
+- [`docs/MOVEMENT.md`](docs/MOVEMENT.md) — movement/capsule/state-machine spec;
+- [`docs/CAMERA.md`](docs/CAMERA.md) — camera, FOV, roll, landing and accessibility spec;
+- [`docs/REFERENCE.md`](docs/REFERENCE.md) notes the video is local and untracked.
+
+## 9. Timeline
 
 | Step                 | Estimate      |
 | -------------------- | ------------- |
