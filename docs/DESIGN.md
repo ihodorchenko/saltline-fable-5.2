@@ -135,8 +135,10 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
   running ahead on the start roof. No skinned meshes or external models are
   loaded; pivot groups keep elbows, hips and knees hinged correctly.
 
-Lighting: high-key warm sun, cool blue shadows and a clean blue-to-white sky
-dome, light blue fog, a luminous abyss and a procedural sun sprite. The palette
+Lighting: high-key warm sun, cool blue shadows, a clean blue-to-white sky dome
+and a PMREM environment map generated from that sky for reflective glass. Light
+blue fog, a luminous abyss and a procedural sun sprite complete the palette; the
+sky sphere follows the camera so the route never approaches its edge. The palette
 stays bright and optimistic; danger is conveyed by red route language, not darkness.
 
 ## Motion / feedback

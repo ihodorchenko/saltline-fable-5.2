@@ -16,6 +16,12 @@ test('generated city surrounds the route without blocking it', async ({ page }, 
       transit: byName('city-transit-track')?.count || 0,
       abyss: !!byName('city-abyss'),
       street: !!byName('city-street'),
+      sky: !!window.__G.scene.getObjectByName('glassline-high-key-sky'),
+      environment: !!window.__G.scene.environment,
+      skyFollowsCamera:
+        window.__G.scene
+          .getObjectByName('glassline-high-key-sky')
+          ?.position.distanceTo(window.__G.camera.position) < 1,
       cityTexture: !!bodies?.children?.some((child) => child.material?.map),
       spire: !!window.__G.scene.getObjectByName('city-spire'),
       backdrop: byName('city-backdrop')?.count || 0,
@@ -26,6 +32,9 @@ test('generated city surrounds the route without blocking it', async ({ page }, 
   expect(city.group).toBe(true);
   expect(city.abyss).toBe(true);
   expect(city.street).toBe(false);
+  expect(city.sky).toBe(true);
+  expect(city.environment).toBe(true);
+  expect(city.skyFollowsCamera).toBe(true);
   expect(city.cityTexture).toBe(true);
   expect(city.spire).toBe(true);
   expect(city.backdrop).toBeGreaterThan(100);

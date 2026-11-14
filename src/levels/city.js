@@ -296,10 +296,10 @@ export function buildCity(game, level, plan, textures = null) {
     new THREE.MeshStandardMaterial({
       map: textures?.glassFacade ? textures.glassFacade() : null,
       color: 0xffffff,
-      roughness: 0.16,
-      metalness: 0.72,
+      roughness: 0.1,
+      metalness: 0.84,
       envMap: game.scene?.environment || null,
-      envMapIntensity: 0.85,
+      envMapIntensity: 1.2,
     }),
     new THREE.MeshStandardMaterial({
       color: 0xf8fbff,
