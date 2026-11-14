@@ -110,7 +110,7 @@
 - [x] **Modes (P1.2):** `createModes` в `src/modes/index.js` — реестр showcase-модулей и разрешение `campaign` / `showcase` / `bench` по query/hash; query-алиасы сохранены. Title/campaign по-прежнему реализуются state machine игры.
 - [ ] Event bus, время, детерминированный RNG.
 - [x] **Bindings (P1.2):** `src/engine/input/bindings.js` содержит единый `keyBindings` и `actionMeta`; HUD prompt, reload-подсказка и controls legend берут клавиши через `actionKey`/`actionLegend`.
-- [ ] Схема настроек с версией и миграциями.
+- [x] **Settings (P1.2):** `src/engine/settings/index.js` — `SETTINGS_VERSION`, defaults, validation, v0→v1 migration и load/save; ключ `saltline.settings.v1` сохранён, новые записи содержат `version: 1`.
 - [ ] `docs/ARCHITECTURE.md`: границы engine/game и пример добавления режима.
 
 #### P1.3 — тесты, CI, производительность (1 неделя)
