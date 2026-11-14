@@ -125,6 +125,10 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
 - **Acts**: ascent → descent/second pass → final sprint. Act labels are in-world
   canvas signs; the HUD names the act.
 - **Finish** is a red gate and ring on the final roof.
+- **Characters** are procedural capsule rigs: a first-person courier with an
+  orange wrist tracker and shoes, plus an original mentor in a yellow jacket
+  running ahead on the start roof. No skinned meshes or external models are
+  loaded; pivot groups keep elbows, hips and knees hinged correctly.
 
 Lighting: warm key + cool blue rim + bright hemisphere, light blue fog and a
 procedural sun sprite. The palette stays bright and optimistic; danger is conveyed

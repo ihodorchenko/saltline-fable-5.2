@@ -9,6 +9,7 @@ import { createTutorialMenu } from './menu.js';
 import { createGlasslineAudio } from './audio.js';
 import { loadBindings } from './bindings.js';
 import { createPerfHud } from './perf.js';
+import { createCourierRig, createMentorCharacter } from './characters.js';
 import {
   checkpointSplit,
   formatTime,
@@ -173,11 +174,18 @@ export async function showcaseTutorial(game) {
   // The stage HUD owns the tutorial's on-screen copy. Keep the controller's
   // generic hint out of the scene; the title screen explains pointer lock.
   if (hintEl) hintEl.style.display = 'none';
+  const courier = createCourierRig(game);
+  const mentor = createMentorCharacter(game);
+  built.root.add(mentor.root);
   function showHud() {
     hud.style.display = 'block';
+    courier.setVisible(true);
+    if (mentor.active) mentor.root.visible = true;
   }
   function hideHud() {
     hud.style.display = 'none';
+    courier.setVisible(false);
+    mentor.root.visible = false;
   }
   let elapsed = 0;
   let timeAccumulator = 0;
@@ -369,6 +377,7 @@ export async function showcaseTutorial(game) {
     paused = false;
     started = true;
     showHud();
+    mentor.begin();
     setHud();
   }
 
@@ -405,6 +414,7 @@ export async function showcaseTutorial(game) {
       progress.started = true;
       saveProgress(progress);
       showHud();
+      mentor.begin();
       controller.setEnabled(true);
       audio.start();
       audio.play('ui');
@@ -446,6 +456,7 @@ export async function showcaseTutorial(game) {
     progress.started = true;
     saveProgress(progress);
     showHud();
+    mentor.begin();
     controller.setEnabled(true);
   }
   const benchMode = game.params?.peak === '1';
@@ -672,6 +683,7 @@ export async function showcaseTutorial(game) {
     bindings,
     perf,
     bench,
+    characters: { courier, mentor },
   };
 
   return {
@@ -698,6 +710,8 @@ export async function showcaseTutorial(game) {
       }
       controller.update(dt);
       const state = controller.getState();
+      courier.update(game.camera, state, game.time?.t || elapsed, dt);
+      mentor.update(dt, state.pos.z);
       audio.updateMotion(state.speed, state.pos.z < -174);
 
       if (state.pos.y < level.fallY) {
@@ -812,6 +826,8 @@ export async function showcaseTutorial(game) {
       menu?.dispose();
       audio.dispose();
       perf.dispose();
+      courier.root.removeFromParent();
+      mentor.root.removeFromParent();
       hud.remove();
       controller.dispose();
     },

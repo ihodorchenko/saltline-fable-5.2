@@ -19,11 +19,14 @@ test('glassline performance overlay reports a sane low-quality budget', async ({
     }
     return samples.reduce((best, sample) => (sample.calls < best.calls ? sample : best), samples[0]);
   });
-  expect(stats.calls).toBeLessThan(300);
-  // The generated city, horizon rings, roof fascia and textured service kits
-  // add geometry at low quality; 35k triangles is still a light frame for 60 FPS.
-  expect(stats.tris).toBeLessThan(35000);
-  expect(stats.geos).toBeLessThan(150);
+  // Two procedural characters add rigid joint meshes (no skinning) to the
+  // low-quality frame by design.
+  expect(stats.calls).toBeLessThan(330);
+  // The generated city, horizon rings, roof fascia, textured service kits and
+  // two rigid character rigs add geometry at low quality; 40k triangles is
+  // still a light frame for 60 FPS.
+  expect(stats.tris).toBeLessThan(40000);
+  expect(stats.geos).toBeLessThan(175);
   expect(stats.fps).toBeGreaterThan(20);
 
   await page.keyboard.press('F3');

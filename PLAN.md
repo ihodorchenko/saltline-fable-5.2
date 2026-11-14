@@ -178,6 +178,8 @@ removed from `src/`; the original artifact remains at the repository root.
       brighter sky/fog, warm sun with cool rim light and exposure lift;
 - [x] generated city district around the route: terraced blocks, windows,
       skybridges, transit, roof gardens and signage; instanced draw calls;
+- [x] procedural first-person courier rig and mentor character using capsule
+      joints, with run/slide/vault animation and no external models;
 - [x] explicit start/finish city clusters and a central spire landmark;
 - [x] full surface/texture pass: procedural concrete, facade, roof, metal and
       asphalt maps, plus rooftop fascia, curbs, legs, AC/vents, huts and pipes;
