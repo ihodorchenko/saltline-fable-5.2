@@ -70,7 +70,7 @@ export function createHighKeySky(game, sunDirection = null) {
       envScene.add(envSky);
       environment = pmrem.fromScene(envScene, 0, 0.1, 1000).texture;
       scene.environment = environment;
-      scene.environmentIntensity = 0.62;
+      scene.environmentIntensity = 0.34;
       pmrem.dispose();
     } catch (error) {
       console.warn('[sky] PMREM environment unavailable', error);

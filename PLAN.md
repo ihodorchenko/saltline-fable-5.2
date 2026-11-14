@@ -178,6 +178,8 @@ removed from `src/`; the original artifact remains at the repository root.
       brighter sky/fog, warm sun with cool rim light and exposure lift;
 - [x] high-key sky/lighting, PMREM environment reflections, three contrasting
       facade material families and a luminous deep abyss instead of a dark street grid;
+- [x] selective HDR bloom threshold in the existing post chain and emissive route
+      accents, without a duplicate EffectComposer;
 - [x] generated city district around the route: terraced blocks, windows,
       skybridges, transit, roof gardens and signage; instanced draw calls;
 - [x] procedural first-person courier rig and mentor character using capsule

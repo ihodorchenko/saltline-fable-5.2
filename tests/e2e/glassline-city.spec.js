@@ -18,6 +18,8 @@ test('generated city surrounds the route without blocking it', async ({ page }, 
       street: !!byName('city-street'),
       sky: !!window.__G.scene.getObjectByName('glassline-high-key-sky'),
       environment: !!window.__G.scene.environment,
+      bloom: window.__G.render.tune?.bloom || 0,
+      bloomThreshold: window.__G.render.tune?.bloomThreshold || 0,
       skyFollowsCamera:
         window.__G.scene
           .getObjectByName('glassline-high-key-sky')
@@ -34,6 +36,8 @@ test('generated city surrounds the route without blocking it', async ({ page }, 
   expect(city.street).toBe(false);
   expect(city.sky).toBe(true);
   expect(city.environment).toBe(true);
+  expect(city.bloom).toBeGreaterThan(0);
+  expect(city.bloomThreshold).toBeGreaterThan(1);
   expect(city.skyFollowsCamera).toBe(true);
   expect(city.cityTexture).toBe(true);
   expect(city.spire).toBe(true);

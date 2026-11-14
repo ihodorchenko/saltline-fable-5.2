@@ -56,9 +56,13 @@ export function buildLevel(game, level) {
   };
 
   const palette = level.palette || [0xd7d2c6, 0xc3cbca, 0xb3bdc2];
-  const routeMat = new THREE.MeshBasicMaterial({
+  const routeMat = new THREE.MeshStandardMaterial({
     color: 0xffffff,
     map: textures.red(),
+    emissive: 0x7a0e12,
+    emissiveIntensity: 1.05,
+    roughness: 0.38,
+    metalness: 0.05,
   });
   const sideMat = standard(0xffffff, 0.92, textures.side());
   const edgeMat = new THREE.LineBasicMaterial({
@@ -499,8 +503,8 @@ export function buildLevel(game, level) {
   const finish = level.finish.pos;
   const gateMat = new THREE.MeshStandardMaterial({
     color: 0xb51f2a,
-    emissive: 0x2a0205,
-    emissiveIntensity: 0.45,
+    emissive: 0x7a0e12,
+    emissiveIntensity: 1.15,
     roughness: 0.55,
   });
   for (const side of [-1, 1]) {
@@ -517,7 +521,7 @@ export function buildLevel(game, level) {
   root.add(gateTop);
 
   scene.fog = new THREE.FogExp2(0xe3f2f9, 0.0018);
-  const hemisphere = new THREE.HemisphereLight(0xffffff, 0x6699cc, 1.8);
+  const hemisphere = new THREE.HemisphereLight(0xffffff, 0x6699cc, 1.45);
   const key = new THREE.DirectionalLight(0xfff4df, 3.1);
   key.position.set(7, 11, -18);
   key.castShadow = true;
@@ -532,7 +536,7 @@ export function buildLevel(game, level) {
   warm.position.set(-12, 4, -60);
   scene.add(hemisphere, key, rim, warm);
   if (game.render && game.render.exposure != null) {
-    game.render.exposure = 1.18;
+    game.render.exposure = 1.08;
   }
   const sky = game.render?.sky || game.scene?.getObjectByName?.('sky');
   if (sky) sky.visible = false;
@@ -570,6 +574,11 @@ export function buildLevel(game, level) {
   root.add(sunSprite);
   const city = buildCity(game, level, createCityPlan(level), textures);
   root.add(city.root);
+  if (game.render?.tune) {
+    game.render.tune.bloom = 0.09;
+    game.render.tune.bloomThreshold = 1.8;
+    game.render.tune.streakThreshold = 1.15;
+  }
   game.physics?.build?.();
   scene.add(root);
   return { root, checkpointMeshes, finishMesh, city: city.stats, sky: highSky.mesh };

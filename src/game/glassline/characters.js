@@ -18,7 +18,7 @@ function materials(game) {
     accent: new THREE.MeshStandardMaterial({
       color: 0xff5a1f,
       emissive: 0x571400,
-      emissiveIntensity: 0.45,
+      emissiveIntensity: 1.15,
       roughness: 0.4,
     }),
     mentorJacket: new THREE.MeshStandardMaterial({
