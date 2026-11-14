@@ -19,6 +19,13 @@ const AIR_ACCEL = 8;
 const JUMP = 6.2;
 const MAX_DT = 0.05;
 
+import {
+  COYOTE_TIME,
+  coyoteActive,
+  isWalkableGround,
+  ledgeInfo,
+} from './queries.js';
+
 /**
  * @param {GameContext} game
  * @returns {PlayerController}
@@ -39,6 +46,10 @@ export function createPlayerController(game) {
     locked: false,
     jumps: 0,
     landDip: 0,
+    airTime: 0,
+    coyote: 0,
+    walkable: true,
+    ledge: null,
   };
 
   /** @type {any} */
@@ -68,9 +79,14 @@ export function createPlayerController(game) {
       event.preventDefault();
     }
     keys.add(event.code);
-    if (event.code === 'Space' && !event.repeat && state.onGround) {
+    if (
+      event.code === 'Space' &&
+      !event.repeat &&
+      (state.onGround || coyoteActive(state.coyote))
+    ) {
       vel.y = JUMP;
       state.onGround = false;
+      state.coyote = 0;
       state.jumps += 1;
     }
   }
@@ -154,6 +170,46 @@ export function createPlayerController(game) {
       state.onGround = false;
     }
     if (result.hitCeil && vel.y > 0) vel.y = 0;
+
+    if (state.onGround) {
+      state.airTime = 0;
+      state.coyote = COYOTE_TIME;
+    } else {
+      state.airTime += step;
+      state.coyote = Math.max(0, state.coyote - step);
+    }
+
+    // Query the surface under the capsule and the wall/ledge in front. These
+    // probes are state/debug inputs for Step 2's mantle and slope work; they do
+    // not modify movement yet.
+    const downOrigin = new THREE.Vector3(pos.x, pos.y + 0.5, pos.z);
+    const downHit = physics.raycast(
+      downOrigin,
+      new THREE.Vector3(0, -1, 0),
+      2.2,
+    );
+    state.walkable = downHit ? isWalkableGround(downHit.normal) : true;
+    const eye = new THREE.Vector3(pos.x, pos.y + EYE, pos.z);
+    const forward = new THREE.Vector3(
+      -Math.sin(state.yaw),
+      0,
+      -Math.cos(state.yaw),
+    );
+    const wallHit = physics.raycast(eye, forward, 0.9);
+    state.ledge = null;
+    if (wallHit) {
+      const topOrigin = new THREE.Vector3(
+        wallHit.point.x,
+        wallHit.point.y + 2,
+        wallHit.point.z,
+      );
+      const topHit = physics.raycast(
+        topOrigin,
+        new THREE.Vector3(0, -1, 0),
+        3,
+      );
+      state.ledge = topHit ? ledgeInfo(topHit, pos.y) : null;
+    }
 
     state.landDip *= Math.exp(-8 * step);
     state.sprinting = sprinting && length > 0;

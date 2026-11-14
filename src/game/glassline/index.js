@@ -138,6 +138,38 @@ function createPrototype(game) {
   marker.position.set(0, 0.03, 1.4);
   root.add(marker);
 
+  // A stepped collider under a smooth-looking ramp. The engine currently moves
+  // capsules against AABBs, so the visual ramp is paired with 8 shallow steps
+  // until the smooth slope solver lands in Step 1b/2.
+  const ramp = new THREE.Mesh(new THREE.BoxGeometry(3, 0.22, 6), whiteMaterial);
+  ramp.name = 'glassline-ramp';
+  ramp.position.set(5, 0.61, -8);
+  ramp.rotation.x = -Math.atan2(1.2, 6);
+  ramp.castShadow = true;
+  ramp.receiveShadow = true;
+  root.add(ramp);
+  if (game.physics) {
+    for (let i = 0; i < 8; i++) {
+      const z0 = -5 - i * 0.75;
+      const z1 = z0 - 0.76;
+      const height = (i + 1) * 0.15;
+      game.physics.addBox([3.5, 0, z1], [6.5, height, z0], {
+        surface: 'concrete',
+      });
+    }
+  }
+
+  const platform = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 0.25, 2),
+    redMaterial,
+  );
+  platform.name = 'glassline-moving-platform';
+  platform.position.set(2, 1.2, -5);
+  platform.castShadow = true;
+  platform.receiveShadow = true;
+  root.add(platform);
+  root.userData.glasslinePlatform = platform;
+
   // A few low-poly city blocks give the prototype a readable rooftop scale
   // without committing to a level layout yet.
   const skyline = [
@@ -176,6 +208,11 @@ function createPrototype(game) {
     game.physics.addBox([-9.5, 0, -15], [-0.5, 0.25, -1], { surface: 'concrete' });
     game.physics.addBox([0, 0, -2.6], [1.6, 0.9, -1], { surface: 'metal' });
     game.physics.addBox([-9.5, 0.25, -15], [-9.1, 1.5, -1], { surface: 'metal' });
+    root.userData.glasslinePlatformBox = game.physics.addBox(
+      [1, 1.075, -6],
+      [3, 1.325, -4],
+      { surface: 'metal', tag: 'moving-platform' },
+    );
     game.physics.build();
   }
   return root;
@@ -190,11 +227,21 @@ export async function showcaseGlassline(game) {
   const player = root.getObjectByName(PLAYER_NAME);
   if (player) player.visible = false;
   const controller = createPlayerController(game);
-  game.glassline = { controller, root };
+  const platform = root.userData.glasslinePlatform;
+  const platformBox = root.userData.glasslinePlatformBox;
+  game.glassline = { controller, root, platform };
   if (game.render && game.render.exposure != null) game.render.exposure = 1.0;
+  let clock = 0;
   // No `cam` field: the capsule controller owns the camera every frame.
   return {
     update(dt) {
+      clock += dt;
+      if (platform && platformBox) {
+        const y = 1.2 + Math.sin(clock * 0.8) * 0.25;
+        platform.position.y = y;
+        platformBox.min.y = y - 0.125;
+        platformBox.max.y = y + 0.125;
+      }
       controller.update(dt);
     },
   };

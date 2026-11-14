@@ -15,6 +15,8 @@ test('glassline step 0 prototype boots', async ({ page }) => {
       player: !!root?.getObjectByName('glassline-player'),
       ground: !!root?.getObjectByName('glassline-ground'),
       beam: !!root?.getObjectByName('glassline-route-beam'),
+      ramp: !!root?.getObjectByName('glassline-ramp'),
+      platform: !!root?.getObjectByName('glassline-moving-platform'),
     };
   });
   expect(scene).toEqual({
@@ -22,7 +24,13 @@ test('glassline step 0 prototype boots', async ({ page }) => {
     player: true,
     ground: true,
     beam: true,
+    ramp: true,
+    platform: true,
   });
+  const platformY = await page.evaluate(() => window.__G.glassline.platform.position.y);
+  await page.waitForTimeout(600);
+  const platformYLater = await page.evaluate(() => window.__G.glassline.platform.position.y);
+  expect(platformYLater).not.toBeCloseTo(platformY, 3);
   await expect(page.locator('canvas')).toBeVisible();
   const png = await page.screenshot({ animations: 'disabled' });
   fs.mkdirSync('artifacts', { recursive: true });

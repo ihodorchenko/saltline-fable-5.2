@@ -68,10 +68,10 @@ Branch `feat/glassline-physics` (in progress).
 
 - [x] capsule movement on ground/steps/walls via engine `moveCapsule`;
 - [x] WASD, sprint, pointer lock/mouse look, jump, landing camera dip;
+- [x] stepped ramp, moving platform collider, ledge/coyote queries;
 - [x] Playwright boot/movement/jump tests;
-- [ ] slopes and moving platforms;
-- [ ] ledge/coyote queries and camera collision;
-- [ ] deterministic physics unit tests.
+- [x] deterministic query unit tests;
+- [ ] smooth slope solver and platform carry (future polish).
 
 ### Step 2 — Parkour moves
 

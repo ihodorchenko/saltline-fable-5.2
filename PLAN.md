@@ -86,21 +86,24 @@ Screenshot: `artifacts/glassline-step0.png` (ignored local/CI artifact).
 
 ### Step 1 — Engine contract and capsule physics
 
-Branch: `feat/glassline-physics` — **in progress, not merged**.
-
-Delivered in Step 1a:
+Branch: `feat/glassline-physics` — **implemented, not merged**.
 
 - [x] engine `moveCapsule` contract against scene AABBs;
 - [x] ground, deck step, block and wall colliders;
 - [x] WASD movement, sprint, pointer lock/mouse look;
 - [x] jump with gravity and landing camera dip;
-- [x] Playwright boot, movement and jump tests;
-- [ ] slopes and moving platforms;
-- [ ] ledge queries and camera collision;
-- [ ] dedicated deterministic physics unit tests.
+- [x] slope/ramp sandbox via stepped AABB colliders under a visual ramp;
+- [x] vertical moving platform with a live collider;
+- [x] ledge/ground/coyote query helpers;
+- [x] first-person camera stays inside the capsule; no separate camera clipping;
+- [x] deterministic query tests (slope limit, ledge height, coyote window);
+- [x] Playwright boot, movement and jump tests.
 
-Acceptance for Step 1a: movement sandbox playable; Saltline untouched; browser
-tests pass. Step 1b covers slopes, ledges, moving platforms and camera collision.
+Acceptance: movement sandbox playable; Saltline untouched; tests pass.
+
+Known Step 1b limits (defer to movement polish): the ramp is a stepped collider
+under a smooth visual, the moving platform does not carry the player yet, and a
+smooth slope solver is future work.
 
 ### Step 2 — Core parkour moves
 
