@@ -15,7 +15,7 @@ test('glassline tutorial boots with checkpoints', async ({ page }) => {
       rings: root.children.filter((child) => String(child.name).startsWith('checkpoint-')).length,
       signs: root.children.filter((child) => String(child.name).startsWith('sign-')).length,
       props: root.children.filter((child) => String(child.name).startsWith('prop-')).length,
-      windows: root.getObjectByName('window-lights')?.count || 0,
+      windows: root.getObjectByName('city-windows')?.count || 0,
       strips: root.getObjectByName('route-strips')?.count || 0,
       startLine: !!root.getObjectByName('start-line'),
       finish: !!root.getObjectByName('glassline-finish'),
@@ -27,7 +27,7 @@ test('glassline tutorial boots with checkpoints', async ({ page }) => {
   expect(scene.rings).toBe(21);
   expect(scene.signs).toBe(3);
   expect(scene.props).toBeGreaterThanOrEqual(7);
-  expect(scene.windows).toBeGreaterThan(20);
+  expect(scene.windows).toBeGreaterThan(200);
   expect(scene.strips).toBeGreaterThan(10);
   expect(scene.startLine).toBe(true);
   expect(scene.finish).toBe(true);

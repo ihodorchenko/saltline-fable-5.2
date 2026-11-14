@@ -41,7 +41,7 @@ The title screen separates **Continue / Start over**, **Settings**, **Controls**
 ## Project map
 
 - `src/game/glassline/` — playable modes, controller, menu, audio, tutorial flow and editor.
-- `src/levels/` — data-driven route, builder and validator.
+- `src/levels/` — data-driven route, generated city district, builder and validator.
 - `src/engine/` — minimal shared engine: core, physics and renderer.
 - `tools/bench-glassline.mjs` — headed hardware peak-load benchmark.
 - `docs/DESIGN.md` — city concept, palette, typography and HUD/screen language.

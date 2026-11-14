@@ -107,8 +107,11 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
 - **Rooftops** are pale ceramic slabs with blue-grey sides and thin edge lines.
 - **Route** is a continuous red strip; current checkpoint ring and next-checkpoint
   diamond are red.
-- **City** is a layered skyline of pale glass towers with cyan window strips,
-  roof planters, AC/vent/antenna/rail props and a distant sun.
+- **City** is a deterministic generated district: 128 blocks at high quality,
+  terraced low-rise roofs near the route, taller towers behind, cyan window
+  bands, green roofs/trees, four skybridges, an elevated diagonal transit line,
+  rooftop service units and two original wayfinding signs. All city geometry is
+  instanced into roughly a dozen draw calls and kept out of the route corridor.
 - **Acts**: ascent → descent/second pass → final sprint. Act labels are in-world
   canvas signs; the HUD names the act.
 - **Finish** is a red gate and ring on the final roof.
@@ -133,6 +136,7 @@ by red route language, not darkness.
 - title/settings/controls/pause/complete: `src/game/glassline/menu.js`
 - HUD and checkpoint toast: `src/game/glassline/tutorial.js`, `src/ui/styles.css`
 - world palette/material/prop language: `src/levels/build.js`, `src/levels/tutorial.js`
+- generated city plan/build: `src/levels/city.js`, `src/levels/city.test.js`
 - movement/camera feedback: `src/game/glassline/player.js`
 - route/act content: `src/levels/tutorial.js`
 - inspector: `src/game/glassline/editor.js`

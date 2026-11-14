@@ -642,6 +642,7 @@ export async function showcaseTutorial(game) {
     root: built.root,
     tutorial: progress,
     level,
+    city: built.city,
     storageKey: TUTORIAL_STORAGE_KEY,
     menu,
     audio,

@@ -3,11 +3,12 @@
 // rings and a finish gate. No game-specific imports.
 
 import { validateLevel } from './validate.js';
+import { buildCity, createCityPlan } from './city.js';
 
 /**
  * @param {any} game
  * @param {any} level
- * @returns {{root: any, checkpointMeshes: any[], finishMesh: any}}
+ * @returns {{root: any, checkpointMeshes: any[], finishMesh: any, city: any}}
  */
 export function buildLevel(game, level) {
   const errors = validateLevel(level);
@@ -404,7 +405,9 @@ export function buildLevel(game, level) {
   sunSprite.scale.set(110, 110, 1);
   sunSprite.renderOrder = -1;
   root.add(sunSprite);
+  const city = buildCity(game, level, createCityPlan(level));
+  root.add(city.root);
   game.physics?.build?.();
   scene.add(root);
-  return { root, checkpointMeshes, finishMesh };
+  return { root, checkpointMeshes, finishMesh, city: city.stats };
 }
