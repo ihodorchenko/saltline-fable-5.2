@@ -25,7 +25,9 @@ plus movement/checkpoint/finish cues; the title/pause menu has sound mute and
 volume controls saved locally. Mouse sensitivity is saved under
 `glassline.sensitivity.v1`; `R` retries and `Backspace` restarts. Settings include
 rebindable movement/action keys, conflict rejection, reset and localStorage
-persistence. The inspector is linked from the title screen.
+persistence. The inspector is linked from the title screen. QA/licensing evidence is in
+[`docs/GLASSLINE_AUDIT.md`](../../../docs/GLASSLINE_AUDIT.md) and
+[`docs/THIRD_PARTY.md`](../../../docs/THIRD_PARTY.md).
 
 Sandbox for mechanic testing:
 

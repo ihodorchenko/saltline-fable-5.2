@@ -177,7 +177,9 @@ Status: UI shell, art and audio merged. `feat/glassline-settings` implemented, n
 - [x] menu mute/volume controls with localStorage persistence;
 - [x] settings view with dynamic controls, rebinding and reset (settings branch);
 - [x] keyboard bindings model with conflict rejection and localStorage persistence;
-- [ ] no copied-IP audit and final audio QA.
+- [x] final QA and no-copied-IP audit — see [`docs/GLASSLINE_AUDIT.md`](docs/GLASSLINE_AUDIT.md)
+      and [`docs/THIRD_PARTY.md`](docs/THIRD_PARTY.md); no copied assets found.
+- [ ] human audio QA and 10–20 minute pacing playtest.
 
 Acceptance: coherent vertical slice; assets documented and licensed.
 
