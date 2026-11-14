@@ -67,18 +67,18 @@ export function createCourierRig(game) {
   root.visible = false;
 
   const arms = new THREE.Group();
-  arms.position.set(0, -0.3, -0.42);
+  arms.position.set(0, -0.42, -0.42);
   const legs = new THREE.Group();
   legs.position.set(0, -1.02, -0.12);
 
   const makeArm = (side) => {
     const shoulder = createLimb(THREE, 0.03, 0.17, mats.cloth);
     shoulder.position.set(side * 0.29, 0, 0);
-    shoulder.rotation.x = 0.55;
-    shoulder.rotation.z = side * 0.4;
+    shoulder.rotation.x = 0.15;
+    shoulder.rotation.z = side * 0.3;
     const elbow = new THREE.Group();
     elbow.position.y = -0.22;
-    elbow.rotation.x = 1.32;
+    elbow.rotation.x = 1.45;
     const forearm = new THREE.Mesh(
       geometry(THREE, 'capsule:0.022:0.13', () => new THREE.CapsuleGeometry(0.022, 0.13, 4, 8)),
       mats.skin,
@@ -186,19 +186,21 @@ export function createCourierRig(game) {
         ease(j.leftKnee, 'x', -0.9);
         ease(j.rightKnee, 'x', -0.9);
       } else {
-        const armSwing = swing * amp;
-        ease(j.leftShoulder, 'x', 0.55 + armSwing * 0.24);
-        ease(j.rightShoulder, 'x', 0.55 - armSwing * 0.24);
-        ease(j.leftShoulder, 'z', -0.4 - (moving ? side * 0.03 : 0));
-        ease(j.rightShoulder, 'z', 0.4 + (moving ? side * 0.03 : 0));
-        ease(j.leftElbow, 'x', 1.32 + (moving ? Math.max(0, swing) * 0.1 : 0));
-        ease(j.rightElbow, 'x', 1.32 + (moving ? Math.max(0, -swing) * 0.1 : 0));
+        const armSwing = swing * (moving ? Math.min(0.32, 0.16 + speed * 0.012) : 0.018);
+        const shoulderBase = moving ? 0.18 : -0.05;
+        const elbowBase = moving ? 1.58 : 0.46;
+        const targetArmsY = moving ? -0.27 : -0.42;
+        arms.position.y += (targetArmsY - arms.position.y) * target;
+        ease(j.leftShoulder, 'x', shoulderBase + armSwing);
+        ease(j.rightShoulder, 'x', shoulderBase - armSwing);
+        ease(j.leftShoulder, 'z', -0.3 - (moving ? side * 0.03 : 0));
+        ease(j.rightShoulder, 'z', 0.3 + (moving ? side * 0.03 : 0));
+        ease(j.leftElbow, 'x', elbowBase + (moving ? Math.max(0, -swing) * 0.18 : 0));
+        ease(j.rightElbow, 'x', elbowBase + (moving ? Math.max(0, swing) * 0.18 : 0));
         ease(j.leftHip, 'x', moving ? swing * amp * 0.9 : 0);
         ease(j.rightHip, 'x', moving ? -swing * amp * 0.9 : 0);
         ease(j.leftKnee, 'x', moving ? Math.max(0, -swing) * amp * 1.4 : 0);
         ease(j.rightKnee, 'x', moving ? Math.max(0, swing) * amp * 1.4 : 0);
-        ease(arms, 'y', moving ? 0.02 + Math.abs(swing) * 0.012 : 0.02);
-        ease(arms, 'z', moving ? side * 0.012 : 0);
       }
     },
   };
