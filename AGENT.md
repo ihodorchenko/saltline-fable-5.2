@@ -46,6 +46,10 @@ local/untracked and must not be committed.
   third-party IP. Observations are text only.
 - Preserve `NOTICE.md`; original Saltline rights remain with its author.
 - Every step must include tests and a smoke path.
+- GLASSLINE CI auto-runs are **disabled during prototyping**. Run
+  `npm run check`, `npm test` and
+  `npx playwright test tests/e2e/glassline.spec.js` locally. Re-enable CI at the
+  final release steps; the workflow remains available via manual dispatch.
 - Language: JS + JSDoc; target: desktop Chrome at 60 FPS; no TS migration of the legacy engine.
 - The reference combat/disarm segment is out of scope for the first parkour slice.
 

@@ -1,8 +1,8 @@
 name: GLASSLINE
 
+# Automatic runs are intentionally disabled while the prototype is evolving.
+# Run the suite locally; re-enable push/PR triggers at the release steps.
 on:
-  push:
-    branches: [project/glassline, 'feat/glassline-*']
   workflow_dispatch:
 
 permissions:

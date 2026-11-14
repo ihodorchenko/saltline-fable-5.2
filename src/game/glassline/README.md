@@ -25,7 +25,10 @@ rig yet.
 npm run dev
 npm run build
 npm test
-npm run test:e2e
+npx playwright test tests/e2e/glassline.spec.js
+
+# Automatic CI is disabled during prototyping; the workflow is manual-only
+# until the release steps.
 ```
 
 ## Boundaries

@@ -78,7 +78,7 @@ Branch: `feat/glassline-skeleton` — **in progress, not merged**.
 - [x] minimal scene: rooftop deck, skyline blocks, camera, player capsule, red route beam;
 - [x] project-specific README/commands;
 - [x] boot test with empty `__errors`/`__fatal`;
-- [x] dedicated `.github/workflows/glassline.yml` CI path separate from Saltline;
+- [x] `.github/workflows/glassline.yml` exists but auto-runs are disabled during prototyping; manual dispatch/local tests until release;
 - [x] merged into `project/glassline`; feature branch deleted.
 
 Acceptance: `npm run dev` opens a clean scene; build and boot test pass.
