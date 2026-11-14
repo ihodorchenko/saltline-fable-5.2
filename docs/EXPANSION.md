@@ -102,7 +102,8 @@
 - [x] **Core (P1.2):** event bus, frame-time helpers and deterministic mulberry32 RNG extracted to `src/engine/core/` (`createEvents`, `createTime`/`advanceTime`, `createRng`).
 - [ ] `src/game/saltline`: уровни, правила, враги, оружие, HUD-геймплей.
 - [x] **Game state machine (P1.2):** `createSaltlineGame` вынесен в `src/game/saltline/game.js`; flow/radio/compass — в `content.js`. Уровни, оружие и враги пока в `src/game/main.js`.
-- [ ] `src/modes/*`: title / campaign / showcase / bench; query-параметры остаются алиасами.
+- [ ] **Game content (P1.2, отдельный узел):** вынос уровней, оружия, врагов и HUD-геймплея в `src/game/saltline/` — следующий крупный узел после modes; пока остаётся в `src/game/main.js`.
+- [x] **Modes (P1.2):** `createModes` в `src/modes/index.js` — реестр showcase-модулей и разрешение `campaign` / `showcase` / `bench` по query/hash; query-алиасы сохранены. Title/campaign по-прежнему реализуются state machine игры.
 - [ ] Event bus, время, детерминированный RNG.
 - [ ] Биндинги действий в одном месте; HUD-подсказки берут клавишу оттуда.
 - [ ] Схема настроек с версией и миграциями.
