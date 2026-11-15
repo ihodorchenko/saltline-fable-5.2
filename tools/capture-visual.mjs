@@ -127,7 +127,7 @@ async function main() {
     });
     document.dispatchEvent(new Event('pointerlockchange'));
     const look = (movementX, movementY) =>
-      document.dispatchEvent(new MouseEvent('mousemove', { movementX, movementY }));
+      document.dispatchEvent(new MouseEvent('mousemove', { movementX, movementY, bubbles: true }));
     look(0, -520); // look up at the canyon/sky
   });
   const checkpoint = await page.evaluate(() => {

@@ -24,8 +24,18 @@ test('glassline start and pause overlays gate the run', async ({ page }) => {
   await page.waitForTimeout(900);
   await page.screenshot({ path: 'artifacts/glassline-menu.png' });
 
+  // The in-run HUD is the reference-style minimal set: a dot and one prompt.
+  // Everything else still lives in the DOM and is surfaced on pause.
+  const hud = page.locator('#glassline-tutorial');
+  await expect(hud).toHaveClass(/gl-hud--minimal/);
+  await expect(hud.locator('.gl-hud__reticle')).toHaveCount(1);
+
   await page.locator('[data-action="start"]').click();
   await expect(menu).toBeHidden();
+  await expect(hud.locator('.gl-hud__reticle')).toBeVisible();
+  await expect(hud.locator('.gl-hud__left')).toBeHidden();
+  await expect(hud.locator('.gl-hud__right')).toBeHidden();
+  await expect(hud.locator('#gl-prompt')).toBeVisible();
   await expect.poll(() => page.evaluate(() => window.__G.glassline.audio.started)).toBe(true);
   await expect(page.locator('#gl-dispatch')).toHaveClass(/on/);
   await expect(page.locator('#gl-dispatch-text')).toContainText('Follow the red thread');
@@ -38,6 +48,9 @@ test('glassline start and pause overlays gate the run', async ({ page }) => {
   });
   await expect(menu).toBeVisible();
   await expect(menu).toContainText('PAUSED');
+  // Paused run summary takes over the readouts the minimal HUD no longer shows.
+  await expect(menu).toContainText('TIME');
+  await expect(menu).toContainText('CHECKPOINT');
   await page.locator('[data-action="resume"]').click();
   await expect(menu).toBeHidden();
 });
