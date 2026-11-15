@@ -132,16 +132,22 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
 ## World language
 
 - **Rooftops** are pale ceramic slabs with procedural concrete seams, stains and
-  drainage detail, dark board-formed sides, metal fascia and shallow curbs.
+  drainage detail, cooler board-formed sides, metal fascia, a shallow curb and a
+  **coping cap** that overhangs it — every roof edge has a profile at eye level.
 - **Abyss** replaces the old street deck: towers descend far below the route and
   gaps look into a luminous white-blue plane, keeping the drop vertiginous but
   clean instead of a gray grid.
-- **Surfaces** use a runtime Canvas atlas: concrete, side concrete, glass facade,
-  roof membrane, brushed metal, asphalt/street grid and worn red route paint.
+- **Surfaces** use a runtime Canvas atlas (1024² for concrete, side concrete,
+  glass facade and roof; 512² metal; 256² route paint) with **normal and roughness
+  maps derived from the same procedural canvases**: seams and windows read as
+  grooves, glass bays turn smooth and reflective, route paint gets a slightly
+  rough surface. Shared per material family, so the derived maps cost one normal
+  per family rather than one per colour.
   Platform edges get metal fascia, shallow curbs, structural legs, service AC,
   vents, huts, pipes, guard rails, solar arrays and access doors.
-- **Route** is a continuous red strip; current checkpoint ring and next-checkpoint
-  diamond are red.
+- **Route** is a continuous red strip spanning each roof (not dashes); current
+  checkpoint ring and next-checkpoint diamond are red. Sparse catenary cables
+  cross the gaps outside the route corridor, connecting the rooftops into a circuit.
 - **City** is a deterministic generated district: about 130 near blocks plus
   perimeter-ring blocks at high quality, terraced low-rise roofs near the route,
   taller towers behind, cyan window bands, green roofs/trees, four skybridges,
