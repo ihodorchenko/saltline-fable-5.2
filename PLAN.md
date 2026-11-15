@@ -77,8 +77,10 @@ feature branch deleted). Tier 3 is merged into `project/glassline` (2026-11-15,
 `d86f5f7`; feature branch deleted). Tier 4 is merged into `project/glassline`
 (2026-11-15, `ae453b7`; feature branch deleted) — **the P0 visual block is
 closed**. A follow-up content pass (Tier 5) is merged into `project/glassline`
-(2026-11-15, `63a0c35`; feature branch deleted); measured results in
-[`docs/VISUAL_GAP.md §5.1–5.6`](docs/VISUAL_GAP.md). The measured visual gap
+(2026-11-15, `63a0c35`; feature branch deleted). An owner-driven content pass
+(materials + route) is implemented on `feat/glassline-content-materials-routes`
+(not committed yet); measured results in
+[`docs/VISUAL_GAP.md §5.1–5.6` and §6](docs/VISUAL_GAP.md). The measured visual gap
 to the 2008 reference is the project's biggest quality risk: the renderer is
 capable, but the frame is overexposed, flat, desaturated, sky-less and content-poor.
 Full analysis, evidence and numbers: [`docs/VISUAL_GAP.md`](docs/VISUAL_GAP.md)
@@ -214,6 +216,37 @@ near-white surface in frame) and dark split-tone (material palette). Tried and
 reverted: raising the exposure ceiling moved p95 into band but pushed p25 and
 sky-blue out — a net loss. Cost: 421 draw calls, 75.9 k triangles, 63 textures,
 906 kB build; the new density is gated to high/ultra.
+
+### Owner content pass — materials and route (2026-11-15) — implemented, merge pending
+
+Owner feedback after Tier 5: materials still read plastic and the glass did not
+read as glass; the route was linear ("just a run") and should be multi-level and
+non-linear like the reference. Two parallel passes, one branch:
+
+- [x] **Materials.** Relief-first texture pipeline (one shared height canvas per
+      family drives both normal and roughness maps), warm plaster albedo with
+      stains/run-off, dark-tinted reflective curtain-wall glass with per-bay
+      variation and per-instance tower tints, brushed metal, and **scene
+      reflection probes**: `src/levels/reflections.js` captures two CubeCamera
+      views of the actual city at route height and PMREMs them into the glass and
+      metal env maps. Geometry/draw-call hygiene: 124 → 94 materials, 429 → 329
+      draw calls at the start view, triangles +8 % (inside budget).
+- [x] **Route.** Rebuilt as a vertically layered, non-linear course on the same 21
+      checkpoint ids and 3 acts: vertical range 17.8 m (−5.9 … +11.9), 219 m long,
+      with a mantle annex, wall-run gap, wall-climb parapet, a +11.9 m summit and a
+      drop through lower roofs, a 3-tier walled courtyard open to the sky
+      (+4.2 → −5.9 m), a loop around a free-standing core with a side corridor
+      that rejoins, a low-duct slide, an outside mantle climb, and a high/low
+      branch that rejoins at `final-b`. Lateral weave ±5 m (canyon-bound).
+- [x] Rebalanced exposure for the darker mix (auto key 0.28 → 0.35, sky fill 0.74
+      → 0.92, highlight lift 0.12 → 0.15) and recalibrated the golden bands as a
+      regression guard.
+
+Result: **13/13 acceptance metrics still in band** on the new content (near-white
+12.6 %, p95 0.954, deep shadow 3.7 %, split-tone −45.0, top-third 0.0597),
+`npm run check` / 135 unit tests / 30 Playwright tests green. Known builder-visual
+compromises are listed in VISUAL_GAP §6.2 (route strips, roof kit on mantle
+ledges, shaded courtyard floor).
 
 ### Tier 5 — content pass (follow-up) — merged 2026-11-15
 
