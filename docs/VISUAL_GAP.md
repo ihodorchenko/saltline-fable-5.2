@@ -19,6 +19,7 @@ Companion files (in `docs/visual-gap/`):
 | [`docs/visual-gap/metrics-tier1.json`](visual-gap/metrics-tier1.json) | The same run against the Tier-1 build (cumulus sky, view model, minimal HUD) |
 | [`docs/visual-gap/metrics-tier2.json`](visual-gap/metrics-tier2.json) | The same run against the Tier-2 build (normal/roughness maps, coping, continuous route, cables) |
 | [`docs/visual-gap/metrics-tier3.json`](visual-gap/metrics-tier3.json) | The same run against the Tier-3 build (canyon composition, facade lattice, rooftop service kit) |
+| [`docs/visual-gap/metrics-tier4.json`](visual-gap/metrics-tier4.json) | The same run against the Tier-4 build (motion finish, view-model legs, final grade) |
 | `docs/visual-gap/shots/` | Reference frames, current captures, comparison and proof sheets — **local only, git-ignored**: several sheets embed frames of the owner-provided reference video and must not be committed or redistributed. Regenerate with the tools below. |
 
 ---
@@ -60,18 +61,17 @@ Companion files (in `docs/visual-gap/`):
    facades 3–10 m from the route, and white architecture that clips to near-white
    while its shadow side sits at 0.25–0.40 in strong blue. See §3.6–§3.8 and the
    content audit.
-7. **Tiers 0–3 are implemented** (2026-11-15; Tier 3 pending merge) — same
-   measurement harness, before/after: luma mean 0.736 → **0.567** (reference
-   0.589), p25 0.698 → **0.396** (0.370), near-white 6.0 % → **14.6 %**
-   (27.3 %), saturation 0.102 → **0.310** (0.359), sky blue 1.2 % → **44.1 %**
-   (53 %) on a procedural cumulus day sky, edge energy 0.0154 → **0.0280**
-   (0.0341), top-third contrast 0.0188 → **0.0554** (0.0585 — within 5 % of the
-   reference), red route paint 1.05 % → **2.23 %** (4.2 %): **11 of 13** acceptance
-   metrics now in band. Tier 1: cloud deck, hands, mentor, minimal HUD. Tier 2:
-   normal/roughness maps, 1024 atlas, coping, continuous route, cables. Tier 3:
-   canyon composition, dense facade lattice, rooftop service kit, lifted shade.
-   See §5.1–5.4. The two remaining misses are p95 (white area in frame) and the
-   dark split-tone (a genuinely darker material palette).
+7. **Tiers 0–4 are implemented** (2026-11-15; Tier 4 pending merge) — same
+   measurement harness, final before/after: luma mean 0.736 → **0.570**
+   (reference 0.589), p25 0.698 → **0.395** (0.370), near-white 6.0 % → **15.3 %**
+   (27.3 %), deep shadow 0.18 % → **5.7 %** (3.0 %), saturation 0.102 → **0.331**
+   (0.359), sky blue 1.2 % → **51.1 %** (53.1 %), edge energy 0.0154 → **0.0283**
+   (0.0341), top-third contrast 0.0188 → **0.0556** (0.0585), dark split-tone
+   −17.1 → **−40.2** (−48.6), red route paint 1.05 % → **2.17 %** (4.2 %):
+   **all 13 acceptance metrics in band** (§5.5). Tier 1: cloud deck, hands,
+   mentor, minimal HUD. Tier 2: normal/roughness maps, 1024 atlas, coping,
+   continuous route, cables. Tier 3: canyon, facade lattice, service kit. Tier 4:
+   head bob, view-model legs, the final grade pass and the golden harness.
 8. **Realistic goal.** A convincing "2008 AAA read" in WebGL is reachable for
    tone, value structure and composition (Tier 0–1, ~3–4 days) and for surface
    and prop density (Tier 2–3, ~2–3 weeks). Photogrammetric photorealism is not
@@ -724,6 +724,55 @@ Gates: `npm run check`, `npm test` (118), `npx playwright test` (29), build, no
 
 ---
 
+## 5.5 Tier 4 implemented — measured result (2026-11-15)
+
+Branch `feat/glassline-visual-tier4` (merge pending). Tier 4 is the motion and
+finish pass:
+
+| Item | What landed |
+| --- | --- |
+| Head bob | Speed-scaled bob in `player.js`: ~1.2 cm vertical, ~0.7 cm lateral and 0.2° of roll at full sprint, damped in/out, grounded only, with a pure `bobOffset()` helper and unit tests. Deliberately tiny — a large bob makes first-person parkour unreadable. |
+| View-model legs | Thigh/shin/shoe per leg on the layer-1 view-model pass (`viewmodel.js`). Standing they hang below the frame (looking down shows your feet), a slide swings them forward into view, a roll tucks them, and they stride while running. The body is present in every pose now, not just the arms. |
+| Final grade | Cooler, stronger split tone (`sh` 0.80/1.01/1.13 → 0.74/1.00/1.20), slightly cooler highlights, bluer lifted blacks and a top-of-range highlight lift so sunlit whites and cumulus clip like the reference. Live saturation moved from the inert `lookSat` (AgX branch) to `render.post.saturation` = 0.96. |
+| Golden harness | `npm run golden` captures the ten route viewpoints into `artifacts/golden/` with a metrics manifest (`pngjs`), and `tests/e2e/glassline-golden.spec.js` asserts the look stays inside calibrated bands (mean luma, p95 roll-off, saturation) instead of brittle pixel diffs — film grain and cloud drift are time-dependent by design. |
+
+Official before/after (`metrics-tier3.json` → `metrics-tier4.json`, same 11
+captures, same harness):
+
+| Metric | Tier 3 | Tier 4 | Reference | Status |
+| --- | ---: | ---: | ---: | --- |
+| luma mean | 0.567 | **0.570** | 0.589 | ✅ |
+| luma std | 0.260 | **0.263** | 0.272 | ✅ |
+| luma p25 | 0.396 | **0.395** | 0.370 | ✅ |
+| luma p95 | 0.936 | **0.953** | 0.979 | ✅ newly in band |
+| near-white | 14.6 % | **15.3 %** | 27.3 % | ✅ |
+| deep shadow | 5.8 % | **5.7 %** | 3.0 % | ✅ |
+| saturation mean | 0.310 | **0.331** | 0.359 | ✅ |
+| local contrast | 0.0663 | **0.0668** | 0.0713 | ✅ |
+| edge energy | 0.0280 | **0.0283** | 0.0341 | ✅ |
+| sky blue area | 44.1 % | **51.1 %** | 53.1 % | ✅ |
+| contrast, top third | 0.0554 | **0.0556** | 0.0585 | ✅ |
+| split-tone dark R−B | −30.3 | **−40.2** | −48.6 | ✅ newly in band |
+| red accent coverage | 2.23 % | **2.17 %** | 4.2 % | ✅ |
+
+Verdict: **13 of 13 acceptance metrics in band** — the measured visual gap that
+opened this analysis is closed on the metric set that defined it (from 0/13 at the
+baseline). Two notes on what that does and does not mean:
+
+- the saturation lift from the bluer shadows briefly pushed `sat_mean` over the
+  band (0.342); the live grade saturation is now 0.96 instead of the inert
+  `lookSat`, which is where that value has to live while `agxMix` is 0.
+- `near-white` (15.3 % vs 27.3 %) and `p95` are now inside the bands but still on
+  the low side: the reference has more white architecture in frame, which is a
+  level-content property (Tier 5 territory), not a grade one.
+
+Cost: 427 draw calls, 76.9 k triangles, 63 textures at high quality; build 907 kB.
+Gates: `npm run check`, `npm test` (123, including head-bob and view-model-leg
+tests), `npx playwright test` (30, including the golden band test), build, no
+`__errors`/`__fatal`.
+
+---
+
 ## 6. Roadmap
 
 Effort is for one experienced developer; "acceptance" is a metric from §7 that the
@@ -818,21 +867,21 @@ and ≈ +12 draw calls.
 Re-run `tools/image-metrics.py` against a fresh capture pass after each tier. The
 build is "visually in the reference's family" when the primary set lands in:
 
-| Metric | Target band | Baseline | Tier 0 | Tier 1 | Tier 2 | Tier 3 |
-| --- | --- | ---: | ---: | ---: | ---: | ---: |
-| luma mean | 0.48 – 0.62 | 0.736 | **0.579 ✅** | **0.574 ✅** | **0.576 ✅** | **0.567 ✅** |
-| luma std | 0.23 – 0.31 | 0.166 | **0.253 ✅** | **0.259 ✅** | **0.260 ✅** | **0.260 ✅** |
-| luma p25 | 0.30 – 0.42 | 0.698 | **0.416 ✅** | **0.372 ✅** | **0.372 ✅** | **0.396 ✅** |
-| luma p95 | 0.95 – 1.00 | 0.904 | 0.930 ❌ | 0.922 ❌ | 0.926 ❌ | 0.936 ❌ |
-| near-white | 12 % – 30 % | 6.0 % | **14.7 % ✅** | **12.7 % ✅** | **14.0 % ✅** | **14.6 % ✅** |
-| deep shadow | 1.5 % – 6 % | 0.18 % | **5.5 % ✅** | **5.6 % ✅** | **6.0 % ✅** | **5.8 % ✅** |
-| saturation mean | 0.22 – 0.34 | 0.102 | **0.311 ✅** | **0.296 ✅** | **0.308 ✅** | **0.310 ✅** |
-| local contrast | 0.055 – 0.075 | 0.0376 | **0.0560 ✅** | **0.0565 ✅** | **0.0572 ✅** | **0.0663 ✅** |
-| edge energy | 0.022 – 0.035 | 0.0154 | 0.0215 ❌ | 0.0213 ❌ | **0.0220 ✅** | **0.0280 ✅** |
-| sky blue fraction | 35 % – 60 % | 1.2 % | 67.8 % ⚠️ | **44.1 % ✅** | **46.9 % ✅** | **44.1 % ✅** |
-| contrast, top third (far field) | 0.045 – 0.065 | 0.0188 | 0.0303 ❌ | 0.0409 ❌ | 0.0421 ❌ | **0.0554 ✅** |
-| split-tone dark R−B | −60 – −35 | −17.1 | −26.6 ❌ | −25.6 ❌ | −28.7 ❌ | −30.3 ❌ |
-| red accent coverage | 1.5 % – 4 % | 1.05 % | 1.32 % ❌ | **1.62 % ✅** | **2.09 % ✅** | **2.23 % ✅** |
+| Metric | Target band | Baseline | Tier 0 | Tier 1 | Tier 2 | Tier 3 | Tier 4 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| luma mean | 0.48 – 0.62 | 0.736 | **0.579 ✅** | **0.574 ✅** | **0.576 ✅** | **0.567 ✅** | **0.570 ✅** |
+| luma std | 0.23 – 0.31 | 0.166 | **0.253 ✅** | **0.259 ✅** | **0.260 ✅** | **0.260 ✅** | **0.263 ✅** |
+| luma p25 | 0.30 – 0.42 | 0.698 | **0.416 ✅** | **0.372 ✅** | **0.372 ✅** | **0.396 ✅** | **0.395 ✅** |
+| luma p95 | 0.95 – 1.00 | 0.904 | 0.930 ❌ | 0.922 ❌ | 0.926 ❌ | 0.936 ❌ | **0.953 ✅** |
+| near-white | 12 % – 30 % | 6.0 % | **14.7 % ✅** | **12.7 % ✅** | **14.0 % ✅** | **14.6 % ✅** | **15.3 % ✅** |
+| deep shadow | 1.5 % – 6 % | 0.18 % | **5.5 % ✅** | **5.6 % ✅** | **6.0 % ✅** | **5.8 % ✅** | **5.7 % ✅** |
+| saturation mean | 0.22 – 0.34 | 0.102 | **0.311 ✅** | **0.296 ✅** | **0.308 ✅** | **0.310 ✅** | **0.331 ✅** |
+| local contrast | 0.055 – 0.075 | 0.0376 | **0.0560 ✅** | **0.0565 ✅** | **0.0572 ✅** | **0.0663 ✅** | **0.0668 ✅** |
+| edge energy | 0.022 – 0.035 | 0.0154 | 0.0215 ❌ | 0.0213 ❌ | **0.0220 ✅** | **0.0280 ✅** | **0.0283 ✅** |
+| sky blue fraction | 35 % – 60 % | 1.2 % | 67.8 % ⚠️ | **44.1 % ✅** | **46.9 % ✅** | **44.1 % ✅** | **51.1 % ✅** |
+| contrast, top third (far field) | 0.045 – 0.065 | 0.0188 | 0.0303 ❌ | 0.0409 ❌ | 0.0421 ❌ | **0.0554 ✅** | **0.0556 ✅** |
+| split-tone dark R−B | −60 – −35 | −17.1 | −26.6 ❌ | −25.6 ❌ | −28.7 ❌ | −30.3 ❌ | **−40.2 ✅** |
+| red accent coverage | 1.5 % – 4 % | 1.05 % | 1.32 % ❌ | **1.62 % ✅** | **2.09 % ✅** | **2.23 % ✅** | **2.17 % ✅** |
 
 These are bands around the reference aggregate, not pixel-matching; they are
 deliberately defined on the same metric set so a regression cannot hide behind
@@ -880,7 +929,8 @@ deliberately defined on the same metric set so a regression cannot hide behind
 - Tooling: `tools/capture-visual.mjs` (deterministic viewpoint captures),
   `tools/lookdev-probe.mjs` (live tuning presets), `tools/image-metrics.py`
   (metrics + comparison sheets), `tools/measure-hud-area.mjs` (persistent HUD
-  screen share).
+  screen share), `tools/golden.mjs` (`npm run golden`: golden frames + metrics
+  manifest in `artifacts/golden/`).
 
 ## Appendix — shot index (`docs/visual-gap/shots/`)
 
@@ -899,5 +949,7 @@ deliberately defined on the same metric set so a regression cannot hide behind
 | `proof-tier1.png` | Tier 0 vs Tier 1 on three beats |
 | `proof-tier2.png` | Tier 1 vs Tier 2 on three beats |
 | `proof-tier3.png` | Tier 2 vs Tier 3 on three beats |
+| `tier4-01..11-*.png` | The same 11 viewpoints after Tier 4 |
+| `proof-tier4.png` | Tier 3 vs Tier 4 on three beats |
 | `lowq-*.png` | `q=low` (bloom off → correct metering) evidence for §3.1 |
 | `compare-01..03.png` | Metrics-generated reference-vs-current sheets |
