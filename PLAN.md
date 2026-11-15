@@ -233,8 +233,14 @@ concrete backlog with specs, files and acceptance checks in
 - **P3 life and finish** — distant helicopter, opening fly-in, audio "air" band
   (our ambience is 98.6 % below 500 Hz vs the reference's more open top end).
 
-Status: implemented on `feat/reference-prologue-kit` / following feature branches;
-measured results are recorded in `docs/VISUAL_GAP.md` when the phase lands.
+Status: **implemented** on `feat/reference-prologue-kit` (merge pending) — P1 props
+(solar PV, AC fan grilles, glass skylights, red ladders/pipes/rails), P2 structure
+(covered service block with skylights/lockers/red stair, orange fencing, white
+plant rooms), P3 life (helicopter, opening fly-in, audio air band). Measured in
+[`docs/VISUAL_GAP.md §7`](docs/VISUAL_GAP.md): 13/13 acceptance metrics still in
+band, red accent 2.07 → 2.21 %, but near-white did not rise (12.6 → 12.4 %): the
+new white volumes face the camera shaded, so closing that gap needs a
+lighting/exposure or white-facade pass, not more props.
 
 ### Audio pass — mix, space, surfaces and score (2026-11-16) — merged 2026-11-16
 

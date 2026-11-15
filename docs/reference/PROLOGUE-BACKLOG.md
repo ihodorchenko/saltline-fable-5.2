@@ -126,6 +126,16 @@ still opens with speed.
 
 ---
 
+## Status (2026-11-16)
+
+All three phases are implemented on `feat/reference-prologue-kit` (merge pending):
+P1.1–P1.4 props, P2.1–P2.3 structure, P3.1–P3.3 life/audio. Measured in
+`docs/VISUAL_GAP.md §7`: red accent 2.07 → 2.21 %, near-white 12.58 → 12.36 %
+(goal missed — the new white volumes present shaded faces to the camera), audio
+air band idle above-2 kHz 0.2 → 1.7 %, 13/13 metrics in band, low-quality draw
+calls down to 252. Open follow-up: the white-area gap needs a lighting/exposure
+or white-facade pass, not more props.
+
 ## Order of work and gates
 
 1. P1.1 → P1.4, commit `feat(levels): reference prop vocabulary`.
