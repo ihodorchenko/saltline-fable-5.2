@@ -2,6 +2,7 @@
 // GLASSLINE tutorial mode: data-driven route, checkpoint/respawn/finish flow,
 // saved progress, route readability and a minimal stage HUD.
 
+import { Vector3 } from 'three';
 import { tutorialLevel } from '../../levels/tutorial.js';
 import { buildLevel } from '../../levels/build.js';
 import { keyHint, keycapHtml } from './hud.js';
@@ -136,6 +137,17 @@ function saveBest(seconds) {
 export async function showcaseTutorial(game) {
   const level = tutorialLevel;
   const built = buildLevel(game, level);
+  // Some level parts animate through their own userData.update hook (the sky does;
+  // the city owns the distant helicopter). Resolve it once instead of walking the
+  // graph every frame.
+  const levelUpdaters = [];
+  built.root?.traverse((object) => {
+    const update = object.userData?.update;
+    // The sky has its own dedicated call above (it also follows the camera).
+    if (typeof update === 'function' && object !== built.sky && !levelUpdaters.includes(update)) {
+      levelUpdaters.push(update);
+    }
+  });
   // The showcase bootstrap adds a flat 80×80 ground plane. The tutorial has its
   // own platforms, so hide that plane to avoid coplanar z-fighting and let the
   // gaps read as real falls.
@@ -477,6 +489,7 @@ export async function showcaseTutorial(game) {
       showDispatch(
         'Rooftop line is open. Follow the red thread. Do not look down.',
       );
+      beginFlyIn();
     },
     onResume: () => {
       paused = false;
@@ -751,6 +764,53 @@ export async function showcaseTutorial(game) {
     characters: { courier, mentor, viewmodel },
   };
 
+  // Opening fly-in: a short cinematic settle from above the spawn down to the
+  // eye position, only when a run is started from the menu. The autostart/shot/
+  // bench paths keep the exact spawn camera, and any input skips it.
+  /** @type {null | {t: number, duration: number, from: any, to: any, look: any}} */
+  let flyIn = null;
+  let flyInSkipHandler = null;
+
+  function endFlyIn() {
+    if (!flyIn) return;
+    flyIn = null;
+    if (flyInSkipHandler) {
+      window.removeEventListener('keydown', flyInSkipHandler);
+      window.removeEventListener('pointerdown', flyInSkipHandler);
+      flyInSkipHandler = null;
+    }
+  }
+
+  function beginFlyIn() {
+    if (autostart || benchMode || progress.finished) return;
+    const now = controller.getState();
+    flyIn = {
+      t: 0,
+      duration: 2.2,
+      from: new Vector3(now.pos.x + 6.5, now.pos.y + 9.5, now.pos.z + 13),
+      to: new Vector3(now.pos.x, now.pos.y + now.eyeHeight, now.pos.z),
+      look: new Vector3(now.pos.x, now.pos.y + 1.2, now.pos.z - 18),
+    };
+    // The controller stays enabled: the fly-in only overrides the camera, so the
+    // first input both cancels the shot and starts moving without a frame of lag.
+    flyInSkipHandler = () => endFlyIn();
+    window.addEventListener('keydown', flyInSkipHandler, { once: true });
+    window.addEventListener('pointerdown', flyInSkipHandler, { once: true });
+  }
+
+  function updateFlyIn(dt) {
+    if (!flyIn) return;
+    const camera = game.camera;
+    flyIn.t += dt;
+    const k = Math.min(1, flyIn.t / flyIn.duration);
+    const e = k * k * (3 - 2 * k);
+    camera.position.lerpVectors(flyIn.from, flyIn.to, e);
+    // Look down the route, then settle onto the spawn gaze.
+    const lookY = flyIn.look.y + (flyIn.to.y - flyIn.look.y) * e * 0.35;
+    camera.lookAt(flyIn.look.x, lookY, flyIn.look.z);
+    if (k >= 1) endFlyIn();
+  }
+
   return {
     update(dt) {
       if (benchMode) {
@@ -762,6 +822,7 @@ export async function showcaseTutorial(game) {
         built.sky.position.copy(game.camera.position);
         built.sky.userData.update?.(game.time?.t || elapsed);
       }
+      for (const update of levelUpdaters) update(game.time?.t || elapsed);
       if (built.lighting) built.lighting.update(game.camera.position);
       if (beacon.visible) beacon.rotation.y += dt * 1.2;
       if (paused) return;
@@ -779,6 +840,7 @@ export async function showcaseTutorial(game) {
         return;
       }
       controller.update(dt);
+      updateFlyIn(dt);
       const state = controller.getState();
       courier.update(game.camera, state, game.time?.t || elapsed, dt);
       viewmodel.update(dt, state, game.time?.t || elapsed);
