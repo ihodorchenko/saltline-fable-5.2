@@ -1,25 +1,29 @@
 // @ts-check
-// Air and grade for GLASSLINE. The haze that flattens the scene is stacked: scene
-// fog, the engine's volumetric scattering (sigma, far haze, ambient) and a global
-// saturation/tone grade. They are tuned together here. Values are starting points
-// for look-dev; compare in the browser with:
+// Air and grade for GLASSLINE. Three things stack here: scene fog, the engine's
+// volumetric scattering (sigma, far haze, ambient) and a global saturation/tone
+// grade. Tuned together, but note the measured finding in docs/VISUAL_GAP.md:
+// air is a *minor* lever (+11 % top-third contrast); the flattened look came from
+// exposure, the light rig and the missing sky. Compare in the browser with:
 //   ?haze=0.5   thinner air   (?haze=0 no haze, ?haze=2 heavier)
 //   ?atmo=off   the previous look (scene fog and engine defaults)
 
 export const ATMOSPHERE = {
-  // The existing GLASSLINE bloom look, unchanged.
-  base: { bloom: 0.09, bloomThreshold: 1.8, streakThreshold: 1.15 },
-  // Engine defaults in brackets: lookSat [1.22], lookPower [1.18], agxMix [0.25], dirt [0.1].
-  // lookSat stays at the engine default on purpose: the palette is muted at the
-  // source, and lowering global saturation would also mute the red route.
-  // lookPower is the contrast curve (pow on the graded colour: deepens mids and
-  // shadows, whites stay), the main lever against the washed-out look.
-  look: { lookSat: 1.22, lookPower: 1.28, agxMix: 0.12, dirt: 0.04 },
+  // Glare is kept on the sun and speculars only: the sun is ~10 stops above the
+  // white roofs, so a low threshold blooms the whole sky instead of the sun.
+  base: { bloom: 0.05, bloomThreshold: 2.6, streakThreshold: 2.0 },
+  // Engine defaults in brackets: lookSat [1.22], lookPower [1.18], agxMix [0.25],
+  // dirt [0.1]. lookPower is a `#define` inside the AgX branch only, so with
+  // agxMix 0 it is inert; the contrast curve now comes from the ACES-side
+  // S-curve in the grade pass. lookSat is a mild global lift; most of the
+  // reference's saturation must come from the sky, accents and materials.
+  look: { lookSat: 1.3, lookPower: 1.28, agxMix: 0, dirt: 0.02 },
   // Engine defaults in brackets: volSigma [0.0034], volFarHaze [0.42],
   // volAmbient [0.2], volSunScale [0.85]. All but volSunScale scale with ?haze.
-  haze: { volSigma: 0.002, volFarHaze: 0.22, volAmbient: 0.1, volSunScale: 0.75 },
+  // The audit measured air alone as a minor lever (+11 % top-third contrast);
+  // this is mostly about one consistent pale-blue palette.
+  haze: { volSigma: 0.0012, volFarHaze: 0.1, volAmbient: 0.05, volSunScale: 0.75 },
   // Scene FogExp2 density [was 0.0018].
-  fogDensity: 0.0011,
+  fogDensity: 0.0006,
 };
 
 /**
