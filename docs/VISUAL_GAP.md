@@ -672,8 +672,9 @@ Gates: `npm run check`, `npm test` (118), `npx playwright test` (29), build, no
 
 ## 5.4 Tier 3 implemented — measured result (2026-11-15)
 
-Branch `feat/glassline-visual-tier3` (merge pending). Tier 3 is the composition
-and density pass; three deliverables shipped:
+Merged into `project/glassline` as `d86f5f7` (2026-11-15) from
+`feat/glassline-visual-tier3`; the feature branch was deleted after integration.
+Tier 3 is the composition and density pass; three deliverables shipped:
 
 | Item | What landed |
 | --- | --- |

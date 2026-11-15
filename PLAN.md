@@ -73,8 +73,8 @@ Still open:
 into `project/glassline` (2026-11-15, `dbd3a6f`; feature branch deleted). Tier 1
 is merged into `project/glassline` (2026-11-15, `c8047db`; feature branch
 deleted). Tier 2 is merged into `project/glassline` (2026-11-15, `f25bfd4`;
-feature branch deleted). Tier 3 is implemented on
-`feat/glassline-visual-tier3` (2026-11-15, merge pending)** — measured results in
+feature branch deleted). Tier 3 is merged into `project/glassline` (2026-11-15,
+`d86f5f7`; feature branch deleted)** — measured results in
 [`docs/VISUAL_GAP.md §5.1–5.4`](docs/VISUAL_GAP.md). The measured visual gap
 to the 2008 reference is the project's biggest quality risk: the renderer is
 capable, but the frame is overexposed, flat, desaturated, sky-less and content-poor.
@@ -189,7 +189,7 @@ Result: **10 of 13 acceptance metrics in band** (up from 9); Tier 2 acceptance m
 0.0421). Cost: 67 k → 77.5 k triangles, 390 → 413 draw calls, +9 kB build.
 `npm run check`, 118 unit tests and 29 Playwright tests green.
 
-### Tier 3 — "A city, not a test map" (1–2 weeks) — implemented, merge pending
+### Tier 3 — "A city, not a test map" (1–2 weeks) — merged 2026-11-15
 
 - [x] Canyon composition: route corridor 15 → **9 m**, a deterministic row of near
       facades (26–58 m tall) whose inner face sits just outside it, and taller
