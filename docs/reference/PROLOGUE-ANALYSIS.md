@@ -27,14 +27,16 @@ mission with its rooftop run, interiors and prop vocabulary.
 | 0:00–0:30 | Logos + title | EA / DICE / Mirror's Edge title over the white skyline, then the city loading splash |
 | 0:31–1:47 | **Intro cutscene** | Third-person parkour of the runners across white rooftops; sweeping city shots, close-ups, the red route accents |
 | 1:48–1:52 | **Training title card** | "ОБУЧЕНИЕ (ТРЕНИРОВКА)" over the rooftops — the reference for our own act/level intro card |
-| 1:52–2:07 | Movement training: run | First-person rooftop run with the VO prompt bar at the bottom; "ПРОБЕГ: нажмите Tab…" |
+| 1:52–2:10 | Movement training: run | First-person rooftop run with the VO prompt bar at the bottom ("ПРОБЕГ: нажмите Tab…"), white roof with railings and red/blue props |
 | 2:07–2:10 | Pause menu | "Продолжить обучение" — the reference for our pause layout |
-| 2:10–2:40 | Movement training: jump / ramp | White roof, red launch ramp, orange safety fencing, blue props; the trainer NPC appears |
-| 2:40–3:00 | Movement training: interior | White/green service room, a doorway onto a balcony, first interior transition |
-| 3:00–3:20 | Movement training: **jump zone** | Blue-and-white workshop: scaffold, yellow staircase, "ПРЫЖОК" prompt |
-| 3:20–3:40 | Movement training: **wall-run zone** | Long white wall with blue accent band; the wall-run line is painted on the wall |
-| 3:40–4:20 | Movement training: red ramp launch | Red ramp + red landing pad on the street side; jump prompt; the city as the backdrop |
-| 4:20–4:40 | Movement training: **vault/climb zone** | Blue box course, orange railing, climb prompts |
+| 2:10–2:30 | Movement training: **sprint** | Red-and-white "ПРОБЕГ / Shift" prompt on a railed white roof, orange blocks |
+| 2:30–2:45 | Movement training: **vault/climb** | Blue box course with a red pad; the trainer NPC (red top) waits ahead |
+| 2:45–3:05 | Movement training: **jump** | Red tubular and curved ramps over the gaps, with the city as the backdrop |
+| 3:05–3:15 | Movement training: **balance** | Red pipe across a white roof, A/D balance prompt |
+| 3:15–3:30 | Movement training: **climb / stairs** | Yellow staircase to the upper courtyard, NPC climbing above |
+| 3:45–4:10 | Movement training: **interior transition** | White doorway into a service room with a red awning, out onto a red-walled balcony |
+| 4:10–4:20 | Movement training: **wall-run** | White wall with orange/yellow accents and the wall-run prompt |
+| 4:20–4:40 | Movement training: **service corridor** | White service alley with stairs, exit toward the training arena |
 | 4:40–7:20 | **Combat training** | Orange-wall arena with a red-clad virtual opponent; punch/kick prompts. Irrelevant to GLASSLINE (we have no combat) except as palette reference |
 | 7:20–8:20 | Loading | Black screen + "ПРОЛОГ" title card with DICE logo |
 | 8:20–13:20 | **The "PROLOGUE" mission** | Rooftop run over white roofs with blue glass towers, service interiors, HVAC, red pipes, orange fences — the closest reference for GLASSLINE's own course |
@@ -47,13 +49,14 @@ dedicated *designed space*, not a generic roof:
 
 | Beat | Space | Lesson for GLASSLINE |
 | --- | --- | --- |
-| Run (1:52) | wide white roof, VO prompt | teach the basic run with no obstacles and a clear view of the next landmark |
-| Jump / ramp (2:10–2:40) | red launch ramp + orange safety fence | **red marks the intended action line**, orange marks the fail boundary; both are props, not HUD |
-| Interior transition (2:40) | white/green room with a doorway | a doorway is enough to make a course feel multi-level; the interior is bright, not a dark tunnel |
-| Vertical (3:00) | scaffold + yellow staircase | vertical route is readable because the structure *is* the route |
-| Wall-run (3:20) | long wall with a painted blue band | the wall-run surface is visually distinct from the walkable floor |
-| Red ramp launch (3:40) | red ramp aimed at the street gap | a long, clean run-up so the jump is a reward, not a gamble |
-| Vault/climb (4:20) | blue box course with orange railings | props at knee/chest height read as vaultable without markers |
+| Run / sprint (1:52–2:30) | wide railed white roof, VO prompt | teach the basic run with no obstacles and a clear view of the next landmark; sprint is introduced with a red-and-white "ПРОБЕГ / Shift" prompt |
+| Vault / climb (2:30–2:45) | blue box course with a red pad | props at knee/chest height read as vaultable without markers; the red pad marks the landing |
+| Jump / ramp (2:45–3:05) | red tubular and curved ramps over the gaps | **red marks the intended action line**; a long, clean run-up makes the jump a reward, not a gamble |
+| Balance (3:05) | red pipe on a white roof | the beam is a distinct object, not a painted line; A/D prompt in the subtitle bar |
+| Climb / stairs (3:15) | yellow staircase to the upper courtyard | vertical route is readable because the structure *is* the route |
+| Interior transition (3:45) | white doorway → red-awning service room → red balcony | a doorway is enough to make a course feel multi-level; the interior is bright, not a dark tunnel |
+| Wall-run (4:10) | long white wall with orange/yellow accents | the wall-run surface is visually distinct from the walkable floor |
+| Service corridor (4:20) | white alley, stairs, exit | connective tissue that keeps the course from being "roofs only" |
 
 Structure to borrow: **each mechanic in its own purpose-built pocket, separated by
 short connective runs**, with color-coded functional props and VO subtitles
