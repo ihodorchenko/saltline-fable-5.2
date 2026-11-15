@@ -153,6 +153,9 @@ without sounding noisy.
 
 ## 7. Backlog for GLASSLINE from this video
 
+(Detailed implementation specs, files, effort and acceptance checks for every item:
+[`PROLOGUE-BACKLOG.md`](PROLOGUE-BACKLOG.md).)
+
 Prioritised, each item is cheap relative to a full content pass:
 
 **P1 — content vocabulary that is missing**

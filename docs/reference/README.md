@@ -10,6 +10,7 @@ into the game or into committed docs**. This folder holds:
 | `<video>-kit/` | generated analysis library for a video (see below) | no (git-ignored) |
 | `README.md` | this guide | yes |
 | `PROLOGUE-ANALYSIS.md` | written analysis of the prologue + training walkthrough, with timestamps | yes (text only) |
+| `PROLOGUE-BACKLOG.md` | the implementation backlog distilled from it (P1 props, P2 level structure, P3 life/finish) | yes |
 | `../visual-gap/metrics*.json` | numeric profiles derived from reference frames (no imagery) | yes |
 
 ## The kit
