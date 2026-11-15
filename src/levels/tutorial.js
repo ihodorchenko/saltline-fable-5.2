@@ -10,7 +10,7 @@ export const tutorialLevel = {
   fallY: -6,
   pacing: { targetMinutes: [10, 20] },
   palette: [0xf2eee3, 0xe1eaea, 0xd2e1e4],
-  city: { seed: 731, streetY: -18, corridor: 15 },
+  city: { seed: 731, streetY: -18, corridor: 9 },
   acts: [
     { id: 'act1', title: 'ACT I — ASCENT', pos: [0, 4.4, 7] },
     { id: 'act2', title: 'ACT II — DESCENT', pos: [2, 5.2, -64] },

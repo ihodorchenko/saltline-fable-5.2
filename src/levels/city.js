@@ -91,6 +91,41 @@ export function createCityPlan(level) {
       return ox > -1.2 && oz > -1.2;
     });
 
+  // Canyon walls: a deterministic row of near facades whose inner face sits just
+  // outside the route corridor. The reference is a corridor of close verticals
+  // with the sky as a narrow band; the generic grid alone left the nearest facade
+  // ~35 m away and the route read as slabs floating in an open field.
+  for (let z = 16; z >= -224; z -= 13) {
+    for (const side of [-1, 1]) {
+      const width = 8 + rng() * 6;
+      const depth = 11 + rng() * 6;
+      const inner = corridor + 0.6 + rng() * 2.2;
+      const x = side * (inner + width / 2);
+      const height = 26 + rng() * 32;
+      const candidate = {
+        x,
+        z: z + (rng() - 0.5) * 3,
+        w: width,
+        d: depth,
+        h: height,
+        top: streetY + height,
+        color: Math.floor(rng() * BODY_COLORS.length),
+        roofColor: Math.floor(rng() * (ROOF_COLORS.length - 1)),
+        keep: 0.9,
+        floors: Math.max(4, Math.floor((height - 4) / 5)),
+        windows: true,
+        roofUnit: height > 34,
+        landmark: false,
+        nearFacade: true,
+        style: rng() < 0.62 ? 1 : 0,
+      };
+      if (!overlaps(candidate)) {
+        buildings.push(candidate);
+        occupied.push(candidate);
+      }
+    }
+  }
+
   for (let z = 22; z >= -224; z -= 18) {
     for (let x = -88; x <= 88; x += 16) {
       if (Math.abs(x) < corridor + 4) continue;
@@ -103,7 +138,7 @@ export function createCityPlan(level) {
       const bz = z + jitterZ;
       if (Math.abs(bx) - width / 2 < corridor) continue;
       const inner = Math.abs(bx) < 44;
-      const height = (inner ? 8 : 20) + rng() * (inner ? 18 : 48);
+      const height = (inner ? 16 : 22) + rng() * (inner ? 34 : 48);
       const top = streetY + height;
       const styleRoll = rng();
       const style = styleRoll < 0.55 ? 0 : styleRoll < 0.84 ? 1 : 2;
@@ -311,6 +346,11 @@ export function buildCity(game, level, plan, textures = null) {
   const color = new THREE.Color();
   const bodyGeometry = new THREE.BoxGeometry(1, 1, 1);
   const glassBundle = textures?.glassMaps ? textures.glassMaps() : null;
+  if (glassBundle) {
+    glassBundle.map.repeat.set(2, 3);
+    glassBundle.normalMap.repeat.set(2, 3);
+    glassBundle.roughnessMap.repeat.set(2, 3);
+  }
   const bodyMaterials = [
     new THREE.MeshStandardMaterial({
       map: glassBundle ? glassBundle.map : null,
@@ -332,7 +372,9 @@ export function buildCity(game, level, plan, textures = null) {
       });
       if (bundle) {
         material.map = bundle.map;
+        material.map.repeat.set(2.6, 4.2);
         material.normalMap = bundle.normalMap;
+        material.normalMap.repeat.set(2.6, 4.2);
         material.normalScale = new THREE.Vector2(0.7, 0.7);
       }
       return material;
@@ -346,7 +388,9 @@ export function buildCity(game, level, plan, textures = null) {
       });
       if (bundle) {
         material.map = bundle.map;
+        material.map.repeat.set(2.2, 3.6);
         material.normalMap = bundle.normalMap;
+        material.normalMap.repeat.set(2.2, 3.6);
         material.normalScale = new THREE.Vector2(0.6, 0.6);
       }
       return material;
@@ -405,15 +449,20 @@ export function buildCity(game, level, plan, textures = null) {
   root.add(roofs);
 
   // Scale-correct window bands: inner faces plus the front faces visible from
-  // the route. These are geometry, not stretched into the facade texture.
+  // the route. These are geometry, not stretched into the facade texture. The
+  // dense canyon lattice is a high/ultra detail: low quality has a triangle
+  // budget and keeps the old sparse rhythm.
+  const detailCity = game?.quality?.name !== 'low';
+  const bandSpacing = detailCity ? 2.8 : 4;
   const windows = [];
   for (const building of allBuildings) {
     if (!building.windows) continue;
     const side = building.x > 0 ? -1 : 1;
     const faceX = building.x + side * (building.w / 2 + 0.025);
     const faceZ = building.z + building.d / 2 + 0.025;
-    for (let floor = 1; floor <= building.floors; floor += 1) {
-      const y = building.top - floor * 5;
+    // Fill the whole visible facade: the route is a canyon now, so these bands
+    // are what gives the near walls their scale. 3.6 m storeys, not 5 m.
+    for (let y = building.top - bandSpacing; y > building.streetY + 2; y -= bandSpacing) {
       windows.push({
         x: faceX,
         y,
@@ -457,6 +506,40 @@ export function buildCity(game, level, plan, textures = null) {
   windowMesh.instanceMatrix.needsUpdate = true;
   windowMesh.computeBoundingSphere();
   root.add(windowMesh);
+
+  // Vertical mullions on the near canyon facades: without them the canyon walls
+  // are flat planes with a few horizontal bands, which reads as blank card.
+  const mullions = [];
+  for (const building of allBuildings) {
+    if (!detailCity) break;
+    if (!building.windows) continue;
+    const near = building.nearFacade || Math.abs(building.x) < 30;
+    if (!near) continue;
+    const side = building.x > 0 ? -1 : 1;
+    const faceX = building.x + side * (building.w / 2 + 0.035);
+    const count = Math.max(4, Math.round(building.d / 1.55));
+    const span = building.d * 0.86;
+    for (let i = 0; i < count; i += 1) {
+      const z = building.z - span / 2 + (count === 1 ? 0 : (span / (count - 1)) * i);
+      mullions.push({ x: faceX, z, height: building.h, y: building.top - building.h / 2 });
+    }
+  }
+  const mullionMesh = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshStandardMaterial({ color: 0x8ea3b2, roughness: 0.6, metalness: 0.08 }),
+    Math.max(1, mullions.length),
+  );
+  mullionMesh.name = 'city-mullions';
+  mullions.forEach((mullion, index) => {
+    position.set(mullion.x, mullion.y, mullion.z);
+    scale.set(0.1, mullion.height, 0.14);
+    quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0);
+    matrix.compose(position, quaternion, scale);
+    mullionMesh.setMatrixAt(index, matrix);
+  });
+  mullionMesh.instanceMatrix.needsUpdate = true;
+  mullionMesh.computeBoundingSphere();
+  root.add(mullionMesh);
 
   // Balcony bands break up the flat instanced facades.
   const balconies = [];

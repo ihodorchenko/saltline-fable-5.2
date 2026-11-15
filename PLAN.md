@@ -73,8 +73,9 @@ Still open:
 into `project/glassline` (2026-11-15, `dbd3a6f`; feature branch deleted). Tier 1
 is merged into `project/glassline` (2026-11-15, `c8047db`; feature branch
 deleted). Tier 2 is merged into `project/glassline` (2026-11-15, `f25bfd4`;
-feature branch deleted)** — measured results in
-[`docs/VISUAL_GAP.md §5.1–5.3`](docs/VISUAL_GAP.md). The measured visual gap
+feature branch deleted). Tier 3 is implemented on
+`feat/glassline-visual-tier3` (2026-11-15, merge pending)** — measured results in
+[`docs/VISUAL_GAP.md §5.1–5.4`](docs/VISUAL_GAP.md). The measured visual gap
 to the 2008 reference is the project's biggest quality risk: the renderer is
 capable, but the frame is overexposed, flat, desaturated, sky-less and content-poor.
 Full analysis, evidence and numbers: [`docs/VISUAL_GAP.md`](docs/VISUAL_GAP.md)
@@ -188,10 +189,31 @@ Result: **10 of 13 acceptance metrics in band** (up from 9); Tier 2 acceptance m
 0.0421). Cost: 67 k → 77.5 k triangles, 390 → 413 draw calls, +9 kB build.
 `npm run check`, 118 unit tests and 29 Playwright tests green.
 
-### Tier 3–4 — the content and finish work (next, high priority)
+### Tier 3 — "A city, not a test map" (1–2 weeks) — implemented, merge pending
 
-- **Tier 3 (1–2 weeks):** prop density ×6–10, city canyon (corridor 6–9 m, near
-  facades, street below), material consolidation, white surface area in frame.
+- [x] Canyon composition: route corridor 15 → **9 m**, a deterministic row of near
+      facades (26–58 m tall) whose inner face sits just outside it, and taller
+      inner blocks (16–50 m). The reference's close-vertical sightline is the
+      default now instead of a distant box horizon.
+- [x] Facade lattice: window bands every **2.8 m** (was 5 m) filling the visible
+      facade, vertical mullions every ~1.55 m on near walls, and body textures
+      tiling at building scale instead of stretching six windows over a tower.
+- [x] Rooftop service kit v2: second condenser bank + vent stack on most roofs,
+      dish antennas, duct runs, and billboards with an ivory panel and the red
+      rule; instanced, high/ultra only.
+- [x] Shade lift: sky fill raised (hemisphere 0.5 → 0.74) and cumulus tops
+      brightened, because the canyon put far more shaded facade in frame.
+
+Result: **11 of 13 acceptance metrics in band** (up from 10); Tier 3 acceptance
+met (`edge_energy` **0.0280** ≥ 0.028, `contrast_top_third` **0.0554** ≥ 0.045,
+within 5 % of the reference). The two remaining misses are p95 (amount of
+near-white surface in frame) and dark split-tone (material palette). Tried and
+reverted: raising the exposure ceiling moved p95 into band but pushed p25 and
+sky-blue out — a net loss. Cost: 421 draw calls, 75.9 k triangles, 63 textures,
+906 kB build; the new density is gated to high/ultra.
+
+### Tier 4 — motion and finish (2 weeks+)
+
 - **Tier 4 (2 weeks+):** motion/character finish, final grade, golden screenshots.
 
 Evidence rule: every tier re-runs the capture + metrics harness and records the

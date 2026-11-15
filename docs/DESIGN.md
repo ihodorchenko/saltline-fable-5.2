@@ -148,7 +148,10 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
 - **Route** is a continuous red strip spanning each roof (not dashes); current
   checkpoint ring and next-checkpoint diamond are red. Sparse catenary cables
   cross the gaps outside the route corridor, connecting the rooftops into a circuit.
-- **City** is a deterministic generated district: about 130 near blocks plus
+- **City** is a deterministic generated district arranged as a **canyon**: the
+  route corridor is 9 m wide and a row of near facades (26–58 m) frames it on both
+  sides, with a dense facade lattice (window bands every 2.8 m, vertical mullions
+  every ~1.55 m, panel textures tiled at building scale). About 130 near blocks plus
   perimeter-ring blocks at high quality, terraced low-rise roofs near the route,
   taller towers behind, cyan window bands, green roofs/trees, four skybridges,
   an elevated diagonal transit line, rooftop service units, three original
@@ -168,6 +171,10 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
   running ahead on the start roof. Red stays the runner's colour; the mentor
   reads by value (dark jacket, pale steel pack) on ivory, not by hue. No skinned meshes or external models are
   loaded; pivot groups keep elbows, hips and knees hinged correctly.
+
+Rooftop service kit: a second condenser bank and vent stack on most roofs, dish
+antennas, duct runs and billboards on posts (ivory panel, red rule) — instanced and
+high/ultra only, so the low-quality frame keeps its triangle budget.
 
 Lighting: one dominant warm sun at ~56° elevation and ~50° off the route axis,
 a small blue sky fill (hemisphere 0.5 `#bcd9ff`/`#4e6274`, two weak rim/fill

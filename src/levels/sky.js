@@ -130,10 +130,10 @@ const FRAGMENT_SHADER = `
     vec3 base = mix(vec3(0.36, 0.42, 0.54), vec3(0.62, 0.67, 0.77), 1.0 - thick);
     // Sunlit tops sit well above 1.0 in HDR so they roll off to white after the
     // tonemap and bloom, like the reference's clipped cumulus.
-    vec3 top = mix(vec3(2.2, 2.1, 1.92), vec3(1.4, 1.4, 1.46), thick);
+    vec3 top = mix(vec3(3.1, 2.95, 2.7), vec3(1.55, 1.55, 1.62), thick);
     vec3 cloud = mix(base, top, relief * relief * 0.82 + 0.18);
     // silver lining where the cloud is thin and close to the sun
-    cloud += uSunColor * pow(s, 10.0) * 0.22 * (1.0 - thick);
+    cloud += uSunColor * pow(s, 10.0) * 0.34 * (1.0 - thick);
     // aerial perspective: low clouds melt into the horizon haze
     cloud = mix(cloud, uHorizon * 1.06 + 0.05, smoothstep(0.34, 0.04, h));
     col = mix(col, cloud, cover);
