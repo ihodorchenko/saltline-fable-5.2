@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "GLASSLINE — original first-person rooftop parkour vertical slice.",
+  "description": "GLASSLINE \u2014 original first-person rooftop parkour vertical slice.",
   "engines": {
     "node": ">=22.12.0"
   },
@@ -18,7 +18,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "npm run build && playwright test",
-    "test:e2e:headed": "npm run build && playwright test --headed"
+    "test:e2e:headed": "npm run build && playwright test --headed",
+    "golden": "node tools/golden.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
