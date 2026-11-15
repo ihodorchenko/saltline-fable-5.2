@@ -570,8 +570,9 @@ composition item.
 
 ## 5.2 Tier 1 implemented — measured result (2026-11-15)
 
-Branch `feat/glassline-visual-tier1` (merge pending). Four deliverables from the
-plan, all shipped:
+Merged into `project/glassline` as `c8047db` (2026-11-15) from
+`feat/glassline-visual-tier1`; the feature branch was deleted after integration.
+Four deliverables from the plan, all shipped:
 
 | Item | What landed |
 | --- | --- |

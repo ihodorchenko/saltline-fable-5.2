@@ -71,8 +71,9 @@ Still open:
 
 **Priority: P0.** Outranks every unfinished Step 4/5 item. **Tier 0 is merged
 into `project/glassline` (2026-11-15, `dbd3a6f`; feature branch deleted). Tier 1
-is implemented on `feat/glassline-visual-tier1` (2026-11-15, merge pending)** —
-measured results in [`docs/VISUAL_GAP.md §5.1–5.2`](docs/VISUAL_GAP.md). The measured visual gap
+is merged into `project/glassline` (2026-11-15, `c8047db`; feature branch
+deleted)** — measured results in
+[`docs/VISUAL_GAP.md §5.1–5.2`](docs/VISUAL_GAP.md). The measured visual gap
 to the 2008 reference is the project's biggest quality risk: the renderer is
 capable, but the frame is overexposed, flat, desaturated, sky-less and content-poor.
 Full analysis, evidence and numbers: [`docs/VISUAL_GAP.md`](docs/VISUAL_GAP.md)
@@ -142,7 +143,7 @@ contrast, route paint, dark-pixel tint) owned by Tier 1–3. Engine commits are
 `fix(engine):`-prefixed so they can be cherry-picked to a `fix/engine-*` branch
 for `dev`.
 
-### Tier 1 — "Sky and body" (2–3 days) — implemented, merge pending
+### Tier 1 — "Sky and body" (2–3 days) — merged 2026-11-15
 
 - [x] Day sky with cumulus: six-octave fbm deck (`src/levels/sky.js`) with sunlit
       tops, blue-grey bases, silver lining, sun disc and slow drift; PMREM
