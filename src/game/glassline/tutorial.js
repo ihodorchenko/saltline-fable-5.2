@@ -5,6 +5,7 @@
 import { tutorialLevel } from '../../levels/tutorial.js';
 import { buildLevel } from '../../levels/build.js';
 import { keyHint, keycapHtml } from './hud.js';
+import { createBeacon } from '../../levels/guides.js';
 import { createPlayerController } from './player.js';
 import { createTutorialMenu } from './menu.js';
 import { createGlasslineAudio } from './audio.js';
@@ -220,14 +221,7 @@ export async function showcaseTutorial(game) {
     autoRespawns: 0,
   };
 
-  const beaconGeometry = new game.THREE.OctahedronGeometry(0.28);
-  const beaconMaterial = new game.THREE.MeshBasicMaterial({
-    color: 0xd23a39,
-    transparent: true,
-    opacity: 0.9,
-  });
-  const beacon = new game.THREE.Mesh(beaconGeometry, beaconMaterial);
-  beacon.name = 'glassline-next-checkpoint';
+  const beacon = createBeacon(game.THREE);
   built.root.add(beacon);
 
   function updateRings() {

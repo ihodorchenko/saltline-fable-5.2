@@ -8,6 +8,7 @@ import { createTextureFactory } from './textures.js';
 import { createHighKeySky } from './sky.js';
 import { createLighting, SUN_DIRECTION } from './lighting.js';
 import { CONTACT, buildContactShadows, contactFootprint } from './contact.js';
+import { createFinishGeometry, createRingGeometry } from './guides.js';
 
 /**
  * @param {any} game
@@ -488,11 +489,9 @@ export function buildLevel(game, level) {
   }
 
   const checkpointMeshes = [];
+  const ringGeometry = createRingGeometry(THREE, !detailed);
   for (const checkpoint of level.checkpoints) {
-    const mesh = new THREE.Mesh(
-      new THREE.TorusGeometry(0.62, 0.055, 8, 28),
-      new THREE.MeshBasicMaterial({ color: 0xb51f2a }),
-    );
+    const mesh = new THREE.Mesh(ringGeometry, new THREE.MeshBasicMaterial({ color: 0xb51f2a }));
     mesh.name = `checkpoint-${checkpoint.id}`;
     mesh.rotation.x = Math.PI / 2;
     mesh.position.set(checkpoint.pos[0], checkpoint.pos[1] + 0.08, checkpoint.pos[2]);
@@ -501,7 +500,7 @@ export function buildLevel(game, level) {
   }
 
   const finishMesh = new THREE.Mesh(
-    new THREE.TorusGeometry(1.25, 0.09, 8, 36),
+    createFinishGeometry(THREE, !detailed),
     new THREE.MeshBasicMaterial({ color: 0xd23a39 }),
   );
   finishMesh.name = 'glassline-finish';
