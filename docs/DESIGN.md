@@ -148,7 +148,10 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
 - **Route** is a continuous red strip spanning each roof (not dashes); current
   checkpoint ring and next-checkpoint diamond are red. Sparse catenary cables
   cross the gaps outside the route corridor, connecting the rooftops into a circuit.
-- **City** is a deterministic generated district arranged as a **canyon**: the
+- **City** is a deterministic generated district arranged as a **canyon** with
+  white parapet caps, setback terraces and denser balcony bands on the near
+  facades (white horizontal surfaces catch the high sun and supply the reference's
+  large white planes): the
   route corridor is 9 m wide and a row of near facades (26–58 m) frames it on both
   sides, with a dense facade lattice (window bands every 2.8 m, vertical mullions
   every ~1.55 m, panel textures tiled at building scale). About 130 near blocks plus

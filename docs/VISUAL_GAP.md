@@ -20,6 +20,7 @@ Companion files (in `docs/visual-gap/`):
 | [`docs/visual-gap/metrics-tier2.json`](visual-gap/metrics-tier2.json) | The same run against the Tier-2 build (normal/roughness maps, coping, continuous route, cables) |
 | [`docs/visual-gap/metrics-tier3.json`](visual-gap/metrics-tier3.json) | The same run against the Tier-3 build (canyon composition, facade lattice, rooftop service kit) |
 | [`docs/visual-gap/metrics-tier4.json`](visual-gap/metrics-tier4.json) | The same run against the Tier-4 build (motion finish, view-model legs, final grade) |
+| [`docs/visual-gap/metrics-tier5.json`](visual-gap/metrics-tier5.json) | The same run against the Tier-5 build (white canyon architecture, material pooling) |
 | `docs/visual-gap/shots/` | Reference frames, current captures, comparison and proof sheets — **local only, git-ignored**: several sheets embed frames of the owner-provided reference video and must not be committed or redistributed. Regenerate with the tools below. |
 
 ---
@@ -61,7 +62,7 @@ Companion files (in `docs/visual-gap/`):
    facades 3–10 m from the route, and white architecture that clips to near-white
    while its shadow side sits at 0.25–0.40 in strong blue. See §3.6–§3.8 and the
    content audit.
-7. **Tiers 0–4 are implemented** (2026-11-15; Tier 4 pending merge) — same
+7. **Tiers 0–5 are implemented** (2026-11-15; Tier 5 pending merge) — same
    measurement harness, final before/after: luma mean 0.736 → **0.570**
    (reference 0.589), p25 0.698 → **0.395** (0.370), near-white 6.0 % → **15.3 %**
    (27.3 %), deep shadow 0.18 % → **5.7 %** (3.0 %), saturation 0.102 → **0.331**
@@ -71,7 +72,10 @@ Companion files (in `docs/visual-gap/`):
    **all 13 acceptance metrics in band** (§5.5). Tier 1: cloud deck, hands,
    mentor, minimal HUD. Tier 2: normal/roughness maps, 1024 atlas, coping,
    continuous route, cables. Tier 3: canyon, facade lattice, service kit. Tier 4:
-   head bob, view-model legs, the final grade pass and the golden harness.
+   head bob, view-model legs, the final grade pass and the golden harness. Tier 5
+   is a content pass: white parapet caps, setback terraces and denser balconies on
+   the canyon walls, plus material pooling (155 → 123 materials, shared platform
+   tops via world-space UVs).
 8. **Realistic goal.** A convincing "2008 AAA read" in WebGL is reachable for
    tone, value structure and composition (Tier 0–1, ~3–4 days) and for surface
    and prop density (Tier 2–3, ~2–3 weeks). Photogrammetric photorealism is not
@@ -774,6 +778,57 @@ tests), `npx playwright test` (30, including the golden band test), build, no
 
 ---
 
+## 5.6 Tier 5 implemented — content pass (2026-11-15)
+
+Branch `feat/glassline-visual-tier5` (merge pending). Tier 5 attacks the two
+numbers that were still structurally below the reference and the material
+inventory that had accumulated during the earlier passes.
+
+| Item | What landed |
+| --- | --- |
+| White architecture in frame | White parapet caps on every near canyon facade, white setback terraces at two heights per facade, denser balcony bands (one every 2 floors instead of 3) and a higher white-facade share (62 → 72 %) on the canyon walls. Cloud cover up slightly (0.50 → 0.56) so the cumulus contributes more white area. |
+| Material consolidation | Platform tops now share one material per palette colour using **world-space UVs** (the UV attribute is scaled by the box size, so a single 4 m tile density holds on every roof) instead of 26 per-platform clones. Obstacles, scenery and flat city props are pooled by colour/roughness. 155 → **123 materials**; platform top materials went 26 → 3. |
+| 13/13 hold | Every acceptance metric stays inside its band; the pass moves the frame slightly closer to the reference rather than away from it. |
+
+Official before/after (`metrics-tier4.json` → `metrics-tier5.json`, same 11
+captures, same harness):
+
+| Metric | Tier 4 | Tier 5 | Reference | Status |
+| --- | ---: | ---: | ---: | --- |
+| luma mean | 0.570 | **0.571** | 0.589 | ✅ |
+| luma std | 0.263 | **0.264** | 0.272 | ✅ |
+| luma p25 | 0.395 | **0.395** | 0.370 | ✅ |
+| luma p95 | 0.953 | **0.953** | 0.979 | ✅ |
+| near-white | 15.3 % | **15.4 %** | 27.3 % | ✅ (band 12–30 %) |
+| deep shadow | 5.7 % | **5.6 %** | 3.0 % | ✅ |
+| saturation mean | 0.331 | **0.328** | 0.359 | ✅ |
+| local contrast | 0.0668 | **0.0679** | 0.0713 | ✅ |
+| edge energy | 0.0283 | **0.0288** | 0.0341 | ✅ |
+| sky blue area | 51.1 % | **50.1 %** | 53.1 % | ✅ |
+| contrast, top third | 0.0556 | **0.0580** | 0.0585 | ✅ (within 1 % of the reference) |
+| split-tone dark R−B | −40.2 | **−40.1** | −48.6 | ✅ |
+| red accent coverage | 2.18 % | **2.18 %** | 4.2 % | ✅ |
+
+Verdict: **13 of 13 still in band**, with top-third contrast now within 1 % of the
+reference and local contrast within 5 %. `near-white` is the one number that stays
+structurally low (15.4 % vs 27.3 %): it is a **level-content** property — the
+reference tutorial spends most of its time on wide sunlit white roofs, while our
+route threads a canyon with shaded walls and dark obstacle faces in several
+poses. Raising it further means redesigning the route toward open white roofs,
+not adding more props; that is a level-design decision, not a polish pass.
+
+Material count: **155 → 123**. The original audit's ≤40 estimate assumed texture-
+family atlasing (one atlas for all concrete variants); reaching it would be a
+texture-pipeline change, not a palette one. The cheap consolidation is done:
+platform tops 26 → 3 materials, obstacles and flat props pooled.
+
+Cost: 429 draw calls, 77.6 k triangles, 60 → 59 textures, 909 kB build at high
+quality. Gates: `npm run check`, `npm test` (123), `npx playwright test` (30),
+build, no `__errors`/`__fatal`; the new white geometry is high/ultra only so the
+low-quality triangle budget stays inside its test.
+
+---
+
 ## 6. Roadmap
 
 Effort is for one experienced developer; "acceptance" is a metric from §7 that the
@@ -868,21 +923,21 @@ and ≈ +12 draw calls.
 Re-run `tools/image-metrics.py` against a fresh capture pass after each tier. The
 build is "visually in the reference's family" when the primary set lands in:
 
-| Metric | Target band | Baseline | Tier 0 | Tier 1 | Tier 2 | Tier 3 | Tier 4 |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| luma mean | 0.48 – 0.62 | 0.736 | **0.579 ✅** | **0.574 ✅** | **0.576 ✅** | **0.567 ✅** | **0.570 ✅** |
-| luma std | 0.23 – 0.31 | 0.166 | **0.253 ✅** | **0.259 ✅** | **0.260 ✅** | **0.260 ✅** | **0.263 ✅** |
-| luma p25 | 0.30 – 0.42 | 0.698 | **0.416 ✅** | **0.372 ✅** | **0.372 ✅** | **0.396 ✅** | **0.395 ✅** |
-| luma p95 | 0.95 – 1.00 | 0.904 | 0.930 ❌ | 0.922 ❌ | 0.926 ❌ | 0.936 ❌ | **0.953 ✅** |
-| near-white | 12 % – 30 % | 6.0 % | **14.7 % ✅** | **12.7 % ✅** | **14.0 % ✅** | **14.6 % ✅** | **15.3 % ✅** |
-| deep shadow | 1.5 % – 6 % | 0.18 % | **5.5 % ✅** | **5.6 % ✅** | **6.0 % ✅** | **5.8 % ✅** | **5.7 % ✅** |
-| saturation mean | 0.22 – 0.34 | 0.102 | **0.311 ✅** | **0.296 ✅** | **0.308 ✅** | **0.310 ✅** | **0.331 ✅** |
-| local contrast | 0.055 – 0.075 | 0.0376 | **0.0560 ✅** | **0.0565 ✅** | **0.0572 ✅** | **0.0663 ✅** | **0.0668 ✅** |
-| edge energy | 0.022 – 0.035 | 0.0154 | 0.0215 ❌ | 0.0213 ❌ | **0.0220 ✅** | **0.0280 ✅** | **0.0283 ✅** |
-| sky blue fraction | 35 % – 60 % | 1.2 % | 67.8 % ⚠️ | **44.1 % ✅** | **46.9 % ✅** | **44.1 % ✅** | **51.1 % ✅** |
-| contrast, top third (far field) | 0.045 – 0.065 | 0.0188 | 0.0303 ❌ | 0.0409 ❌ | 0.0421 ❌ | **0.0554 ✅** | **0.0556 ✅** |
-| split-tone dark R−B | −60 – −35 | −17.1 | −26.6 ❌ | −25.6 ❌ | −28.7 ❌ | −30.3 ❌ | **−40.2 ✅** |
-| red accent coverage | 1.5 % – 4 % | 1.05 % | 1.32 % ❌ | **1.62 % ✅** | **2.09 % ✅** | **2.23 % ✅** | **2.17 % ✅** |
+| Metric | Target band | Baseline | Tier 0 | Tier 1 | Tier 2 | Tier 3 | Tier 4 | Tier 5 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| luma mean | 0.48 – 0.62 | 0.736 | **0.579 ✅** | **0.574 ✅** | **0.576 ✅** | **0.567 ✅** | **0.570 ✅** | **0.571 ✅** |
+| luma std | 0.23 – 0.31 | 0.166 | **0.253 ✅** | **0.259 ✅** | **0.260 ✅** | **0.260 ✅** | **0.263 ✅** | **0.264 ✅** |
+| luma p25 | 0.30 – 0.42 | 0.698 | **0.416 ✅** | **0.372 ✅** | **0.372 ✅** | **0.396 ✅** | **0.395 ✅** | **0.395 ✅** |
+| luma p95 | 0.95 – 1.00 | 0.904 | 0.930 ❌ | 0.922 ❌ | 0.926 ❌ | 0.936 ❌ | **0.953 ✅** | **0.953 ✅** |
+| near-white | 12 % – 30 % | 6.0 % | **14.7 % ✅** | **12.7 % ✅** | **14.0 % ✅** | **14.6 % ✅** | **15.3 % ✅** | **15.4 % ✅** |
+| deep shadow | 1.5 % – 6 % | 0.18 % | **5.5 % ✅** | **5.6 % ✅** | **6.0 % ✅** | **5.8 % ✅** | **5.7 % ✅** | **5.6 % ✅** |
+| saturation mean | 0.22 – 0.34 | 0.102 | **0.311 ✅** | **0.296 ✅** | **0.308 ✅** | **0.310 ✅** | **0.331 ✅** | **0.328 ✅** |
+| local contrast | 0.055 – 0.075 | 0.0376 | **0.0560 ✅** | **0.0565 ✅** | **0.0572 ✅** | **0.0663 ✅** | **0.0668 ✅** | **0.0679 ✅** |
+| edge energy | 0.022 – 0.035 | 0.0154 | 0.0215 ❌ | 0.0213 ❌ | **0.0220 ✅** | **0.0280 ✅** | **0.0283 ✅** | **0.0288 ✅** |
+| sky blue fraction | 35 % – 60 % | 1.2 % | 67.8 % ⚠️ | **44.1 % ✅** | **46.9 % ✅** | **44.1 % ✅** | **51.1 % ✅** | **50.1 % ✅** |
+| contrast, top third (far field) | 0.045 – 0.065 | 0.0188 | 0.0303 ❌ | 0.0409 ❌ | 0.0421 ❌ | **0.0554 ✅** | **0.0556 ✅** | **0.0580 ✅** |
+| split-tone dark R−B | −60 – −35 | −17.1 | −26.6 ❌ | −25.6 ❌ | −28.7 ❌ | −30.3 ❌ | **−40.2 ✅** | **−40.1 ✅** |
+| red accent coverage | 1.5 % – 4 % | 1.05 % | 1.32 % ❌ | **1.62 % ✅** | **2.09 % ✅** | **2.23 % ✅** | **2.17 % ✅** | **2.18 % ✅** |
 
 These are bands around the reference aggregate, not pixel-matching; they are
 deliberately defined on the same metric set so a regression cannot hide behind
@@ -952,5 +1007,7 @@ deliberately defined on the same metric set so a regression cannot hide behind
 | `proof-tier3.png` | Tier 2 vs Tier 3 on three beats |
 | `tier4-01..11-*.png` | The same 11 viewpoints after Tier 4 |
 | `proof-tier4.png` | Tier 3 vs Tier 4 on three beats |
+| `tier5-01..11-*.png` | The same 11 viewpoints after Tier 5 |
+| `proof-tier5.png` | Tier 4 vs Tier 5 on three beats |
 | `lowq-*.png` | `q=low` (bloom off → correct metering) evidence for §3.1 |
 | `compare-01..03.png` | Metrics-generated reference-vs-current sheets |
