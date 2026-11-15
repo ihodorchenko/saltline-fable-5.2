@@ -89,6 +89,7 @@ DEFAULT_REFERENCE_VIDEO = (
 )
 
 # Gameplay timestamps requested by the audit brief (seconds into the video).
+# A different reference video can be profiled with --video/--timestamps/--classes-json.
 DEFAULT_TIMESTAMPS = [
     85, 100, 115, 130, 145, 160, 175, 190, 205, 220, 235, 250,
     265, 280, 300, 320, 340, 360, 380, 400, 420, 440, 460, 480,
@@ -954,18 +955,33 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-sheets", action="store_true", help="skip compare-*.png sheets")
     parser.add_argument("--out-json", type=Path, default=None)
     parser.add_argument("--no-write-json", action="store_true")
+    parser.add_argument("--video", type=Path, default=None,
+                        help="reference video path (default: the tutorial walkthrough)")
+    parser.add_argument("--timestamps", default=None,
+                        help="comma-separated seconds, e.g. 115,130,150")
+    parser.add_argument("--classes-json", type=Path, default=None,
+                        help="JSON object mapping timestamp -> [class, note] for a custom video")
     args = parser.parse_args(argv)
 
     repo_root: Path = args.repo_root.resolve()
     scratch: Path = args.scratch_dir.resolve()
     out_json = args.out_json or (repo_root / "docs" / "visual-gap" / "metrics.json")
     shots_dir = repo_root / "docs" / "visual-gap" / "shots"
-    video = repo_root / DEFAULT_REFERENCE_VIDEO
+    video = args.video or (repo_root / DEFAULT_REFERENCE_VIDEO)
+    if args.video is not None and not video.is_absolute():
+        video = (repo_root / args.video).resolve()
 
     if not video.exists():
         raise SystemExit(f"reference video not found: {video}")
 
     timestamps = list(DEFAULT_TIMESTAMPS)
+    if args.timestamps:
+        timestamps = sorted({int(part) for part in args.timestamps.split(",") if part.strip()})
+
+    global REFERENCE_FRAME_CLASSES
+    if args.classes_json:
+        loaded = json.loads(Path(args.classes_json).read_text())
+        REFERENCE_FRAME_CLASSES = {int(key): tuple(value) for key, value in loaded.items()}
     video_info = probe_video(video)
     log(f"reference video: {video_info['width']}x{video_info['height']} "
         f"{video_info['fps']} fps {video_info['codec']} {video_info['duration_s']} s")
@@ -1006,7 +1022,7 @@ def main(argv: list[str] | None = None) -> int:
             "set_family": "reference",
             "class": cls,
             "note": note,
-            "source": f"{DEFAULT_REFERENCE_VIDEO}@t={t}s",
+            "source": f"{video.name}@t={t}s",
             "timestamp_s": t,
             "source_sha256": sha256_file(path),
             "metrics": compute_metrics(arr),

@@ -4,6 +4,9 @@ node_modules/
 # build output (deployment strategy for dist/ is decided in Phase 1)
 dist/
 
+# local reference-analysis libraries (generated from owner-provided videos)
+docs/reference/*-kit/
+
 # local artifacts and reports
 .npm-cache/
 .omni-workstation/
