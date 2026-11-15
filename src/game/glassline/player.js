@@ -31,6 +31,23 @@ const SLIDE_FOV = 88;
  * Camera FOV target for the current parkour state.
  * @param {{sliding?: boolean, sprinting?: boolean, speed?: number}} state
  */
+/**
+ * Head-bob offset for a camera state. Pure so the feel can be unit-tested: the
+ * amplitude is deliberately tiny (about one centimetre) because a large bob makes
+ * first-person parkour unreadable and nauseating.
+ * @param {{bobPhase?: number, bobAmount?: number}} state
+ * @returns {{x: number, y: number, roll: number}} metres and radians
+ */
+export function bobOffset(state) {
+  const amount = Math.max(0, Math.min(1, Number(state?.bobAmount) || 0));
+  const phase = Number(state?.bobPhase) || 0;
+  return {
+    y: Math.sin(phase * 2) * 0.012 * amount,
+    x: Math.cos(phase) * 0.007 * amount,
+    roll: Math.sin(phase) * 0.0035 * amount,
+  };
+}
+
 export function targetFov(state) {
   if (state.sliding) return SLIDE_FOV;
   if (state.sprinting && (state.speed || 0) > 5.5) return SPRINT_FOV;
@@ -111,6 +128,8 @@ export function createPlayerController(game, options = {}) {
     landDip: 0,
     landingOffset: 0,
     landingVelocity: 0,
+    bobPhase: 0,
+    bobAmount: 0,
     airTime: 0,
     coyote: 0,
     walkable: true,
@@ -735,14 +754,26 @@ export function createPlayerController(game, options = {}) {
         game.camera.updateProjectionMatrix();
       }
     }
+    // Head bob: subtle, speed-scaled, grounded only. Fast traversal needs some
+    // body motion in the frame; a large bob makes first-person parkour unreadable
+    // (and nauseating), so the amplitude stays around one centimetre.
+    const bobTarget =
+      state.onGround && !state.sliding && !state.rolling && state.speed > 0.6
+        ? Math.min(1, state.speed / 7)
+        : 0;
+    state.bobAmount += (bobTarget - state.bobAmount) * (1 - Math.exp(-6 * step));
+    state.bobPhase += step * (5.5 + state.speed * 0.85);
+    const bob = bobOffset(state);
+    const sinYaw = Math.sin(state.yaw);
+    const cosYaw = Math.cos(state.yaw);
     game.camera.position.set(
-      pos.x,
-      pos.y + state.eyeHeight + state.landingOffset,
-      pos.z,
+      pos.x + cosYaw * bob.x,
+      pos.y + state.eyeHeight + state.landingOffset + bob.y,
+      pos.z - sinYaw * bob.x,
     );
     state.rollPhase += step;
     const targetRoll = cameraRollTarget(state, state.rollPhase);
-    state.roll += (targetRoll - state.roll) * (1 - Math.exp(-10 * step));
+    state.roll += (targetRoll + bob.roll - state.roll) * (1 - Math.exp(-10 * step));
     game.camera.rotation.order = 'YXZ';
     game.camera.rotation.set(
       state.pitch + state.landingOffset * 0.45,
