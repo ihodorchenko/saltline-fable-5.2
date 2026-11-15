@@ -14,7 +14,8 @@ Companion files (in `docs/visual-gap/`):
 | [`docs/visual-gap/01-renderer-audit.md`](visual-gap/01-renderer-audit.md) | Render-pipeline inventory, shadow/material detail, per-lever table with values and cost |
 | [`docs/visual-gap/02-metrics.md`](visual-gap/02-metrics.md) | Method and interpretation of the image metrics, caveats |
 | [`docs/visual-gap/03-content-audit.md`](visual-gap/03-content-audit.md) | Level/prop/city/character/HUD inventory and missing content families |
-| [`docs/visual-gap/metrics.json`](visual-gap/metrics.json) | Raw per-image numbers and set aggregates |
+| [`docs/visual-gap/metrics.json`](visual-gap/metrics.json) | Raw per-image numbers and set aggregates for the baseline (pre-Tier-0) build |
+| [`docs/visual-gap/metrics-tier0.json`](visual-gap/metrics-tier0.json) | The same run against the Tier-0 build (`metrics.json` without `--out-json` overwrites the baseline; keep both) |
 | `docs/visual-gap/shots/` | Reference frames, current captures, comparison and proof sheets — **local only, git-ignored**: several sheets embed frames of the owner-provided reference video and must not be committed or redistributed. Regenerate with the tools below. |
 
 ---
@@ -56,7 +57,12 @@ Companion files (in `docs/visual-gap/`):
    facades 3–10 m from the route, and white architecture that clips to near-white
    while its shadow side sits at 0.25–0.40 in strong blue. See §3.6–§3.8 and the
    content audit.
-7. **Realistic goal.** A convincing "2008 AAA read" in WebGL is reachable for
+7. **Tier 0 is implemented** on `feat/glassline-visual-tier0` (2026-11-15) — same
+   measurement harness, before/after: luma mean 0.736 → **0.579** (reference
+   0.589), p25 0.698 → **0.416** (0.370), near-white 6.0 % → **14.7 %** (27.3 %),
+   saturation 0.102 → **0.311** (0.359), sky blue 1.2 % → **67.8 %** (53 %).
+   See §5.1. The remaining gaps are content (Tier 1–3).
+8. **Realistic goal.** A convincing "2008 AAA read" in WebGL is reachable for
    tone, value structure and composition (Tier 0–1, ~3–4 days) and for surface
    and prop density (Tier 2–3, ~2–3 weeks). Photogrammetric photorealism is not
    the goal and not needed — the reference itself is a stylised white/grey city
@@ -504,6 +510,59 @@ Proof sheet: `shots/proof-lookdev.png`; reference-vs-current pairs:
 
 ---
 
+## 5.1 Tier 0 implemented — measured result (2026-11-15)
+
+Branch `feat/glassline-visual-tier0`, commits `fix(engine):` + `feat(levels):` +
+`test(levels):` + `docs:`. Nothing merged yet (owner command pending).
+
+What landed (values measured in the running build):
+
+| Item | Before | After |
+| --- | --- | --- |
+| Exposure metering | bloom-thresholded mip, `lum 0.002` → `auto 2.0` (clamped) | scene HDR, `lum 0.153` → `auto 1.676` (no clamp), `key 0.28`, window 0.6–2.0, `LIGHTING.exposure 1.05` |
+| Light rig | sun 3.4, hemi 0.85 white, rim 1.0, fill 0.5, env 0.34 | sun **6.2** `#fff4e2`, hemi **0.5** `#bcd9ff`/`#4e6274`, rim **0.35**, fill **0.20**, env **0.14** |
+| Sun | elevation 26.5°, azimuth down the route | **56°**, ~50° off the route axis (`[-0.52, 0.93, -0.42]`) |
+| Sky | gradient `#1454a6 → #e9f5fb`, exponent 0.55, additive 110 m sun billboard | `#0a3d8f → #a8c9e2`, exponent **0.32**, sun disc in the shader, billboard deleted |
+| Grade | `agxMix 0.12`, S-curve 0.22, lift 0.006–0.011, bloom 0.09 @ 1.8, flare 0.16 | `agxMix 0`, S-curve **0.27**, lift 0.002–0.004, bloom **0.05 @ 2.6**, flare **0.08**, vignette 0.22, grain 0.012 |
+| AO | faded by `1 − 0.8·lit` at 2× exposure (≈0.19 effective) | `1 − 0.5·lit`, radius 1.2, intensity 2.0, strength 1.0 |
+| Shadow box | 96.85 × 69.36 m, 4.73 × 3.39 cm texels | **63.88 × 68.59 m, 3.12 × 3.35 cm** |
+| Render budget | high 2.3 Mpx | high **3.2 Mpx** (affects Retina only, not these 1× captures) |
+
+Official before/after numbers (`tools/image-metrics.py`, identical methodology,
+`metrics.json` vs `metrics-tier0.json`, 11 captures each):
+
+| Metric | Before | Tier 0 | Reference | Status |
+| --- | ---: | ---: | ---: | --- |
+| luma mean | 0.736 | **0.579** | 0.589 | ✅ band 0.48–0.62 |
+| luma std | 0.166 | **0.253** | 0.272 | ✅ band 0.23–0.31 |
+| luma p25 | 0.698 | **0.416** | 0.370 | ✅ band 0.30–0.42 |
+| luma p95 | 0.904 | 0.930 | 0.979 | ❌ still soft (content: white area) |
+| near-white | 6.0 % | **14.7 %** | 27.3 % | ✅ band 12–30 % |
+| deep shadow | 0.18 % | **5.5 %** | 3.0 % | ✅ band 1.5–6 % |
+| saturation mean | 0.102 | **0.311** | 0.359 | ✅ band 0.22–0.34 |
+| saturation p90 | 0.279 | 0.553 | 0.745 | ⚠️ content palette |
+| colourfulness | 22.5 | 47.8 | 71.1 | ⚠️ content palette |
+| local contrast | 0.0376 | **0.0560** | 0.0713 | ✅ band 0.055–0.075 |
+| edge energy | 0.0154 | 0.0215 | 0.0341 | ❌ 2 % under band (content) |
+| contrast, top third | 0.0188 | 0.0303 | 0.0585 | ❌ content |
+| sky blue area | 1.2 % | 67.8 % | 53.1 % | ⚠️ composition (more sky in our frames) |
+| sky saturation | 0.075 | 0.384 | 0.398 | ✅ |
+| split-tone dark R−B | −17.1 | −26.6 | −48.6 | ❌ dark pixels are black metal, not blue shadow (content) |
+| red accent coverage | 1.05 % | 1.32 % | 4.2 % | ❌ route paint area (content) |
+
+Verdict: **7 of the 13 acceptance metrics are now in band**, and the ones that
+are not are the same content items the analysis predicted cannot be fixed by
+tuning (white surface area, near-field detail, route paint, composition). The
+`q=low` vs `q=high` exposure inversion is gone; no `__errors`/`__fatal`;
+`npm run check`, `npm test` (109) and the full Playwright suite (28) pass; build
+is 889 kB.
+
+Remaining Tier-0-era caveat: the high sun throws the sun disc off-screen most of
+the time, so the frame has glare but rarely the sun itself — a Tier-1 sky/sun
+composition item.
+
+---
+
 ## 6. Roadmap
 
 Effort is for one experienced developer; "acceptance" is a metric from §7 that the
@@ -598,21 +657,21 @@ and ≈ +12 draw calls.
 Re-run `tools/image-metrics.py` against a fresh capture pass after each tier. The
 build is "visually in the reference's family" when the primary set lands in:
 
-| Metric | Target band | Today |
-| --- | --- | --- |
-| luma mean | 0.48 – 0.62 | 0.736 |
-| luma std | 0.23 – 0.31 | 0.166 |
-| luma p25 | 0.30 – 0.42 | 0.698 |
-| luma p95 | 0.95 – 1.00 | 0.904 |
-| near-white | 12 % – 30 % | 6.0 % |
-| deep shadow | 1.5 % – 6 % | 0.2 % |
-| saturation mean | 0.22 – 0.34 | 0.102 |
-| local contrast | 0.055 – 0.075 | 0.038 |
-| edge energy | 0.022 – 0.035 | 0.015 |
-| sky blue fraction | 35 % – 60 % | 1.2 % |
-| contrast, top third (far field) | 0.045 – 0.065 | 0.0188 |
-| split-tone dark R−B | −60 – −35 | −17 |
-| red accent coverage | 1.5 % – 4 % | 1.05 % |
+| Metric | Target band | Baseline | After Tier 0 |
+| --- | --- | ---: | ---: |
+| luma mean | 0.48 – 0.62 | 0.736 | **0.579 ✅** |
+| luma std | 0.23 – 0.31 | 0.166 | **0.253 ✅** |
+| luma p25 | 0.30 – 0.42 | 0.698 | **0.416 ✅** |
+| luma p95 | 0.95 – 1.00 | 0.904 | 0.930 ❌ |
+| near-white | 12 % – 30 % | 6.0 % | **14.7 % ✅** |
+| deep shadow | 1.5 % – 6 % | 0.18 % | **5.5 % ✅** |
+| saturation mean | 0.22 – 0.34 | 0.102 | **0.311 ✅** |
+| local contrast | 0.055 – 0.075 | 0.0376 | **0.0560 ✅** |
+| edge energy | 0.022 – 0.035 | 0.0154 | 0.0215 ❌ |
+| sky blue fraction | 35 % – 60 % | 1.2 % | 67.8 % ⚠️ (more sky in frame) |
+| contrast, top third (far field) | 0.045 – 0.065 | 0.0188 | 0.0303 ❌ |
+| split-tone dark R−B | −60 – −35 | −17.1 | −26.6 ❌ |
+| red accent coverage | 1.5 % – 4 % | 1.05 % | 1.32 % ❌ |
 
 These are bands around the reference aggregate, not pixel-matching; they are
 deliberately defined on the same metric set so a regression cannot hide behind
@@ -671,5 +730,6 @@ deliberately defined on the same metric set so a regression cannot hide behind
 | `current-01..11-*.png` | Fresh 1920×1080 captures at ten route checkpoints (HUD hidden) |
 | `hud-01-start.png` | Same viewpoint with the shipped HUD |
 | `lookdev-{A,B,C,D,E}-{start,wallrun,act2}.png` | The probe presets |
+| `tier0-01..11-*.png` | The same 11 viewpoints after Tier 0 (compare with `current-*.png`) |
 | `lowq-*.png` | `q=low` (bloom off → correct metering) evidence for §3.1 |
 | `compare-01..03.png` | Metrics-generated reference-vs-current sheets |
