@@ -69,9 +69,9 @@ Still open:
 
 ## 5. P0 — Visual recovery (high priority, added 2026-11-15)
 
-**Priority: P0.** Outranks every unfinished Step 4/5 item. **Tier 0 is implemented
-on `feat/glassline-visual-tier0` (2026-11-15), not merged** — measured result in
-[`docs/VISUAL_GAP.md §5.1`](docs/VISUAL_GAP.md). The measured visual gap
+**Priority: P0.** Outranks every unfinished Step 4/5 item. **Tier 0 is merged
+into `project/glassline` (2026-11-15, `dbd3a6f`; feature branch deleted)** —
+measured result in [`docs/VISUAL_GAP.md §5.1`](docs/VISUAL_GAP.md). The measured visual gap
 to the 2008 reference is the project's biggest quality risk: the renderer is
 capable, but the frame is overexposed, flat, desaturated, sky-less and content-poor.
 Full analysis, evidence and numbers: [`docs/VISUAL_GAP.md`](docs/VISUAL_GAP.md)
@@ -95,9 +95,9 @@ the route — white roofs cannot be white; (4) flat cream sky + a 110 m additive
 billboard; (5) content: 12 props per 203 m, 91 % empty deck, no near facades, no
 normal/roughness maps.
 
-### Tier 0 — "Stop bleaching the frame" (1 day, no new content) — implemented, not merged
+### Tier 0 — "Stop bleaching the frame" (1 day, no new content) — merged 2026-11-15
 
-Branch: `feat/glassline-visual-tier0` from `project/glassline`.
+Merged from `feat/glassline-visual-tier0` (branch deleted after integration).
 Order matters: 0.1 → 0.2 first (everything else is measured through them).
 
 - [x] 0.1 Fix exposure metering: adapt pass meters the unthresholded scene (or

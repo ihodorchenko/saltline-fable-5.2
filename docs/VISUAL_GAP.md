@@ -512,8 +512,9 @@ Proof sheet: `shots/proof-lookdev.png`; reference-vs-current pairs:
 
 ## 5.1 Tier 0 implemented — measured result (2026-11-15)
 
-Branch `feat/glassline-visual-tier0`, commits `fix(engine):` + `feat(levels):` +
-`test(levels):` + `docs:`. Nothing merged yet (owner command pending).
+Merged into `project/glassline` as `dbd3a6f` (2026-11-15) from
+`feat/glassline-visual-tier0`; the feature branch was deleted after integration.
+Commits: `fix(engine):` + `feat(levels):` + `test(levels):` + `docs:`.
 
 What landed (values measured in the running build):
 
