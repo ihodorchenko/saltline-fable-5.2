@@ -72,8 +72,9 @@ Still open:
 **Priority: P0.** Outranks every unfinished Step 4/5 item. **Tier 0 is merged
 into `project/glassline` (2026-11-15, `dbd3a6f`; feature branch deleted). Tier 1
 is merged into `project/glassline` (2026-11-15, `c8047db`; feature branch
-deleted)** — measured results in
-[`docs/VISUAL_GAP.md §5.1–5.2`](docs/VISUAL_GAP.md). The measured visual gap
+deleted). Tier 2 is implemented on `feat/glassline-visual-tier2` (2026-11-15,
+merge pending)** — measured results in
+[`docs/VISUAL_GAP.md §5.1–5.3`](docs/VISUAL_GAP.md). The measured visual gap
 to the 2008 reference is the project's biggest quality risk: the renderer is
 capable, but the frame is overexposed, flat, desaturated, sky-less and content-poor.
 Full analysis, evidence and numbers: [`docs/VISUAL_GAP.md`](docs/VISUAL_GAP.md)
@@ -164,12 +165,33 @@ Result: **9 of 13 acceptance metrics in band** (up from 7). Sky acceptance met:
 0.190 (> 0.15). `npm run check`, 118 unit tests, 29 Playwright tests green;
 build 898 kB.
 
-### Tier 2–4 — the content and finish work (next, high priority)
+### Tier 2 — "Surfaces" (~1 week) — implemented, merge pending
 
-- **Tier 2 (~1 week):** normal/roughness maps, 1024–2048 atlas, parapets/copings/
-  joints/drains, facade window depth.
+- [x] Normal + roughness maps generated from the same procedural canvases (Sobel
+      normals, shared per material family), applied to platform tops/sides, curbs,
+      coping, huts, legs, obstacles, service props, route paint and every city
+      material (glass curtain walls get a roughness map too).
+- [x] Bigger atlas: concrete/side/facade/glass 512 → **1024**; metal 256 → 512,
+      route paint 128 → 256. Normals generated at 512 (roughness 256).
+- [x] Surface-format geometry: a coping cap overhangs every roof curb (one
+      instanced mesh), so the slab edge has a profile instead of one flat band.
+- [x] Continuous red route: the strip spans the full roof depth; route paint
+      19 % → ~85 % of the route length.
+- [x] Sparse catenary cables across the gaps, outside the route corridor and above
+      head height (one instanced mesh).
+- [x] Shaded slab sides, fascia, service props and view-model sleeves lightened and
+      cooled, so the deep-shadow share returns inside the reference band and dark
+      pixels are bluer.
+
+Result: **10 of 13 acceptance metrics in band** (up from 9); Tier 2 acceptance met
+(`edge_energy` 0.0220 ≥ 0.022, `local_contrast` 0.0572, `contrast_top_third`
+0.0421). Cost: 67 k → 77.5 k triangles, 390 → 413 draw calls, +9 kB build.
+`npm run check`, 118 unit tests and 29 Playwright tests green.
+
+### Tier 3–4 — the content and finish work (next, high priority)
+
 - **Tier 3 (1–2 weeks):** prop density ×6–10, city canyon (corridor 6–9 m, near
-  facades, street below), material consolidation.
+  facades, street below), material consolidation, white surface area in frame.
 - **Tier 4 (2 weeks+):** motion/character finish, final grade, golden screenshots.
 
 Evidence rule: every tier re-runs the capture + metrics harness and records the

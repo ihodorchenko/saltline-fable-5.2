@@ -17,6 +17,7 @@ Companion files (in `docs/visual-gap/`):
 | [`docs/visual-gap/metrics.json`](visual-gap/metrics.json) | Raw per-image numbers and set aggregates for the baseline (pre-Tier-0) build |
 | [`docs/visual-gap/metrics-tier0.json`](visual-gap/metrics-tier0.json) | The same run against the Tier-0 build (`metrics.json` without `--out-json` overwrites the baseline; keep both) |
 | [`docs/visual-gap/metrics-tier1.json`](visual-gap/metrics-tier1.json) | The same run against the Tier-1 build (cumulus sky, view model, minimal HUD) |
+| [`docs/visual-gap/metrics-tier2.json`](visual-gap/metrics-tier2.json) | The same run against the Tier-2 build (normal/roughness maps, coping, continuous route, cables) |
 | `docs/visual-gap/shots/` | Reference frames, current captures, comparison and proof sheets — **local only, git-ignored**: several sheets embed frames of the owner-provided reference video and must not be committed or redistributed. Regenerate with the tools below. |
 
 ---
@@ -58,14 +59,16 @@ Companion files (in `docs/visual-gap/`):
    facades 3–10 m from the route, and white architecture that clips to near-white
    while its shadow side sits at 0.25–0.40 in strong blue. See §3.6–§3.8 and the
    content audit.
-7. **Tier 0 and Tier 1 are implemented** (2026-11-15; Tier 1 pending merge) —
-   same measurement harness, before/after: luma mean 0.736 → **0.574**
-   (reference 0.589), p25 0.698 → **0.372** (0.370), near-white 6.0 % → **12.7 %**
-   (27.3 %), saturation 0.102 → **0.296** (0.359), sky blue 1.2 % → **44 %**
-   (53 %) on a procedural cumulus day sky, **9 of 13** acceptance metrics now in
-   band. Tier 1 adds the cloud deck (sky luma std 0.10 → 0.19), first-person
-   hands, the mentor out of the spawn camera and a 0.62 %-of-frame HUD.
-   See §5.1 and §5.2. The remaining gaps are material/prop content (Tier 2–3).
+7. **Tiers 0–2 are implemented** (2026-11-15; Tier 2 pending merge) — same
+   measurement harness, before/after: luma mean 0.736 → **0.576** (reference
+   0.589), p25 0.698 → **0.372** (0.370), near-white 6.0 % → **14.0 %**
+   (27.3 %), saturation 0.102 → **0.308** (0.359), sky blue 1.2 % → **46.9 %**
+   (53 %) on a procedural cumulus day sky, edge energy 0.0154 → **0.0220**
+   (0.0341), red route paint 1.05 % → **2.09 %** (4.2 %): **10 of 13** acceptance
+   metrics now in band. Tier 1 added the cloud deck, hands, the mentor and the
+   minimal HUD; Tier 2 added normal/roughness maps, a 1024 atlas, coping profiles,
+   the continuous red route and catenary cables. See §5.1–5.3. What is left is
+   Tier 3 content (white surface area, far-field architectural detail, palette).
 8. **Realistic goal.** A convincing "2008 AAA read" in WebGL is reachable for
    tone, value structure and composition (Tier 0–1, ~3–4 days) and for surface
    and prop density (Tier 2–3, ~2–3 weeks). Photogrammetric photorealism is not
@@ -616,6 +619,53 @@ no `__errors`/`__fatal`.
 
 ---
 
+## 5.3 Tier 2 implemented — measured result (2026-11-15)
+
+Branch `feat/glassline-visual-tier2` (merge pending). The plan's Tier 2 is a
+surface pass; all of its deliverables shipped:
+
+| Item | What landed |
+| --- | --- |
+| Normal + roughness maps | `src/levels/textures.js` derives tangent-space normal maps (Sobel over the albedo as height, tileable) and roughness maps for the material families, sharing one normal per family so memory stays bounded. Applied to platform tops, slab sides, curbs, coping, huts, legs, obstacles, AC/vents/pipes/rails/doors, the route paint, the city curtain walls (glass + roughness), backdrop facades, and the white/accent district bodies. |
+| Bigger atlas | 512 → 1024 albedo for concrete, side, facade and glass; metal 256 → 512, route paint 128 → 256. Normals are generated at 512 (roughness 256) because they do not need albedo resolution. |
+| Surface-format geometry | A coping cap (0.22 m overhang, 0.05 m deep) sits on every roof curb — the slab edge now has a profile instead of a single flat band. Platform-wide coping is one instanced mesh. |
+| Continuous route | The red route strip spans the full roof depth instead of 26 short dashes: route paint went from 19 % of the route length to ~85 %, and the screen-space red coverage from 1.62 % to 2.09 %. |
+| Catenary cables | Sparse cables span the gaps between roofs on the same level, outside the route corridor and above head height, as thin instanced segments (one draw call). |
+| Palette | Shaded slab sides, fascia, service props and the view-model sleeves lightened and cooled: the deep-shadow share is back inside the reference band and dark pixels are bluer (split-tone −25.6 → −28.7 against −48.6 in the reference). |
+
+Official before/after (`metrics-tier1.json` → `metrics-tier2.json`, same 11
+captures, same harness):
+
+| Metric | Tier 1 | Tier 2 | Reference | Status |
+| --- | ---: | ---: | ---: | --- |
+| luma mean | 0.574 | **0.576** | 0.589 | ✅ |
+| luma std | 0.259 | **0.260** | 0.272 | ✅ |
+| luma p25 | 0.372 | **0.372** | 0.370 | ✅ |
+| luma p95 | 0.922 | 0.926 | 0.979 | ❌ (content: white area) |
+| near-white | 12.7 % | **14.0 %** | 27.3 % | ✅ |
+| deep shadow | 5.6 % | **6.0 %** | 3.0 % | ✅ (band edge) |
+| saturation mean | 0.296 | **0.308** | 0.359 | ✅ |
+| local contrast | 0.0565 | **0.0572** | 0.0713 | ✅ |
+| edge energy | 0.0213 | **0.0220** | 0.0341 | ✅ newly in band |
+| sky blue area | 44.1 % | **46.9 %** | 53.1 % | ✅ |
+| contrast, top third | 0.0409 | 0.0421 | 0.0585 | ❌ (improved 3 %; far-field content) |
+| split-tone dark R−B | −25.6 | **−28.7** | −48.6 | ❌ (improved 12 %) |
+| red accent coverage | 1.62 % | **2.09 %** | 4.2 % | ✅ |
+
+Verdict: **10 of 13 acceptance metrics in band** (up from 9). Tier 2's own
+acceptance is met: `edge_energy` 0.0220 (≥ 0.022), `local_contrast` 0.0572
+(≥ 0.050), `contrast_top_third` 0.0421 (≥ 0.035). The three remaining misses are
+Tier 3 content: white surface area in frame (p95), far-field architectural detail
+(top-third contrast), and a genuinely darker/bluer material palette (split-tone).
+
+Cost: 67 k → 77.5 k triangles at the start viewpoint, 390 → 413 draw calls,
+52 → 61 textures, +9 kB build (909 kB). All within the documented 60 fps budget.
+
+Gates: `npm run check`, `npm test` (118), `npx playwright test` (29), build, no
+`__errors`/`__fatal`.
+
+---
+
 ## 6. Roadmap
 
 Effort is for one experienced developer; "acceptance" is a metric from §7 that the
@@ -710,21 +760,21 @@ and ≈ +12 draw calls.
 Re-run `tools/image-metrics.py` against a fresh capture pass after each tier. The
 build is "visually in the reference's family" when the primary set lands in:
 
-| Metric | Target band | Baseline | After Tier 0 | After Tier 1 |
-| --- | --- | ---: | ---: | ---: |
-| luma mean | 0.48 – 0.62 | 0.736 | **0.579 ✅** | **0.574 ✅** |
-| luma std | 0.23 – 0.31 | 0.166 | **0.253 ✅** | **0.259 ✅** |
-| luma p25 | 0.30 – 0.42 | 0.698 | **0.416 ✅** | **0.372 ✅** |
-| luma p95 | 0.95 – 1.00 | 0.904 | 0.930 ❌ | 0.922 ❌ |
-| near-white | 12 % – 30 % | 6.0 % | **14.7 % ✅** | **12.7 % ✅** |
-| deep shadow | 1.5 % – 6 % | 0.18 % | **5.5 % ✅** | **5.6 % ✅** |
-| saturation mean | 0.22 – 0.34 | 0.102 | **0.311 ✅** | **0.296 ✅** |
-| local contrast | 0.055 – 0.075 | 0.0376 | **0.0560 ✅** | **0.0565 ✅** |
-| edge energy | 0.022 – 0.035 | 0.0154 | 0.0215 ❌ | 0.0213 ❌ |
-| sky blue fraction | 35 % – 60 % | 1.2 % | 67.8 % ⚠️ | **44.1 % ✅** |
-| contrast, top third (far field) | 0.045 – 0.065 | 0.0188 | 0.0303 ❌ | 0.0409 ❌ |
-| split-tone dark R−B | −60 – −35 | −17.1 | −26.6 ❌ | −25.6 ❌ |
-| red accent coverage | 1.5 % – 4 % | 1.05 % | 1.32 % ❌ | **1.62 % ✅** |
+| Metric | Target band | Baseline | After Tier 0 | After Tier 1 | After Tier 2 |
+| --- | --- | ---: | ---: | ---: | ---: |
+| luma mean | 0.48 – 0.62 | 0.736 | **0.579 ✅** | **0.574 ✅** | **0.576 ✅** |
+| luma std | 0.23 – 0.31 | 0.166 | **0.253 ✅** | **0.259 ✅** | **0.260 ✅** |
+| luma p25 | 0.30 – 0.42 | 0.698 | **0.416 ✅** | **0.372 ✅** | **0.372 ✅** |
+| luma p95 | 0.95 – 1.00 | 0.904 | 0.930 ❌ | 0.922 ❌ | 0.926 ❌ |
+| near-white | 12 % – 30 % | 6.0 % | **14.7 % ✅** | **12.7 % ✅** | **14.0 % ✅** |
+| deep shadow | 1.5 % – 6 % | 0.18 % | **5.5 % ✅** | **5.6 % ✅** | **6.0 % ✅** |
+| saturation mean | 0.22 – 0.34 | 0.102 | **0.311 ✅** | **0.296 ✅** | **0.308 ✅** |
+| local contrast | 0.055 – 0.075 | 0.0376 | **0.0560 ✅** | **0.0565 ✅** | **0.0572 ✅** |
+| edge energy | 0.022 – 0.035 | 0.0154 | 0.0215 ❌ | 0.0213 ❌ | **0.0220 ✅** |
+| sky blue fraction | 35 % – 60 % | 1.2 % | 67.8 % ⚠️ | **44.1 % ✅** | **46.9 % ✅** |
+| contrast, top third (far field) | 0.045 – 0.065 | 0.0188 | 0.0303 ❌ | 0.0409 ❌ | 0.0421 ❌ |
+| split-tone dark R−B | −60 – −35 | −17.1 | −26.6 ❌ | −25.6 ❌ | −28.7 ❌ |
+| red accent coverage | 1.5 % – 4 % | 1.05 % | 1.32 % ❌ | **1.62 % ✅** | **2.09 % ✅** |
 
 These are bands around the reference aggregate, not pixel-matching; they are
 deliberately defined on the same metric set so a regression cannot hide behind
@@ -786,6 +836,8 @@ deliberately defined on the same metric set so a regression cannot hide behind
 | `lookdev-{A,B,C,D,E}-{start,wallrun,act2}.png` | The probe presets |
 | `tier0-01..11-*.png` | The same 11 viewpoints after Tier 0 (compare with `current-*.png`) |
 | `tier1-01..11-*.png` | The same 11 viewpoints after Tier 1 |
+| `tier2-01..11-*.png` | The same 11 viewpoints after Tier 2 |
 | `proof-tier1.png` | Tier 0 vs Tier 1 on three beats |
+| `proof-tier2.png` | Tier 1 vs Tier 2 on three beats |
 | `lowq-*.png` | `q=low` (bloom off → correct metering) evidence for §3.1 |
 | `compare-01..03.png` | Metrics-generated reference-vs-current sheets |
