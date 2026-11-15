@@ -60,15 +60,30 @@ export function buildLevel(game, level) {
   };
 
   const palette = level.palette || [0xd7d2c6, 0xc3cbca, 0xb3bdc2];
+  const redMaps = textures.redMaps();
   const routeMat = new THREE.MeshStandardMaterial({
     color: 0xffffff,
-    map: textures.red(),
+    map: redMaps.map,
+    normalMap: redMaps.normalMap,
+    normalScale: new THREE.Vector2(0.7, 0.7),
     emissive: 0x7a0e12,
     emissiveIntensity: 1.05,
     roughness: 0.38,
     metalness: 0.05,
   });
-  const sideMat = standard(0xffffff, 0.92, textures.side());
+  const sideBundle = textures.sideMaps();
+  sideBundle.normalMap.repeat.set(1, 2);
+  const sideMat = standard(0xffffff, 0.92, sideBundle.map);
+  sideMat.normalMap = sideBundle.normalMap;
+  sideMat.normalScale.set(1, 1);
+  const metalBundle = textures.metalMaps();
+  const metalStandard = (color, rough) => {
+    const material = standard(color, rough, metalBundle.map);
+    material.normalMap = metalBundle.normalMap;
+    material.roughnessMap = metalBundle.roughnessMap;
+    material.normalScale.set(1, 1);
+    return material;
+  };
   const edgeMat = new THREE.LineBasicMaterial({
     color: 0xa8b4b7,
     transparent: true,
@@ -79,6 +94,8 @@ export function buildLevel(game, level) {
   const windowMatrices = [];
   const fasciaMatrices = [];
   const curbMatrices = [];
+  const copingMatrices = [];
+  const cableMatrices = [];
   const columnMatrices = [];
   const acMatrices = [];
   const ventMatrices = [];
@@ -102,14 +119,21 @@ export function buildLevel(game, level) {
 
   for (const [index, platform] of level.platforms.entries()) {
     const color = platform.color || palette[index % palette.length];
-    const topTexture = textures.concrete(color).clone();
-    topTexture.repeat.set(
+    const topMaps = textures.concreteMaps(color);
+    const topRepeat = [
       Math.max(1, Math.round(platform.size[0] / 4)),
       Math.max(1, Math.round(platform.size[2] / 4)),
-    );
+    ];
+    const topTexture = topMaps.map.clone();
+    topTexture.repeat.set(topRepeat[0], topRepeat[1]);
     topTexture.needsUpdate = true;
+    const topNormal = topMaps.normalMap.clone();
+    topNormal.repeat.set(topRepeat[0], topRepeat[1]);
+    topNormal.needsUpdate = true;
     const topMat = new THREE.MeshStandardMaterial({
       map: topTexture,
+      normalMap: topNormal,
+      normalScale: new THREE.Vector2(0.9, 0.9),
       roughness: 0.84,
       metalness: 0.04,
     });
@@ -137,11 +161,14 @@ export function buildLevel(game, level) {
       }
       edgeGeometry.dispose();
     }
+    // Continuous route paint: the strip spans the whole roof depth so the red
+    // thread reads as a line instead of 26 dashes (the reference uses red as a
+    // traversal language, and our route paint was only 19 % of the route length).
     stripMatrices.push(
       new THREE.Matrix4().compose(
         new THREE.Vector3(px, py + ph / 2 + 0.012, pz),
         new THREE.Quaternion(),
-        new THREE.Vector3(0.18, 0.025, Math.min(1.5, pd * 0.35)),
+        new THREE.Vector3(0.26, 0.025, Math.max(0.8, pd - 0.24)),
       ),
     );
 
@@ -178,6 +205,16 @@ export function buildLevel(game, level) {
     pushBox(curbMatrices, pw, 0.09, 0.13, px, topY + 0.045, pz - pd / 2 + 0.08);
     pushBox(curbMatrices, 0.13, 0.09, pd, px + pw / 2 - 0.08, topY + 0.045, pz);
     pushBox(curbMatrices, 0.13, 0.09, pd, px - pw / 2 + 0.08, topY + 0.045, pz);
+    // A thinner coping cap overhanging the curb: a real roof edge profile instead
+    // of a single flat band, and a clean highlight line at eye level. High/ultra
+    // only: it is a silhouette detail, and low quality has a triangle budget.
+    if (floorDetail) {
+      const capY = topY + 0.115;
+      pushBox(copingMatrices, pw - 0.02, 0.05, 0.22, px, capY, pz + pd / 2 - 0.08);
+      pushBox(copingMatrices, pw - 0.02, 0.05, 0.22, px, capY, pz - pd / 2 + 0.08);
+      pushBox(copingMatrices, 0.22, 0.05, pd - 0.02, px + pw / 2 - 0.08, capY, pz);
+      pushBox(copingMatrices, 0.22, 0.05, pd - 0.02, px - pw / 2 + 0.08, capY, pz);
+    }
 
     // Structural legs down to the street; purely visual.
     const streetY = level.city?.streetY ?? -18;
@@ -257,6 +294,59 @@ export function buildLevel(game, level) {
     }
   }
 
+  // Catenary cables spanning the gaps: thin dark silhouettes against the sky that
+  // connect the slabs into a circuit and give the low band of the frame detail.
+  if (floorDetail) {
+    const up = new THREE.Vector3(0, 1, 0);
+    const direction = new THREE.Vector3();
+    const midpoint = new THREE.Vector3();
+    const segmentQuaternion = new THREE.Quaternion();
+    for (let i = 1; i < level.platforms.length; i += 1) {
+      // Sparse on purpose: a cable on every gap reads as a web across the view.
+      if (i % 2 === 0) continue;
+      const from = level.platforms[i - 1];
+      const to = level.platforms[i];
+      const dz = to.pos[2] - from.pos[2];
+      const directionSign = Math.sign(dz);
+      const gap = Math.abs(dz) - (from.size[2] + to.size[2]) / 2;
+      if (gap < 0.3 || gap > 12) continue;
+      const fromTop = from.pos[1] + from.size[1] / 2;
+      const toTop = to.pos[1] + to.size[1] / 2;
+      // Only span gaps between roofs on roughly the same level; a cable strung
+      // across a big height difference reads as a floating hook.
+      if (Math.abs(fromTop - toTop) > 2.5) continue;
+      const z0 = from.pos[2] + directionSign * (from.size[2] / 2 + 0.1);
+      const z1 = to.pos[2] - directionSign * (to.size[2] / 2 + 0.1);
+      const halfWidth = Math.min(from.size[0], to.size[0]) / 2 - 0.35;
+      // One cable per gap, alternating sides, outside the route corridor and
+      // above head height.
+      {
+        const side = i % 4 === 1 ? 1 : -1;
+        const x = (from.pos[0] + to.pos[0]) / 2 + side * Math.max(0.9, halfWidth);
+        const baseY = Math.max(fromTop, toTop) + (side > 0 ? 2.9 : 2.35);
+        const steps = 10;
+        for (let step = 0; step < steps; step += 1) {
+          const t0 = step / steps;
+          const t1 = (step + 1) / steps;
+          const sag = (t) => Math.sin(Math.PI * t) * (0.14 + gap * 0.03);
+          const a = new THREE.Vector3(x, baseY - sag(t0), z0 + (z1 - z0) * t0);
+          const b = new THREE.Vector3(x, baseY - sag(t1), z0 + (z1 - z0) * t1);
+          direction.copy(b).sub(a);
+          const length = direction.length();
+          midpoint.copy(a).addScaledVector(direction, 0.5);
+          segmentQuaternion.setFromUnitVectors(up, direction.normalize());
+          cableMatrices.push(
+            new THREE.Matrix4().compose(
+              midpoint.clone(),
+              segmentQuaternion.clone(),
+              new THREE.Vector3(0.024, length, 0.024),
+            ),
+          );
+        }
+      }
+    }
+  }
+
   if (edgePositions.length) {
     const edgeGeometry = new THREE.BufferGeometry();
     edgeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(edgePositions, 3));
@@ -297,79 +387,63 @@ export function buildLevel(game, level) {
   addInstances(
     'platform-fascia',
     new THREE.BoxGeometry(1, 1, 1),
-    standard(0xffffff, 0.68, textures.metal()),
+    metalStandard(0xb6c8d6, 0.6),
     fasciaMatrices,
   );
-  addInstances(
-    'platform-curbs',
-    new THREE.BoxGeometry(1, 1, 1),
-    standard(0xcfd6d2, 0.9, textures.concrete(0xcfd6d2)),
-    curbMatrices,
-  );
-  addInstances(
-    'platform-legs',
-    new THREE.BoxGeometry(1, 1, 1),
-    standard(0xffffff, 0.75, textures.side()),
-    columnMatrices,
-  );
-  addInstances(
-    'platform-ac',
-    new THREE.BoxGeometry(1, 1, 1),
-    standard(0xffffff, 0.72, textures.metal()),
-    acMatrices,
-  );
+  const curbMaps = textures.concreteMaps(0xcfd6d2);
+  const curbMaterial = standard(0xffffff, 0.9, curbMaps.map);
+  curbMaterial.normalMap = curbMaps.normalMap;
+  curbMaterial.normalScale.set(0.8, 0.8);
+  addInstances('platform-curbs', new THREE.BoxGeometry(1, 1, 1), curbMaterial, curbMatrices);
+  const copingMaps = textures.concreteMaps(0xe4e7e2);
+  const copingMaterial = standard(0xffffff, 0.72, copingMaps.map);
+  copingMaterial.normalMap = copingMaps.normalMap;
+  copingMaterial.normalScale.set(1, 1);
+  addInstances('platform-coping', new THREE.BoxGeometry(1, 1, 1), copingMaterial, copingMatrices);
+  const legMaps = textures.sideMaps();
+  const legMaterial = standard(0xffffff, 0.75, legMaps.map);
+  legMaterial.normalMap = legMaps.normalMap;
+  addInstances('platform-legs', new THREE.BoxGeometry(1, 1, 1), legMaterial, columnMatrices);
+  addInstances('platform-ac', new THREE.BoxGeometry(1, 1, 1), metalStandard(0xffffff, 0.72), acMatrices);
   addInstances(
     'platform-vents',
     new THREE.CylinderGeometry(0.5, 0.5, 1, 12),
-    standard(0xffffff, 0.72, textures.metal()),
+    metalStandard(0xffffff, 0.72),
     ventMatrices,
   );
-  addInstances(
-    'platform-huts',
-    new THREE.BoxGeometry(1, 1, 1),
-    standard(0xffffff, 0.88, textures.side(0x6a7a80)),
-    hutMatrices,
-  );
-  addInstances(
-    'platform-pipes',
-    new THREE.BoxGeometry(1, 1, 1),
-    standard(0xffffff, 0.5, textures.metal()),
-    pipeMatrices,
-  );
+  const hutMaps = textures.sideMaps(0x7a8c9c);
+  const hutMaterial = standard(0xffffff, 0.88, hutMaps.map);
+  hutMaterial.normalMap = hutMaps.normalMap;
+  addInstances('platform-huts', new THREE.BoxGeometry(1, 1, 1), hutMaterial, hutMatrices);
+  addInstances('platform-pipes', new THREE.BoxGeometry(1, 1, 1), metalStandard(0xffffff, 0.5), pipeMatrices);
   addInstances(
     'platform-rail-bars',
     new THREE.BoxGeometry(1, 1, 1),
-    standard(0xffffff, 0.55, textures.metal()),
+    metalStandard(0xffffff, 0.55),
     railBarMatrices,
   );
   addInstances(
     'platform-rail-posts',
     new THREE.BoxGeometry(1, 1, 1),
-    standard(0xffffff, 0.55, textures.metal()),
+    metalStandard(0xffffff, 0.55),
     railPostMatrices,
   );
-  addInstances(
-    'platform-solar',
-    new THREE.BoxGeometry(1, 1, 1),
-    standard(0x18292f, 0.32, textures.metal()),
-    solarMatrices,
-  );
-  addInstances(
-    'platform-doors',
-    new THREE.BoxGeometry(1, 1, 1),
-    standard(0x2c3a3e, 0.65, textures.metal()),
-    doorMatrices,
-  );
+  addInstances('platform-solar', new THREE.BoxGeometry(1, 1, 1), metalStandard(0x21333f, 0.3), solarMatrices);
+  addInstances('platform-doors', new THREE.BoxGeometry(1, 1, 1), metalStandard(0x3d4e5a, 0.62), doorMatrices);
+  addInstances('route-cables', new THREE.BoxGeometry(1, 1, 1), metalStandard(0x3a4854, 0.42), cableMatrices);
 
   for (const obstacle of level.obstacles || []) {
-    const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(...obstacle.size),
-      standard(
-        obstacle.color || 0xffffff,
-        0.84,
-        obstacle.material === 'metal' ? textures.metal() : textures.concrete(obstacle.color || 0xe6e8e6),
-      ),
-    );
+    const surfaceMaps =
+      obstacle.material === 'metal'
+        ? textures.metalMaps()
+        : textures.concreteMaps(obstacle.color || 0xe6e8e6);
+    const surfaceMaterial = standard(obstacle.color || 0xffffff, 0.84, surfaceMaps.map);
+    if (surfaceMaps.normalMap) {
+      surfaceMaterial.normalMap = surfaceMaps.normalMap;
+      surfaceMaterial.normalScale.set(0.9, 0.9);
+    }
+    if (surfaceMaps.roughnessMap) surfaceMaterial.roughnessMap = surfaceMaps.roughnessMap;
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...obstacle.size), surfaceMaterial);
     mesh.name = `obstacle-${obstacle.id}`;
     mesh.position.fromArray(obstacle.pos);
     mesh.castShadow = true;
