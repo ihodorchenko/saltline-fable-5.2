@@ -40,9 +40,23 @@ original or procedural.
 | Moss | `#78977D` | rooftop planting |
 
 Surfaces use near-white tops and desaturated blue-grey sides; the red route is
-the strongest saturation on screen. Accent towers are muted slate, sage, sand,
-dusk and steel tints (saturation ≤ 0.30, never red-hued); this is enforced by
-`city.test.js`.
+the strongest saturation on screen. Accent towers are pale slate, sage, sand,
+dusk and steel tints (saturation ≤ 0.20, lightness ≥ 0.66, never red-hued) and
+appear only beyond 38 m of the route; closer towers are plain white or glass.
+Both rules are enforced by `city.test.js`. In-world signs use the same ivory
+plate, ink type and red top rule as the HUD (`signs.js`).
+
+Atmosphere is tuned in one place (`atmosphere.js`): the scene fog, the engine's
+volumetric haze are thinned, AgX mix and lens dirt lowered and the contrast curve
+(`lookPower`) raised, so the air stays pale but the mid-ground reads. Global
+saturation stays at the engine default: the palette is muted at the source and a
+lower grade saturation would also mute the red route. The engine applies the haze
+and grade values live only with the live-tune fix (`render.tune` was baked at
+start-up before it). Compare in the browser
+with `?haze=0.5` (thinner), `?haze=2` (heavier) or `?atmo=off` (previous look).
+Flat roofs get scale cues without colour: per-panel tonal variation and a heavier
+joint every 4 m in the concrete texture, and a steel-grey safety stripe 0.1 m
+wide, inset 0.3 m from every platform edge (`floor.js`).
 
 ## Typography
 

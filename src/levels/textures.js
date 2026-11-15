@@ -12,6 +12,10 @@ function mulberry(seed) {
 
 // Per-pixel grain amplitude (0-255 scale). High-key surfaces must read as clean
 // ceramic and concrete; heavy grain reads as fabric. Guarded by textures.test.js.
+// Per-panel brightness spread (fraction of full white/ink overlay). Low-frequency
+// tone breaks up flat floors without reintroducing grain. Guarded by textures.test.js.
+export const TONE = { panel: 0.04 };
+
 export const GRAIN = { concrete: 7, concreteDark: 10, side: 6, facade: 10, roof: 6, metal: 9 };
 
 function canvasOf(size) {
@@ -60,6 +64,16 @@ function panelSeams(context, size, step, color, width = 1) {
 }
 
 // Light edge on the far side of each seam so panels read as separate slabs.
+function panelTones(context, size, step, random, amount) {
+  for (let y = 0; y < size; y += step) {
+    for (let x = 0; x < size; x += step) {
+      const shade = (random() * 2 - 1) * amount;
+      context.fillStyle = shade >= 0 ? `rgba(255, 255, 255, ${shade})` : `rgba(20, 28, 30, ${-shade})`;
+      context.fillRect(x, y, step, step);
+    }
+  }
+}
+
 function seamHighlights(context, size, step, color) {
   context.fillStyle = color;
   for (let i = 0; i <= size; i += step) {
@@ -105,8 +119,16 @@ export function createTextureFactory(game) {
     stain(context, size * 0.2, size * 0.16, size * 0.22, '45, 52, 52', 0.05);
     stain(context, size * 0.78, size * 0.64, size * 0.3, '70, 72, 62', 0.06);
     stain(context, size * 0.42, size * 0.94, size * 0.2, '24, 32, 34', 0.06);
+    panelTones(context, size, 128, random, TONE.panel);
     panelSeams(context, size, 128, 'rgba(42, 50, 50, .2)', 1);
     seamHighlights(context, size, 128, 'rgba(255, 255, 255, .16)');
+    // A heavier joint at every tile edge (every 4 m once repeated) gives the roof a scale cue.
+    context.fillStyle = 'rgba(30, 38, 40, .34)';
+    context.fillRect(0, 0, size, 3);
+    context.fillRect(0, 0, 3, size);
+    context.fillStyle = 'rgba(255, 255, 255, .2)';
+    context.fillRect(0, 3, size, 1);
+    context.fillRect(3, 0, 1, size);
     const texture = finish(canvas, [2, 2]);
     cache.set(key, texture);
     return texture;

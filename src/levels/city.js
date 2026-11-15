@@ -2,10 +2,26 @@
 // Deterministic procedural city district around the hand-authored route.
 // The city is decorative: route collisions remain the authored level boxes.
 
+import { SIGN, drawSignPlate } from './signs.js';
+
 const BODY_COLORS = [0xffffff, 0xf7f4ea, 0xeaf3f4, 0xf1eee4, 0xe3eef0];
 // Muted tints for the accent towers. Saturation is reserved for the red route
 // and goals (see docs/DESIGN.md), so no accent may be vivid or red-hued.
-export const ACCENT_COLORS = [0x5e81a1, 0x629377, 0xbba681, 0x6a73a0, 0x7894a5];
+export const ACCENT_COLORS = [0xb9c5ce, 0xbfcac2, 0xd9d3c8, 0xc2c5d2, 0xcbd4d9];
+
+// Accent towers are far-field only: within this distance of the route centre line
+// they fall back to plain white, so colour arrives as aerial perspective and the
+// red route stays the loudest thing near the player.
+export const ACCENT_MIN_DISTANCE = 38;
+
+/**
+ * @param {number} style building style (0 glass, 1 white, 2 accent)
+ * @param {number} x building centre, lateral distance from the route line
+ * @returns {number}
+ */
+export function resolveStyle(style, x) {
+  return style === 2 && Math.abs(x) < ACCENT_MIN_DISTANCE ? 1 : style;
+}
 const ROOF_COLORS = [0xf5f1e7, 0xdce9eb, 0xe7e3d8, 0x78977d];
 
 function makeRng(seed) {
@@ -310,15 +326,15 @@ export function buildCity(game, level, plan, textures = null) {
     }),
     new THREE.MeshStandardMaterial({
       color: 0xffffff,
-      roughness: 0.34,
-      metalness: 0.18,
+      roughness: 0.62,
+      metalness: 0.04,
     }),
   ];
   const bodyGroup = new THREE.Group();
   bodyGroup.name = 'city-buildings';
   const styleCounts = [0, 0, 0];
   for (let style = 0; style < 3; style += 1) {
-    const group = allBuildings.filter((building) => (building.style || 0) === style);
+    const group = allBuildings.filter((building) => resolveStyle(building.style || 0, building.x) === style);
     styleCounts[style] = group.length;
     const mesh = new THREE.InstancedMesh(bodyGeometry, bodyMaterials[style], group.length);
     mesh.name = `city-buildings-${style}`;
@@ -550,18 +566,15 @@ export function buildCity(game, level, plan, textures = null) {
     canvas.width = 512;
     canvas.height = 144;
     const context = canvas.getContext('2d');
-    context.fillStyle = 'rgba(8, 14, 18, .88)';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = '#d23a39';
-    context.fillRect(0, 0, 7, canvas.height);
-    context.fillStyle = '#f2eee3';
+    drawSignPlate(context, canvas.width, canvas.height);
+    context.fillStyle = SIGN.ink;
     context.font = '700 48px "Big Shoulders Display", sans-serif';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    context.fillText(sign.text, 260, 62);
-    context.fillStyle = '#8fa3a9';
+    context.fillText(sign.text, canvas.width / 2, 68);
+    context.fillStyle = SIGN.inkSoft;
     context.font = '500 17px "IBM Plex Mono", monospace';
-    context.fillText(sign.sub || 'ROOFTOP TRANSIT AUTHORITY', 260, 108);
+    context.fillText(sign.sub || 'ROOFTOP TRANSIT AUTHORITY', canvas.width / 2, 110);
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     const board = new THREE.Mesh(

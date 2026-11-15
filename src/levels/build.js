@@ -6,6 +6,9 @@ import { validateLevel } from './validate.js';
 import { buildCity, createCityPlan } from './city.js';
 import { createTextureFactory } from './textures.js';
 import { createHighKeySky } from './sky.js';
+import { applyAtmosphere } from './atmosphere.js';
+import { STRIPE, buildFloorStripes, edgeStripes } from './floor.js';
+import { SIGN, drawSignPlate } from './signs.js';
 import { createLighting } from './lighting.js';
 import { SUN_DIRECTION } from './sun.js';
 import { CONTACT, buildContactShadows, contactFootprint } from './contact.js';
@@ -38,15 +41,12 @@ export function buildLevel(game, level) {
     canvas.width = 1024;
     canvas.height = 160;
     const context = canvas.getContext('2d');
-    context.fillStyle = 'rgba(8, 12, 16, 0.78)';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = '#eef1ef';
+    drawSignPlate(context, canvas.width, canvas.height);
+    context.fillStyle = SIGN.ink;
     context.font = '700 58px "IBM Plex Mono", monospace';
     context.textAlign = 'center';
     context.textBaseline = 'middle';
-    context.fillText(text, canvas.width / 2, canvas.height / 2);
-    context.fillStyle = '#d23a39';
-    context.fillRect(260, canvas.height - 16, 504, 4);
+    context.fillText(text, canvas.width / 2, canvas.height / 2 + 4);
     const texture = new THREE.CanvasTexture(canvas);
     const sprite = new THREE.Sprite(
       new THREE.SpriteMaterial({
@@ -89,7 +89,9 @@ export function buildLevel(game, level) {
   const solarMatrices = [];
   const doorMatrices = [];
   const contactDecals = [];
+  const edgeStripeMatrices = [];
   const detailed = game.quality?.name !== 'low';
+  const floorDetail = game.quality?.name === 'high' || game.quality?.name === 'ultra';
   const stripGeometry = new THREE.BoxGeometry(1, 1, 1);
   const windowGeometry = new THREE.BoxGeometry(0.05, 0.75, 0.42);
   const windowMaterial = new THREE.MeshBasicMaterial({
@@ -154,6 +156,17 @@ export function buildLevel(game, level) {
       );
     };
     const slab = { minX: px - pw / 2, maxX: px + pw / 2, minZ: pz - pd / 2, maxZ: pz + pd / 2 };
+    if (floorDetail) {
+      for (const stripe of edgeStripes(slab)) {
+        edgeStripeMatrices.push(
+          new THREE.Matrix4().compose(
+            new THREE.Vector3(stripe.x, topY + STRIPE.lift, stripe.z),
+            new THREE.Quaternion(),
+            new THREE.Vector3(stripe.w, STRIPE.thickness, stripe.d),
+          ),
+        );
+      }
+    }
     const pushContact = (w, d, x, z) =>
       contactDecals.push({ ...contactFootprint({ x, z, w, d }, slab), y: topY + CONTACT.lift });
     // Dark metal fascia band and a shallow roof curb give every slab real edges.
@@ -255,6 +268,11 @@ export function buildLevel(game, level) {
   if (detailed) {
     const contact = buildContactShadows(THREE, contactDecals);
     if (contact) root.add(contact);
+  }
+
+  if (floorDetail) {
+    const stripes = buildFloorStripes(THREE, edgeStripeMatrices);
+    if (stripes) root.add(stripes);
   }
 
   if (stripMatrices.length) {
@@ -573,11 +591,7 @@ export function buildLevel(game, level) {
   root.add(sunSprite);
   const city = buildCity(game, level, createCityPlan(level), textures);
   root.add(city.root);
-  if (game.render?.tune) {
-    game.render.tune.bloom = 0.09;
-    game.render.tune.bloomThreshold = 1.8;
-    game.render.tune.streakThreshold = 1.15;
-  }
+  applyAtmosphere(game);
   game.physics?.build?.();
   scene.add(root);
   return { root, checkpointMeshes, finishMesh, city: city.stats, sky: highSky.mesh, lighting };
