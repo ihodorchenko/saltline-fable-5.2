@@ -780,9 +780,10 @@ tests), `npx playwright test` (30, including the golden band test), build, no
 
 ## 5.6 Tier 5 implemented — content pass (2026-11-15)
 
-Branch `feat/glassline-visual-tier5` (merge pending). Tier 5 attacks the two
-numbers that were still structurally below the reference and the material
-inventory that had accumulated during the earlier passes.
+Merged into `project/glassline` as `63a0c35` (2026-11-15) from
+`feat/glassline-visual-tier5`; the feature branch was deleted after integration.
+Tier 5 attacks the two numbers that were still structurally below the reference
+and the material inventory that had accumulated during the earlier passes.
 
 | Item | What landed |
 | --- | --- |

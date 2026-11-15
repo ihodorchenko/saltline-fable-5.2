@@ -76,8 +76,8 @@ deleted). Tier 2 is merged into `project/glassline` (2026-11-15, `f25bfd4`;
 feature branch deleted). Tier 3 is merged into `project/glassline` (2026-11-15,
 `d86f5f7`; feature branch deleted). Tier 4 is merged into `project/glassline`
 (2026-11-15, `ae453b7`; feature branch deleted) — **the P0 visual block is
-closed**. A follow-up content pass (Tier 5) is implemented on
-`feat/glassline-visual-tier5` (2026-11-15, merge pending); measured results in
+closed**. A follow-up content pass (Tier 5) is merged into `project/glassline`
+(2026-11-15, `63a0c35`; feature branch deleted); measured results in
 [`docs/VISUAL_GAP.md §5.1–5.6`](docs/VISUAL_GAP.md). The measured visual gap
 to the 2008 reference is the project's biggest quality risk: the renderer is
 capable, but the frame is overexposed, flat, desaturated, sky-less and content-poor.
@@ -215,7 +215,7 @@ reverted: raising the exposure ceiling moved p95 into band but pushed p25 and
 sky-blue out — a net loss. Cost: 421 draw calls, 75.9 k triangles, 63 textures,
 906 kB build; the new density is gated to high/ultra.
 
-### Tier 5 — content pass (follow-up) — implemented, merge pending
+### Tier 5 — content pass (follow-up) — merged 2026-11-15
 
 - [x] White architecture in frame: white parapet caps on every near canyon facade,
       white setback terraces at two heights per facade, denser balcony bands and a
