@@ -96,6 +96,7 @@ export function createCityPlan(level) {
   // with the sky as a narrow band; the generic grid alone left the nearest facade
   // ~35 m away and the route read as slabs floating in an open field.
   for (let z = 16; z >= -224; z -= 13) {
+    const row = Math.round((16 - z) / 13);
     for (const side of [-1, 1]) {
       const width = 8 + rng() * 6;
       const depth = 11 + rng() * 6;
@@ -117,7 +118,12 @@ export function createCityPlan(level) {
         roofUnit: height > 34,
         landmark: false,
         nearFacade: true,
-        style: rng() < 0.72 ? 1 : 0,
+        // Anchor rows force a dark glass tower every few canyon bays, alternating
+        // sides (the first one sits beside the spawn roof), so the route always
+        // has near-black curtain wall in the frame. The rest of the row keeps the
+        // random glass/concrete mix.
+        style:
+          (row % 4 === 1 && side === (Math.floor((row - 1) / 4) % 2 === 0 ? -1 : 1)) || rng() < 0.3 ? 0 : 1,
       };
       if (!overlaps(candidate)) {
         buildings.push(candidate);
@@ -125,6 +131,14 @@ export function createCityPlan(level) {
       }
     }
   }
+
+  // Spawn view: the start frame buildings pushed the first canyon rows out, so the
+  // near-left wall would be the only concrete slab beside the route. Promote it to
+  // the dark glass style: the reference always has one near-black reflective tower
+  // next to the runner, and a flat concrete wall is exactly the "cardboard" read
+  // the materials pass is fixing.
+  const spawnFlank = buildings.find((building) => building.nearFacade && building.x < 0 && building.z > -30);
+  if (spawnFlank) spawnFlank.style = 0;
 
   for (let z = 22; z >= -224; z -= 18) {
     for (let x = -88; x <= 88; x += 16) {
@@ -345,57 +359,60 @@ export function buildCity(game, level, plan, textures = null) {
   const position = new THREE.Vector3();
   const color = new THREE.Color();
   const bodyGeometry = new THREE.BoxGeometry(1, 1, 1);
-  const glassBundle = textures?.glassMaps ? textures.glassMaps() : null;
-  if (glassBundle) {
-    glassBundle.map.repeat.set(2, 3);
-    glassBundle.normalMap.repeat.set(2, 3);
-    glassBundle.roughnessMap.repeat.set(2, 3);
-  }
+  const glassBundle = textures?.glassMaps ? textures.glassMaps({ repeat: [2, 3] }) : null;
   const bodyMaterials = [
+    // Dark tinted curtain wall. Near-black navy bays with pale mullion frames and
+    // a roughness map that keeps the panes almost mirror-smooth while the frames
+    // stay rough: without that separation the facade mirrors as one flat sheet.
+    // The real scene probe (reflections.js) replaces the sky-only envMap later.
     new THREE.MeshStandardMaterial({
       map: glassBundle ? glassBundle.map : null,
       normalMap: glassBundle ? glassBundle.normalMap : null,
-      normalScale: new THREE.Vector2(0.7, 0.7),
+      normalScale: new THREE.Vector2(1.1, 1.1),
       roughnessMap: glassBundle ? glassBundle.roughnessMap : null,
       color: 0xffffff,
-      roughness: 0.55,
-      metalness: 0.84,
+      roughness: 1,
+      metalness: 0,
       envMap: game.scene?.environment || null,
-      envMapIntensity: 1.2,
+      envMapIntensity: 2.3,
     }),
     (() => {
-      const bundle = textures?.concreteMaps ? textures.concreteMaps(0xf8fbff) : null;
+      const bundle = textures?.concreteMaps ? textures.concreteMaps(0xf2ece0, { repeat: [2.6, 4.2] }) : null;
       const material = new THREE.MeshStandardMaterial({
         color: 0xffffff,
-        roughness: 0.86,
+        roughness: 1,
         metalness: 0.03,
       });
       if (bundle) {
         material.map = bundle.map;
-        material.map.repeat.set(2.6, 4.2);
         material.normalMap = bundle.normalMap;
-        material.normalMap.repeat.set(2.6, 4.2);
-        material.normalScale = new THREE.Vector2(0.7, 0.7);
+        material.normalScale = new THREE.Vector2(1, 1);
+        material.roughnessMap = bundle.roughnessMap;
       }
       return material;
     })(),
     (() => {
-      const bundle = textures?.concreteMaps ? textures.concreteMaps(0xe7eef0) : null;
+      const bundle = textures?.concreteMaps ? textures.concreteMaps(0xe9e7dc, { repeat: [2.2, 3.6] }) : null;
       const material = new THREE.MeshStandardMaterial({
         color: 0xffffff,
-        roughness: 0.62,
+        roughness: 1,
         metalness: 0.04,
       });
       if (bundle) {
         material.map = bundle.map;
-        material.map.repeat.set(2.2, 3.6);
         material.normalMap = bundle.normalMap;
-        material.normalMap.repeat.set(2.2, 3.6);
-        material.normalScale = new THREE.Vector2(0.6, 0.6);
+        material.normalScale = new THREE.Vector2(1, 1);
+        material.roughnessMap = bundle.roughnessMap;
       }
       return material;
     })(),
   ];
+  // The glass and metal materials are what the scene reflection probes are for.
+  bodyMaterials[0].userData.reflections = 'glass';
+  // Per-instance tone variation: whole towers differ in value the way the
+  // reference skyline does, on top of the per-bay variation baked in the map.
+  const GLASS_TINTS = [0xffffff, 0xdfe8ec, 0xb6c4cc, 0x8d9ba4, 0xeef2f3, 0x6f7d86];
+  const BODY_TINTS = [0xffffff, 0xfaf6ec, 0xf3f5f1, 0xf7f0e6, 0xf1f3ee];
   const bodyGroup = new THREE.Group();
   bodyGroup.name = 'city-buildings';
   const styleCounts = [0, 0, 0];
@@ -415,6 +432,12 @@ export function buildCity(game, level, plan, textures = null) {
       if (style === 2) {
         color.setHex(ACCENT_COLORS[index % ACCENT_COLORS.length]);
         mesh.setColorAt(index, color);
+      } else if (style === 0) {
+        color.setHex(GLASS_TINTS[index % GLASS_TINTS.length]);
+        mesh.setColorAt(index, color);
+      } else {
+        color.setHex(BODY_TINTS[index % BODY_TINTS.length]);
+        mesh.setColorAt(index, color);
       }
     });
     mesh.instanceMatrix.needsUpdate = true;
@@ -426,7 +449,7 @@ export function buildCity(game, level, plan, textures = null) {
 
   // Roof caps.
   const roofs = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1),
+    bodyGeometry,
     new THREE.MeshStandardMaterial({
       map: textures?.roof ? textures.roof() : null,
       roughness: 0.9,
@@ -500,8 +523,11 @@ export function buildCity(game, level, plan, textures = null) {
     });
   }
   const capMesh = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshStandardMaterial({ color: 0xf7f4ea, roughness: 0.78 }),
+    bodyGeometry,
+    // Shared pale concrete body material: parapets pick up the same joint/relief
+    // maps as the walls they cap, so the whole white architecture reads as one
+    // cast system instead of a stack of untextured white boxes.
+    bodyMaterials[1],
     Math.max(1, caps.length),
   );
   capMesh.name = 'city-parapet-caps';
@@ -534,11 +560,7 @@ export function buildCity(game, level, plan, textures = null) {
       });
     }
   }
-  const terraceMesh = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshStandardMaterial({ color: 0xfaf7ee, roughness: 0.8 }),
-    Math.max(1, terraces.length),
-  );
+  const terraceMesh = new THREE.InstancedMesh(bodyGeometry, bodyMaterials[1], Math.max(1, terraces.length));
   terraceMesh.name = 'city-terraces';
   terraces.forEach((terrace, index) => {
     position.set(terrace.x, terrace.y, terrace.z);
@@ -550,17 +572,20 @@ export function buildCity(game, level, plan, textures = null) {
   terraceMesh.computeBoundingSphere();
   root.add(terraceMesh);
 
+  // Window bands are recessed dark glazing: on the white concrete bodies they read
+  // as punched window strips, on the dark curtain walls as the dark floor line
+  // between reflective bays. They used to be pale cyan lights, which is what made
+  // every facade read as a flat glowing grid. At high/ultra they are shallow 6 cm
+  // frames rather than coplanar decals, so a strip standing proud of the concrete
+  // catches its own sun/shade line at close range (344 bands x 12 tris = ~3.4 k
+  // triangles, one draw call, inside the +15 % budget; low quality keeps planes).
   const windowMesh = new THREE.InstancedMesh(
-    new THREE.PlaneGeometry(1, 1),
-    new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0.72,
-      side: THREE.DoubleSide,
-    }),
+    detailCity ? new THREE.BoxGeometry(1, 1, 0.06) : new THREE.PlaneGeometry(1, 1),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.32, metalness: 0.2 }),
     windows.length,
   );
   windowMesh.name = 'city-windows';
+  const WINDOW_TINTS = [0x2b4050, 0x223440, 0x31495a, 0x1d2c36, 0x3a5666];
   const windowColor = new THREE.Color();
   windows.forEach((window, index) => {
     position.set(window.x, window.y, window.z);
@@ -568,7 +593,7 @@ export function buildCity(game, level, plan, textures = null) {
     quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), window.rotY);
     matrix.compose(position, quaternion, scale);
     windowMesh.setMatrixAt(index, matrix);
-    windowColor.setHex(index % 5 === 0 ? 0xe1fbf7 : 0x4f8b99);
+    windowColor.setHex(WINDOW_TINTS[index % WINDOW_TINTS.length]);
     windowMesh.setColorAt(index, windowColor);
   });
   if (windowMesh.instanceColor) windowMesh.instanceColor.needsUpdate = true;
@@ -593,15 +618,49 @@ export function buildCity(game, level, plan, textures = null) {
       mullions.push({ x: faceX, z, height: building.h, y: building.top - building.h / 2 });
     }
   }
-  const mullionMesh = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshStandardMaterial({ color: 0x8ea3b2, roughness: 0.6, metalness: 0.08 }),
-    Math.max(1, mullions.length),
-  );
+  // Pale mullion frames against the dark glass: the bright vertical rhythm is
+  // most of the curtain-wall read, so the frames are light painted metal with a
+  // real environment reflection rather than mid-grey flat strips.
+  const metalBundle = textures?.metalMaps ? textures.metalMaps() : null;
+  const mullionMaterial = new THREE.MeshStandardMaterial({
+    color: 0xe9edee,
+    map: metalBundle ? metalBundle.map : null,
+    normalMap: metalBundle ? metalBundle.normalMap : null,
+    roughnessMap: metalBundle ? metalBundle.roughnessMap : null,
+    normalScale: new THREE.Vector2(0.6, 0.6),
+    roughness: 0.62,
+    metalness: 0.32,
+    envMap: game.scene?.environment || null,
+    envMapIntensity: 1.6,
+  });
+  mullionMaterial.userData.reflections = 'metal';
+  // One brushed-metal material for the whole transit/service kit: track, supports,
+  // roof units and bridges keep their tonal separation through per-instance
+  // colours instead of four near-identical materials.
+  const cityMetal = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    map: metalBundle ? metalBundle.map : textures?.metal?.() || null,
+    normalMap: metalBundle ? metalBundle.normalMap : null,
+    roughnessMap: metalBundle ? metalBundle.roughnessMap : null,
+    normalScale: new THREE.Vector2(0.8, 0.8),
+    roughness: 0.8,
+    metalness: 0.62,
+    envMap: game.scene?.environment || null,
+    envMapIntensity: 1.4,
+  });
+  cityMetal.userData.reflections = 'metal';
+  const setInstanceTones = (mesh, hexes) => {
+    hexes.forEach((hex, index) => {
+      color.setHex(hex);
+      mesh.setColorAt(index, color);
+    });
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  };
+  const mullionMesh = new THREE.InstancedMesh(bodyGeometry, mullionMaterial, Math.max(1, mullions.length));
   mullionMesh.name = 'city-mullions';
   mullions.forEach((mullion, index) => {
     position.set(mullion.x, mullion.y, mullion.z);
-    scale.set(0.1, mullion.height, 0.14);
+    scale.set(0.13, mullion.height, 0.18);
     quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0);
     matrix.compose(position, quaternion, scale);
     mullionMesh.setMatrixAt(index, matrix);
@@ -627,14 +686,7 @@ export function buildCity(game, level, plan, textures = null) {
       });
     }
   }
-  const balconyMesh = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    new THREE.MeshStandardMaterial({
-      color: 0xf6f2e6,
-      roughness: 0.82,
-    }),
-    Math.max(1, balconies.length),
-  );
+  const balconyMesh = new THREE.InstancedMesh(bodyGeometry, bodyMaterials[1], Math.max(1, balconies.length));
   balconyMesh.name = 'city-balconies';
   balconies.forEach((balcony, index) => {
     position.set(balcony.x, balcony.y, balcony.z);
@@ -702,23 +754,7 @@ export function buildCity(game, level, plan, textures = null) {
       });
     }
   }
-  const trackMesh = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    (() => {
-      const bundle = textures?.metalMaps ? textures.metalMaps() : null;
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xc8dadd,
-        map: bundle ? bundle.map : textures?.metal?.() || null,
-        roughness: 0.55,
-      });
-      if (bundle) {
-        material.normalMap = bundle.normalMap;
-        material.roughnessMap = bundle.roughnessMap;
-      }
-      return material;
-    })(),
-    segments.length,
-  );
+  const trackMesh = new THREE.InstancedMesh(bodyGeometry, cityMetal, segments.length);
   trackMesh.name = 'city-transit-track';
   segments.forEach((segment, index) => {
     position.set(segment.x, segment.y, segment.z);
@@ -727,27 +763,15 @@ export function buildCity(game, level, plan, textures = null) {
     matrix.compose(position, quaternion, scale);
     trackMesh.setMatrixAt(index, matrix);
   });
+  setInstanceTones(
+    trackMesh,
+    segments.map(() => 0xc8dadd),
+  );
   trackMesh.instanceMatrix.needsUpdate = true;
   trackMesh.computeBoundingSphere();
   root.add(trackMesh);
 
-  const supportMesh = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    (() => {
-      const bundle = textures?.metalMaps ? textures.metalMaps() : null;
-      const material = new THREE.MeshStandardMaterial({
-        color: 0x9fb3b8,
-        map: bundle ? bundle.map : textures?.metal?.() || null,
-        roughness: 0.8,
-      });
-      if (bundle) {
-        material.normalMap = bundle.normalMap;
-        material.roughnessMap = bundle.roughnessMap;
-      }
-      return material;
-    })(),
-    supports.length,
-  );
+  const supportMesh = new THREE.InstancedMesh(bodyGeometry, cityMetal, supports.length);
   supportMesh.name = 'city-transit-supports';
   supports.forEach((support, index) => {
     position.set(support.x, support.y, support.z);
@@ -755,6 +779,10 @@ export function buildCity(game, level, plan, textures = null) {
     matrix.compose(position, quaternion.identity(), scale);
     supportMesh.setMatrixAt(index, matrix);
   });
+  setInstanceTones(
+    supportMesh,
+    supports.map(() => 0x9fb3b8),
+  );
   supportMesh.instanceMatrix.needsUpdate = true;
   supportMesh.computeBoundingSphere();
   root.add(supportMesh);
@@ -802,20 +830,7 @@ export function buildCity(game, level, plan, textures = null) {
       d: 1.1,
     });
   }
-  const unitMesh = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    (() => {
-      const bundle = textures?.metalMaps ? textures.metalMaps() : null;
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        map: bundle ? bundle.map : textures?.metal?.() || null,
-        roughness: 0.8,
-      });
-      if (bundle) material.normalMap = bundle.normalMap;
-      return material;
-    })(),
-    units.length,
-  );
+  const unitMesh = new THREE.InstancedMesh(bodyGeometry, cityMetal, units.length);
   unitMesh.name = 'city-roof-units';
   units.forEach((unit, index) => {
     position.set(unit.x, unit.y, unit.z);
@@ -823,25 +838,16 @@ export function buildCity(game, level, plan, textures = null) {
     matrix.compose(position, quaternion, scale);
     unitMesh.setMatrixAt(index, matrix);
   });
+  setInstanceTones(
+    unitMesh,
+    units.map((unit, index) => (index % 3 === 0 ? 0xf2f4f3 : 0xd6dfe0)),
+  );
   unitMesh.instanceMatrix.needsUpdate = true;
   unitMesh.computeBoundingSphere();
   root.add(unitMesh);
 
   // Skybridges crossing the canyon above the route.
-  const bridgeMesh = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1),
-    (() => {
-      const bundle = textures?.metalMaps ? textures.metalMaps() : null;
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xc4d6da,
-        map: bundle ? bundle.map : textures?.metal?.() || null,
-        roughness: 0.7,
-      });
-      if (bundle) material.normalMap = bundle.normalMap;
-      return material;
-    })(),
-    plan.bridges.length,
-  );
+  const bridgeMesh = new THREE.InstancedMesh(bodyGeometry, cityMetal, plan.bridges.length);
   bridgeMesh.name = 'city-skybridges';
   plan.bridges.forEach((bridge, index) => {
     position.set(bridge.x, bridge.y, bridge.z);
@@ -849,6 +855,10 @@ export function buildCity(game, level, plan, textures = null) {
     matrix.compose(position, quaternion, scale);
     bridgeMesh.setMatrixAt(index, matrix);
   });
+  setInstanceTones(
+    bridgeMesh,
+    plan.bridges.map((bridge) => bridge.color || 0xc4d6da),
+  );
   bridgeMesh.instanceMatrix.needsUpdate = true;
   bridgeMesh.computeBoundingSphere();
   root.add(bridgeMesh);
@@ -899,11 +909,9 @@ export function buildCity(game, level, plan, textures = null) {
     );
     crown.position.y = baseHeight + crownHeight / 2;
     spire.add(crown);
+    const ringMaterial = new THREE.MeshBasicMaterial({ color: 0x9fe3e8 });
     for (let i = 0; i < 3; i += 1) {
-      const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(6.2 - i * 1.2, 0.12, 6, 32),
-        new THREE.MeshBasicMaterial({ color: 0x9fe3e8 }),
-      );
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(6.2 - i * 1.2, 0.12, 6, 32), ringMaterial);
       ring.rotation.x = Math.PI / 2;
       ring.position.y = baseHeight * 0.32 + i * 18;
       spire.add(ring);
@@ -926,12 +934,13 @@ export function buildCity(game, level, plan, textures = null) {
   // Outer horizon rings: overlapping towers that close every sightline.
   const facadeBundle = textures?.facadeMaps ? textures.facadeMaps() : null;
   const backdropMesh = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1),
+    bodyGeometry,
     new THREE.MeshStandardMaterial({
       map: facadeBundle ? facadeBundle.map : null,
       normalMap: facadeBundle ? facadeBundle.normalMap : null,
-      normalScale: new THREE.Vector2(0.8, 0.8),
-      roughness: 0.9,
+      normalScale: new THREE.Vector2(1, 1),
+      roughnessMap: facadeBundle ? facadeBundle.roughnessMap : null,
+      roughness: 1,
       metalness: 0.03,
     }),
     plan.backdrop.length,
@@ -954,7 +963,7 @@ export function buildCity(game, level, plan, textures = null) {
 
   // Distant low-detail skyline; fades into fog.
   const distantMesh = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1),
+    bodyGeometry,
     new THREE.MeshBasicMaterial({ color: 0x8fa9b2, fog: true }),
     plan.distant.length,
   );

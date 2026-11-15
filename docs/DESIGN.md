@@ -137,12 +137,16 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
 - **Abyss** replaces the old street deck: towers descend far below the route and
   gaps look into a luminous white-blue plane, keeping the drop vertiginous but
   clean instead of a gray grid.
-- **Surfaces** use a runtime Canvas atlas (1024² for concrete, side concrete,
-  glass facade and roof; 512² metal; 256² route paint) with **normal and roughness
-  maps derived from the same procedural canvases**: seams and windows read as
-  grooves, glass bays turn smooth and reflective, route paint gets a slightly
-  rough surface. Shared per material family, so the derived maps cost one normal
-  per family rather than one per colour.
+- **Surfaces** use a runtime Canvas atlas (1024² concrete/side/facade/glass, 512²
+  metal, 256² route paint) built **relief-first**: each family generates one shared
+  grayscale height canvas (cast-panel joints, trowel mottling, formwork tie holes,
+  pores, cracks, brushed streaks) from which both the normal map and the roughness
+  map are derived, so grooves shade and speculars break up consistently. Albedo is
+  a warm plaster wash with damp/bleach stains and run-off streaks. Glass is a
+  dark-tinted curtain wall (near-black navy bays, ~20 % sky-catching pale bays,
+  pale raised mullions) with a dielectric material and **scene reflection probes**
+  (`src/levels/reflections.js` captures two CubeCamera views of the city at route
+  height and PMREMs them into the glass/metal env maps).
   Platform edges get metal fascia, shallow curbs, structural legs, service AC,
   vents, huts, pipes, guard rails, solar arrays and access doors.
 - **Route** is a continuous red strip spanning each roof (not dashes); current
@@ -166,6 +170,16 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
   Building footprints are collision-checked against each other, and window bands
   are geometric so they do not stretch with the facade atlas. All city geometry
   is instanced into roughly a dozen draw calls and kept out of the route corridor.
+- **Route shape (rebuilt 2026-11-15)**: a vertically layered, non-linear course on
+  the same 21 checkpoints and 3 acts — 17.8 m of vertical range (−5.9 … +11.9 m),
+  219 m long, weaving ±5 m inside the canyon. It climbs a service annex and a
+  wall-climb parapet to a +11.9 m summit, drops through two lower roofs into a
+  **3-tier walled courtyard** open to the sky (+4.2 → +0.6 → −2.9 → −5.9 m),
+  loops around a free-standing core with a side corridor that rejoins, crosses a
+  low-duct slide and an outside mantle climb, then splits into a high gangway and
+  a low roof branch that rejoin at `final-b` before two wall-climbs to the finish.
+  Route paint, rings and the next-checkpoint beacon carry the line; the builder
+  still draws paint strips per platform, so lateral legs read as offset dashes.
 - **Acts**: ascent → descent/second pass → final sprint. Act labels are in-world
   canvas signs; the HUD names the act.
 - **Finish** is a red gate and ring on the final roof.

@@ -33,9 +33,12 @@ function imageMetrics(buffer) {
 // Tolerant bands around the measured Tier-4 look (docs/VISUAL_GAP.md §5.5). The
 // point is to catch a regression to the washed-out / flat look, not to lock
 // individual pixels: film grain and cloud drift are time-dependent by design.
+// Recalibrated after the materials/content pass (dark reflective glass, more
+// shaded courtyard): these are regression guards around the shipped look, not a
+// reference match. `npm run golden` prints the manifest the values came from.
 const LOOK_BANDS = {
-  start: { lumaMean: [0.46, 0.66], lumaP95: [0.86, 1.0], saturationMean: [0.22, 0.42] },
-  balance: { lumaMean: [0.42, 0.64], lumaP95: [0.82, 1.0], saturationMean: [0.22, 0.42] },
+  start: { lumaMean: [0.35, 0.6], lumaP95: [0.84, 1.0], saturationMean: [0.22, 0.5] },
+  balance: { lumaMean: [0.45, 0.66], lumaP95: [0.84, 1.0], saturationMean: [0.22, 0.5] },
 };
 
 test('the tutorial look stays in its calibrated band', async ({ page }) => {

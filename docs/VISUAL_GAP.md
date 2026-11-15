@@ -21,6 +21,7 @@ Companion files (in `docs/visual-gap/`):
 | [`docs/visual-gap/metrics-tier3.json`](visual-gap/metrics-tier3.json) | The same run against the Tier-3 build (canyon composition, facade lattice, rooftop service kit) |
 | [`docs/visual-gap/metrics-tier4.json`](visual-gap/metrics-tier4.json) | The same run against the Tier-4 build (motion finish, view-model legs, final grade) |
 | [`docs/visual-gap/metrics-tier5.json`](visual-gap/metrics-tier5.json) | The same run against the Tier-5 build (white canyon architecture, material pooling) |
+| [`docs/visual-gap/metrics-content.json`](visual-gap/metrics-content.json) | The run against the owner content pass (plaster/glass/metal materials, scene reflection probes, multi-level route) |
 | `docs/visual-gap/shots/` | Reference frames, current captures, comparison and proof sheets — **local only, git-ignored**: several sheets embed frames of the owner-provided reference video and must not be committed or redistributed. Regenerate with the tools below. |
 
 ---
@@ -830,7 +831,87 @@ low-quality triangle budget stays inside its test.
 
 ---
 
-## 6. Roadmap
+## 6. Owner content pass: materials and route (2026-11-15)
+
+Owner feedback after Tier 5: *"материалы — всё пластмассово, стекло не сильно
+стекло; маршрут линейный, просто пробежка — хочется ближе к референсу, там он
+многоуровневый и нелинейный"*. Two parallel passes were made; both landed in one
+working branch.
+
+### 6.1 Materials — from plastic to plaster, glass and metal
+
+| Change | Detail |
+| --- | --- |
+| Relief-first texture pipeline | Every family now generates a shared grayscale **height** canvas (cast-panel joints, trowel mottling, formwork tie holes, pores, hairline cracks, brushed streaks) and derives both the normal map and the roughness map from it, so grooves shade and catch specular consistently. Albedo is a warm plaster wash with damp/bleach stains, run-off streaks and stronger joints instead of the old uniform blue-white. |
+| Glass | Dark-tinted curtain wall texture (`#141d26…#263947` bays) with per-bay value variation, sky-catching pale bays, blackout panes and pale raised mullion frames; material is a dielectric (metalness 0, roughness from map) with `envMapIntensity` 2.3, plus **per-instance tower tints** through `InstancedMesh.setColorAt` (near-black → white). Window bands changed from pale glow planes to dark glazing (shallow 6 cm boxes at high/ultra). |
+| Real reflections | New `src/levels/reflections.js`: at the end of `buildLevel` it takes **two CubeCamera captures of the actual scene at route height**, PMREMs them and assigns one env map to glass and one to metal/mullions. Glass now reflects the neighbouring city, not a uniform sky (see `shots/proof-materials.png`). Flat-only at low quality, disposed on editor rebuild, no per-frame cost. |
+| Metal | Brushed relief/roughness maps (rolled streaks, seams, scratches), metalness 0.62–0.7, reflections from the city probe. |
+| Draw-call and material hygiene | Platform boxes render with 2 draw calls instead of 6 (index reorder/regroup, material array kept 6-long for existing consumers); unit geometry + per-mesh scale for props/obstacles/city; caps/terraces/balconies/transit share materials. **124 → 94 materials, 429 → 329 draw calls** at the start view, triangles +8 % (inside the +15 % budget). |
+
+### 6.2 Route — multi-level, non-linear, reference-shaped
+
+The level data (`src/levels/tutorial.js`) was rebuilt around the same 21
+checkpoint ids and 3 acts, but the course is now a **vertically layered,
+non-linear** route:
+
+| | Old | New |
+| --- | --- | --- |
+| Vertical range | 0 … +3.5 m | **−5.9 … +11.9 m (17.8 m)** |
+| Route length | ~203 m | **219 m** (z +10 → −202, pacing 10–20 min kept) |
+| Traversal | straight line of 26 flat roof slabs | mantle annex, wall-run gap, wall-climb parapet, **summit +11.9 m**, drop through two lower roofs, **3-tier walled courtyard** open to the sky (rim +4.2 → shelves +0.6 / −2.9 → floor −5.9), loop around a free-standing core with a side corridor that rejoins, low-duct slide, outside mantle climb, high gangway vs low branch in act III, two wall-climbs to the finish |
+| Non-linearity | none | courtyard loop + side corridor + a **high/low branch that rejoins** at `final-b`; lateral weave ±5 m (the canyon's near facades at |x| ≈ 9.6 bound it) |
+| Mechanic order | preserved | preserved (jump → slide → vault → mantle → wall-run → wall-climb → balance → roll, then the act II variants, then the final run) |
+
+The route was verified two ways: a data audit (32 checks — ids, monotonic z,
+gaps ≤6 m, climb steps ≤1.9 m, wall-run/slide/vault/balance reachability, fall
+plane, length, pacing) and **live traversal of 14/14 mechanics through the real
+controller** on the dev server.
+
+Known builder-visual compromises (data-only redesign, builder untouched): route
+paint strips are always −Z dashes at platform centres, so lateral legs read as
+offset dashes and the courtyard loop is cued by rings/beacon/duct placement; the
+automatic roof kit (fascia/curbs/coping/legs) applies to every slab, so thick
+mantle ledges read as roof slabs and the gangway gets a curb lip; the courtyard
+floor is structurally shaded by its own walls (reads blue in shadow, which is
+correct for the reference but costs some near-white area).
+
+### 6.3 Measured result on the new content
+
+The darker glass and the courtyard shrank the bright area, so the exposure was
+rebalanced for the new mix (auto-exposure key 0.28 → 0.35, max 2.2; sky fill
+0.74 → 0.92; top-of-range highlight lift 0.12 → 0.15) and the golden bands were
+recalibrated as a regression guard. With that:
+
+| Metric | Tier 5 | Content pass | Reference | Status |
+| --- | ---: | ---: | ---: | --- |
+| luma mean | 0.571 | **0.558** | 0.589 | ✅ |
+| luma std | 0.264 | **0.253** | 0.272 | ✅ |
+| luma p25 | 0.395 | **0.370** | 0.370 | ✅ |
+| luma p95 | 0.953 | **0.954** | 0.979 | ✅ |
+| near-white | 15.4 % | **12.6 %** | 27.3 % | ✅ (band edge) |
+| deep shadow | 5.6 % | **3.7 %** | 3.0 % | ✅ |
+| saturation mean | 0.328 | **0.327** | 0.359 | ✅ |
+| local contrast | 0.0679 | **0.0643** | 0.0713 | ✅ |
+| edge energy | 0.0288 | **0.0273** | 0.0341 | ✅ |
+| sky blue area | 50.1 % | **43.4 %** | 53.1 % | ✅ |
+| contrast, top third | 0.0580 | **0.0597** | 0.0585 | ✅ |
+| split-tone dark R−B | −40.1 | **−45.0** | −48.6 | ✅ |
+| red accent coverage | 2.18 % | **2.07 %** | 4.2 % | ✅ |
+
+Still **13 of 13 in band** — now on a route that is much closer to the
+reference's structure and materials, with the dark-glass contrast that the owner
+asked for. Golden bands moved with the look (they are a regression guard, not a
+reference match); the reference-frame comparisons stay in
+`shots/proof-materials.png` and `shots/proof-content.png`.
+
+Cost: 94 materials, 329 draw calls, 84 k triangles, 71 textures, 921 kB build at
+high quality (low quality stays inside its 40 k triangle test cap with ~39.6 k).
+Gates: `npm run check`, `npm test` (135), `npx playwright test` (30), build, no
+`__errors`/`__fatal`.
+
+---
+
+## 7. Roadmap
 
 Effort is for one experienced developer; "acceptance" is a metric from §7 that the
 tier should move. Do the tiers in order — later tiers are wasted on a broken tone.
@@ -919,7 +1000,7 @@ and ≈ +12 draw calls.
 
 ---
 
-## 7. Acceptance targets ("close enough" definition)
+## 8. Acceptance targets ("close enough" definition)
 
 Re-run `tools/image-metrics.py` against a fresh capture pass after each tier. The
 build is "visually in the reference's family" when the primary set lands in:
@@ -946,7 +1027,7 @@ deliberately defined on the same metric set so a regression cannot hide behind
 
 ---
 
-## 8. Guardrails
+## 9. Guardrails
 
 - **Do not** chase the look with more post FX: bloom, dirt, flare and grain are
   already the reason for the milky frame. Every Tier-0 item is a *subtractive*
@@ -969,8 +1050,9 @@ deliberately defined on the same metric set so a regression cannot hide behind
 
 ---
 
-## 9. Where the detail lives
+## 10. Where the detail lives
 
+- **Reflections** — `src/levels/reflections.js` captures two scene cube probes at route height and PMREMs them into glass/metal env maps at level build (see §6.1).
 - **Render audit** — [`docs/visual-gap/01-renderer-audit.md`](visual-gap/01-renderer-audit.md):
   the 16-stage pass inventory with resolutions, all 27 `render.tune` keys and
   whether they are live, the shadow setup (96.85 × 69.36 m, 4.7 cm texels, 52
@@ -1010,5 +1092,8 @@ deliberately defined on the same metric set so a regression cannot hide behind
 | `proof-tier4.png` | Tier 3 vs Tier 4 on three beats |
 | `tier5-01..11-*.png` | The same 11 viewpoints after Tier 5 |
 | `proof-tier5.png` | Tier 4 vs Tier 5 on three beats |
+| `content-01..11-*.png` | The same 11 viewpoints after the owner content pass (materials + route) |
+| `proof-content.png` | Old route/materials vs new, four beats |
+| `proof-materials.png` | Reference | previous | new material crops (glass + concrete) |
 | `lowq-*.png` | `q=low` (bloom off → correct metering) evidence for §3.1 |
 | `compare-01..03.png` | Metrics-generated reference-vs-current sheets |
