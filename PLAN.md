@@ -77,9 +77,9 @@ feature branch deleted). Tier 3 is merged into `project/glassline` (2026-11-15,
 `d86f5f7`; feature branch deleted). Tier 4 is merged into `project/glassline`
 (2026-11-15, `ae453b7`; feature branch deleted) — **the P0 visual block is
 closed**. A follow-up content pass (Tier 5) is merged into `project/glassline`
-(2026-11-15, `63a0c35`; feature branch deleted). An owner-driven content pass
-(materials + route) is implemented on `feat/glassline-content-materials-routes`
-(not committed yet); measured results in
+(2026-11-15, `63a0c35`; feature branch deleted). The owner-driven materials + route
+content pass is merged into `project/glassline` (2026-11-16, `1923c24`; feature
+branch deleted); measured results in
 [`docs/VISUAL_GAP.md §5.1–5.6` and §6](docs/VISUAL_GAP.md). The measured visual gap
 to the 2008 reference is the project's biggest quality risk: the renderer is
 capable, but the frame is overexposed, flat, desaturated, sky-less and content-poor.
@@ -217,7 +217,7 @@ reverted: raising the exposure ceiling moved p95 into band but pushed p25 and
 sky-blue out — a net loss. Cost: 421 draw calls, 75.9 k triangles, 63 textures,
 906 kB build; the new density is gated to high/ultra.
 
-### Owner content pass — materials and route (2026-11-15) — implemented, merge pending
+### Owner content pass — materials and route (2026-11-15) — merged 2026-11-16
 
 Owner feedback after Tier 5: materials still read plastic and the glass did not
 read as glass; the route was linear ("just a run") and should be multi-level and

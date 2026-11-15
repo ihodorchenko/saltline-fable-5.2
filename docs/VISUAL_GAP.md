@@ -833,10 +833,14 @@ low-quality triangle budget stays inside its test.
 
 ## 6. Owner content pass: materials and route (2026-11-15)
 
+Merged into `project/glassline` as `1923c24` (2026-11-16) from
+`feat/glassline-content-materials-routes`; the feature branch was deleted after
+integration.
+
 Owner feedback after Tier 5: *"материалы — всё пластмассово, стекло не сильно
 стекло; маршрут линейный, просто пробежка — хочется ближе к референсу, там он
-многоуровневый и нелинейный"*. Two parallel passes were made; both landed in one
-working branch.
+многоуровневый и нелинейный"*. Two parallel passes were made; both landed in the
+same branch.
 
 ### 6.1 Materials — from plastic to plaster, glass and metal
 
