@@ -172,7 +172,7 @@ export function createHighKeySky(game, sunDirection = null) {
       uNoise: { value: noise },
       uTime: { value: 0 },
       // 0.5 = the shipped day look; the level data may override per scene.
-      uCloudCover: { value: 0.5 },
+      uCloudCover: { value: 0.56 },
       uCloudScale: { value: 1.25 },
     },
     vertexShader: VERTEX_SHADER,
