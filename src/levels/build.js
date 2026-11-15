@@ -204,8 +204,22 @@ export function buildLevel(game, level) {
   const pipeMatrices = [];
   const railBarMatrices = [];
   const railPostMatrices = [];
-  const solarMatrices = [];
   const doorMatrices = [];
+  // Reference prop vocabulary (P1/P2): every piece below is authored in the
+  // level data and batched by material here, so a solar array, a fan grille or
+  // the covered courtyard interior costs one draw call per material family
+  // instead of one per part.
+  const solarPanelMatrices = [];
+  const solarFlatMatrices = [];
+  const paleKitMatrices = [];
+  const fanRingMatrices = [];
+  const fanBladeMatrices = [];
+  const skylightGlassMatrices = [];
+  const fenceMatrices = [];
+  const redMatrices = [];
+  const whiteMatrices = [];
+  const darkTrimMatrices = [];
+  const acUnits = [];
   const contactDecals = [];
   const edgeStripeMatrices = [];
   const detailed = game.quality?.name !== 'low';
@@ -220,6 +234,24 @@ export function buildLevel(game, level) {
     transparent: true,
     opacity: 0.78,
   });
+  // Prop-vocabulary instancing: one unit box per material family, with the
+  // position/rotation/scale baked into each instance matrix.
+  const pushKit = (list, x, y, z, sx, sy, sz, quaternion = null) => {
+    list.push(
+      new THREE.Matrix4().compose(
+        new THREE.Vector3(x, y, z),
+        quaternion || new THREE.Quaternion(),
+        new THREE.Vector3(sx, sy, sz),
+      ),
+    );
+  };
+  const yawQuaternion = (yaw) => new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
+  // HVAC condensers are collected for a second pass: their bodies stay in the
+  // instanced box kit, the fan grilles are added once every unit is known.
+  const pushAircon = (w, h, d, x, y, z, facing) => {
+    acUnits.push({ x, y, z, w, h, d, facing });
+    pushKit(acMatrices, x, y, z, w, h, d);
+  };
 
   for (const [index, platform] of level.platforms.entries()) {
     const color = platform.color || palette[index % palette.length];
@@ -235,6 +267,9 @@ export function buildLevel(game, level) {
 
     const [px, py, pz] = platform.pos;
     const [pw, ph, pd] = platform.size;
+    // Authored showcases opt out of the generated roof services, so the prop
+    // layout on that deck stays exactly as authored.
+    const serviceKit = platform.serviceKit !== false;
     if (detailed) {
       const edgeGeometry = new THREE.EdgesGeometry(mesh.geometry);
       const positions = edgeGeometry.attributes.position;
@@ -310,8 +345,8 @@ export function buildLevel(game, level) {
     }
 
     // Rooftop services sit on the edges, never on the route line.
-    if (pw > 4.4 && pd > 2.6) {
-      pushBox(acMatrices, 1.05, 0.75, 0.8, px - pw / 2 + 1.1, topY + 0.4, pz - pd / 2 + 1.05);
+    if (serviceKit && pw > 4.4 && pd > 2.6) {
+      pushAircon(1.05, 0.75, 0.8, px - pw / 2 + 1.1, topY + 0.4, pz - pd / 2 + 1.05, 'x+');
       pushContact(1.05, 0.8, px - pw / 2 + 1.1, pz - pd / 2 + 1.05);
       if (index % 2 === 0) {
         pushBox(ventMatrices, 0.32, 1.1, 0.32, px + pw / 2 - 1.15, topY + 0.55, pz + pd / 2 - 1.1);
@@ -344,29 +379,44 @@ export function buildLevel(game, level) {
       }
     }
 
-    // A couple of solar arrays break up the larger roof planes.
-    if (pw > 4.8 && pd > 3.5 && index % 3 === 0) {
-      for (let panel = 0; panel < 2; panel += 1) {
-        solarMatrices.push(
-          new THREE.Matrix4().compose(
-            new THREE.Vector3(px - pw * 0.12 + panel * 1.15, topY + 0.2, pz + pd / 2 - 1.4),
-            new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -0.18),
-            new THREE.Vector3(1.05, 0.06, 0.72),
-          ),
-        );
+    // P2.2: `fence: true` on a platform adds an orange safety run along both
+    // route-facing side edges. Visual guard only: no collider, the drop stays
+    // lethal and the middle of the deck stays walkable.
+    if (detailed && platform.fence) {
+      const fenceHeight = 1.05;
+      const runLength = Math.max(1.2, pd - 1.2);
+      const modules = Math.max(1, Math.round(runLength / 2));
+      for (const side of [-1, 1]) {
+        const fenceX = px + side * (pw / 2 - 0.12);
+        for (let module = 0; module <= modules; module += 1) {
+          pushBox(
+            fenceMatrices,
+            0.07,
+            fenceHeight,
+            0.07,
+            fenceX,
+            topY + fenceHeight / 2,
+            pz - runLength / 2 + (module / modules) * runLength,
+          );
+        }
+        pushBox(fenceMatrices, 0.04, 0.05, runLength, fenceX, topY + fenceHeight - 0.05, pz);
+        pushBox(fenceMatrices, 0.035, 0.04, runLength, fenceX, topY + fenceHeight * 0.56, pz);
       }
     }
+
+    // Photovoltaic arrays are authored explicitly in the level data so they
+    // face the sun and the route instead of landing on every third roof.
 
     // Service kit v2: a second condenser bank, extra vent stack, dishes, duct
     // runs and billboards. The authored prop list is deliberately sparse (12
     // props / 203 m), so the generated kit carries the near-field density that
     // makes a roof read as working infrastructure.
-    if (detailed && pw > 4.0 && pd > 3.0) {
-      pushBox(acMatrices, 0.92, 0.6, 0.72, px + pw / 2 - 1.2, topY + 0.3, pz - pd / 2 + 1.6);
+    if (serviceKit && detailed && pw > 4.0 && pd > 3.0) {
+      pushAircon(0.92, 0.6, 0.72, px + pw / 2 - 1.2, topY + 0.3, pz - pd / 2 + 1.6, 'x-');
       pushContact(0.92, 0.72, px + pw / 2 - 1.2, pz - pd / 2 + 1.6);
       pushBox(ventMatrices, 0.26, 1.3, 0.26, px - pw / 2 + 1.55, topY + 0.65, pz + pd / 2 - 1.55);
     }
-    if (detailed && pw > 5.2 && pd > 3.8 && index % 2 === 1) {
+    if (serviceKit && detailed && pw > 5.2 && pd > 3.8 && index % 2 === 1) {
       const poleX = px - pw / 2 + 1.05;
       const poleZ = pz - pd / 2 + 1.25;
       pushBox(dishPoleMatrices, 0.09, 1.7, 0.09, poleX, topY + 0.85, poleZ);
@@ -378,11 +428,11 @@ export function buildLevel(game, level) {
         ),
       );
     }
-    if (detailed && pw > 6 && pd > 4.2 && index % 3 === 1) {
+    if (serviceKit && detailed && pw > 6 && pd > 4.2 && index % 3 === 1) {
       pushBox(ductMatrices, 2.6, 0.52, 0.56, px + pw / 2 - 2.2, topY + 0.3, pz - pd / 2 + 1.9);
       pushBox(ductMatrices, 0.56, 0.52, 1.15, px + pw / 2 - 0.9, topY + 0.3, pz - pd / 2 + 1.6);
     }
-    if (detailed && pw > 4.6 && (index % 5 === 1 || index === 3)) {
+    if (serviceKit && detailed && pw > 4.6 && (index % 5 === 1 || index === 3)) {
       const side = index % 2 === 0 ? -1 : 1;
       const boardX = px + side * (pw / 2 - 0.45);
       const boardY = topY + 2.35;
@@ -395,7 +445,7 @@ export function buildLevel(game, level) {
     }
 
     // Access huts need a door, not just a textured box.
-    if (index % 5 === 2 || index === 0) {
+    if (serviceKit && (index % 5 === 2 || index === 0)) {
       doorMatrices.push(
         new THREE.Matrix4().compose(
           new THREE.Vector3(px + pw / 2 - 1.25, topY + 0.7, pz - 1.08),
@@ -493,13 +543,17 @@ export function buildLevel(game, level) {
     root.add(strips);
   }
 
-  const addInstances = (name, geometry, material, matrices) => {
+  const addInstances = (name, geometry, material, matrices, shadows = false) => {
     if (!matrices.length) return null;
     const mesh = new THREE.InstancedMesh(geometry, material, matrices.length);
     mesh.name = name;
     matrices.forEach((matrix, index) => mesh.setMatrixAt(index, matrix));
     mesh.instanceMatrix.needsUpdate = true;
     mesh.computeBoundingSphere();
+    if (shadows) {
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+    }
     root.add(mesh);
     return mesh;
   };
@@ -538,7 +592,6 @@ export function buildLevel(game, level) {
   addInstances('platform-pipes', unitBox, metalStandard(0xffffff, 0.5), pipeMatrices);
   addInstances('platform-rail-bars', unitBox, metalStandard(0xffffff, 0.55), railBarMatrices);
   addInstances('platform-rail-posts', unitBox, metalStandard(0xffffff, 0.55), railPostMatrices);
-  addInstances('platform-solar', unitBox, metalStandard(0x21333f, 0.3, 0.35), solarMatrices);
   addInstances('platform-doors', unitBox, metalStandard(0x3d4e5a, 0.62, 0.5), doorMatrices);
   addInstances('route-cables', unitBox, metalStandard(0x3a4854, 0.42, 0.4), cableMatrices);
   addInstances('platform-dish-poles', unitBox, metalStandard(0x6b7c88, 0.55), dishPoleMatrices);
@@ -638,9 +691,419 @@ export function buildLevel(game, level) {
   const propCapMat = flatMaterial(0x9aa4a8, 0.6);
   const propBeaconMat = poolMaterial('beacon', () => new THREE.MeshBasicMaterial({ color: 0xd23a39 }));
   const propPlanterMat = topMaterialFor(0x879398);
+  // Reference-vocabulary families (P1/P2). Four new materials total: the PV
+  // glass, the skylight glass, red painted steel and safety orange. The pale
+  // frames reuse the dish steel, the fan shrouds reuse the cable steel and the
+  // white volumes reuse the palest cast-concrete platform material.
+  // Painted steel reads brighter as a mostly-dielectric surface: a metallic
+  // tint turns the red and the safety orange almost black in shade.
+  const paintedSteel = (color, rough) =>
+    poolMaterial(
+      `paint:${color}:${rough}`,
+      () => new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: 0.18 }),
+    );
+  const redSteel = paintedSteel(0xc0242e, 0.45);
+  const fenceOrange = paintedSteel(0xdf7a26, 0.5);
+  const fanSteel = metalStandard(0x3a4854, 0.42, 0.4);
+  const paleSteel = metalStandard(0xd8e4e8, 0.45, 0.45);
+  const whiteCast = topMaterialFor(0xf2eee3);
+  // Blue-black photovoltaic plate with a procedural cell grid. The grid is
+  // what makes the array read as PV at gameplay distance instead of as a pale
+  // reflective slab; no external image is involved.
+  const solarPanelMat = detailed
+    ? poolMaterial('solar-panel', () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 128;
+        canvas.height = 128;
+        const context = canvas.getContext('2d');
+        context.fillStyle = '#101d2b';
+        context.fillRect(0, 0, 128, 128);
+        const cols = 4;
+        const rows = 6;
+        const cw = canvas.width / cols;
+        const ch = canvas.height / rows;
+        for (let row = 0; row < rows; row += 1) {
+          for (let col = 0; col < cols; col += 1) {
+            const lift = ((row * cols + col) % 5) * 6;
+            context.fillStyle = `rgb(${22 + lift}, ${44 + lift}, ${68 + lift})`;
+            context.fillRect(col * cw + 1.5, row * ch + 1.5, cw - 3, ch - 3);
+          }
+        }
+        context.strokeStyle = 'rgba(154, 182, 200, 0.5)';
+        context.lineWidth = 1.6;
+        for (let col = 0; col <= cols; col += 1) {
+          context.beginPath();
+          context.moveTo(col * cw, 0);
+          context.lineTo(col * cw, canvas.height);
+          context.stroke();
+        }
+        for (let row = 0; row <= rows; row += 1) {
+          context.beginPath();
+          context.moveTo(0, row * ch);
+          context.lineTo(canvas.width, row * ch);
+          context.stroke();
+        }
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.colorSpace = THREE.SRGBColorSpace;
+        return new THREE.MeshStandardMaterial({ map: texture, roughness: 0.52, metalness: 0.04 });
+      })
+    : null;
+  const skylightGlassMat = poolMaterial('skylight-glass', () => {
+    const material = new THREE.MeshStandardMaterial({
+      color: 0x9dc3d6,
+      roughness: 0.06,
+      metalness: 0,
+      transparent: true,
+      opacity: 0.55,
+      depthWrite: false,
+    });
+    material.userData.reflections = 'glass';
+    return material;
+  });
   const unitCylinder = new THREE.CylinderGeometry(1, 1, 1, 12);
   const unitCone = new THREE.ConeGeometry(1, 1, 7);
   const unitSphere = new THREE.SphereGeometry(1, 8, 6);
+  const propQuaternion = (yaw, tiltX = 0) => {
+    const quaternion = yawQuaternion(yaw || 0);
+    if (tiltX) {
+      quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), tiltX));
+    }
+    return quaternion;
+  };
+  // Rotate a local XZ offset by a yaw around Y (local +Z is the prop's front).
+  const localOffset = (yaw, lx, lz) => [
+    lx * Math.cos(yaw || 0) + lz * Math.sin(yaw || 0),
+    -lx * Math.sin(yaw || 0) + lz * Math.cos(yaw || 0),
+  ];
+  // Footprint of a yawed box in world axes (for prop colliders).
+  const footprint = (w, d, yaw) => {
+    const c = Math.abs(Math.cos(yaw || 0));
+    const s = Math.abs(Math.sin(yaw || 0));
+    return [w * c + d * s, w * s + d * c];
+  };
+  const addPropCollider = (x, y, z, w, h, d, surface = 'concrete') => {
+    if (!game.physics) return;
+    game.physics.addBox([x - w / 2, y - h / 2, z - d / 2], [x + w / 2, y + h / 2, z + d / 2], {
+      surface,
+      tag: '',
+    });
+  };
+  // P1.1 photovoltaic array: a tilted panel grid on a pale frame. High detail
+  // only; low quality keeps the old two-slab silhouette so the roof still reads
+  // as a working solar deck without the triangles.
+  const pushSolarArray = (prop) => {
+    const [x, y, z] = prop.pos;
+    const yaw = prop.yaw || 0;
+    const [w, d] = prop.size || [3.4, 2.2];
+    if (!detailed) {
+      for (let panel = 0; panel < 2; panel += 1) {
+        const [ox, oz] = localOffset(yaw, (panel - 0.5) * (w * 0.3), 0);
+        pushKit(
+          solarFlatMatrices,
+          x + ox,
+          y + 0.16,
+          z + oz,
+          w * 0.32,
+          0.06,
+          d * 0.62,
+          propQuaternion(yaw, -0.18),
+        );
+      }
+      return;
+    }
+    const cols = Math.max(1, Math.round(prop.panels?.[0] ?? 3));
+    const rows = Math.max(1, Math.round(prop.panels?.[1] ?? 2));
+    const cellW = w / cols;
+    const cellD = d / rows;
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < cols; col += 1) {
+        const [ox, oz] = localOffset(yaw, -w / 2 + (col + 0.5) * cellW, -d / 2 + (row + 0.5) * cellD);
+        // Tilted toward the route side (+Z): every capture looks at the deck
+        // from +Z, so the blue-black faces read instead of edge-on slivers.
+        pushKit(
+          solarPanelMatrices,
+          x + ox,
+          y + 0.46,
+          z + oz,
+          cellW - 0.12,
+          0.045,
+          cellD - 0.14,
+          propQuaternion(yaw, 0.34),
+        );
+      }
+    }
+    const railY = y + 0.24;
+    for (const side of [-1, 1]) {
+      const [ex, ez] = localOffset(yaw, 0, side * (d / 2 - 0.09));
+      pushKit(paleKitMatrices, x + ex, railY, z + ez, w, 0.07, 0.08, propQuaternion(yaw));
+      const [sx, sz] = localOffset(yaw, side * (w / 2 - 0.09), 0);
+      pushKit(paleKitMatrices, x + sx, railY + 0.03, z + sz, 0.08, 0.07, d, propQuaternion(yaw));
+      for (const depthSide of [-1, 1]) {
+        const [lx, lz] = localOffset(yaw, side * (w / 2 - 0.18), depthSide * (d / 2 - 0.2));
+        pushKit(paleKitMatrices, x + lx, y + 0.13, z + lz, 0.07, 0.26, 0.07, propQuaternion(yaw));
+      }
+    }
+  };
+  // P1.3 roof light: a shallow glass plate in a pale kerb. The glass material is
+  // tagged for the scene reflection probe, so it mirrors the district at the
+  // grazing angles the route sees it from.
+  const pushSkylight = (prop) => {
+    if (!detailed) return;
+    const [x, y, z] = prop.pos;
+    const yaw = prop.yaw || 0;
+    const [w, d] = prop.size || [1.8, 1.8];
+    // A raised light (`raise`) turns the kerb into a roof lantern. The courtyard
+    // ceiling uses this so the skylights break the deck line and read from the
+    // rim, not only from inside the room.
+    const raise = Math.max(0, prop.raise || 0);
+    const kerb = 0.1;
+    const wallHeight = 0.15 + raise;
+    const quaternion = propQuaternion(yaw);
+    pushKit(skylightGlassMatrices, x, y + 0.08 + raise, z, w, 0.06, d, quaternion);
+    for (const side of [-1, 1]) {
+      const [ex, ez] = localOffset(yaw, 0, side * (d / 2 + kerb / 2));
+      pushKit(
+        paleKitMatrices,
+        x + ex,
+        y + wallHeight / 2,
+        z + ez,
+        w + kerb * 2,
+        wallHeight,
+        kerb,
+        quaternion,
+      );
+      const [sx, sz] = localOffset(yaw, side * (w / 2 + kerb / 2), 0);
+      pushKit(paleKitMatrices, x + sx, y + wallHeight / 2, z + sz, kerb, wallHeight, d, quaternion);
+    }
+    if (prop.collider) {
+      const [fw, fd] = footprint(w + 0.2, d + 0.2, yaw);
+      addPropCollider(x, y + (wallHeight + 0.06) / 2, z, fw, wallHeight + 0.06, fd, 'metal');
+    }
+  };
+  // P1.4 red ladder leaning against a wall / parapet.
+  const pushRedLadder = (prop) => {
+    if (!detailed) return;
+    const [x, y, z] = prop.pos;
+    const yaw = prop.yaw || 0;
+    const height = prop.height || 2.8;
+    const width = prop.width || 0.55;
+    const lean = 0.2;
+    const quaternion = propQuaternion(yaw, -lean);
+    const railLength = height / Math.cos(lean);
+    const topOffset = -Math.sin(lean) * height;
+    for (const side of [-1, 1]) {
+      const [ox, oz] = localOffset(yaw, side * (width / 2 - 0.04), topOffset * 0.5);
+      pushKit(redMatrices, x + ox, y + height / 2, z + oz, 0.06, railLength, 0.06, quaternion);
+    }
+    for (let rung = 1; rung <= 9; rung += 1) {
+      const t = rung / 10;
+      const [ox, oz] = localOffset(yaw, 0, topOffset * t);
+      const rungY = y + Math.cos(lean) * t * height;
+      pushKit(redMatrices, x + ox, rungY, z + oz, width, 0.05, 0.05, quaternion);
+    }
+  };
+  // P1.4 red conduit run with collar brackets.
+  const pushRedPipe = (prop) => {
+    if (!detailed) return;
+    const [x, y, z] = prop.pos;
+    const yaw = prop.yaw || 0;
+    const length = prop.length || 4;
+    const radius = prop.radius || 0.065;
+    const quaternion = yawQuaternion(yaw);
+    pushKit(redMatrices, x, y, z, length, radius * 2, radius * 2, quaternion);
+    const brackets = Math.max(2, Math.round(length / 1.7));
+    for (let i = 0; i < brackets; i += 1) {
+      const [ox, oz] = localOffset(yaw, -length / 2 + (i + 0.5) * (length / brackets), 0);
+      pushKit(redMatrices, x + ox, y, z + oz, 0.1, radius * 2 + 0.12, radius * 2 + 0.12, quaternion);
+    }
+  };
+  // P2.2 safety fence: 2 m posts-and-rails modules, no collider (fail
+  // boundaries stay lethal, the fence is a visual guard only).
+  const pushFence = (prop) => {
+    if (!detailed) return;
+    const [x, y, z] = prop.pos;
+    const yaw = prop.yaw || 0;
+    const length = prop.length || 4;
+    const height = prop.height || 1.05;
+    const quaternion = yawQuaternion(yaw);
+    const modules = Math.max(1, Math.round(length / 2));
+    for (let i = 0; i <= modules; i += 1) {
+      const [ox, oz] = localOffset(yaw, -length / 2 + (i / modules) * length, 0);
+      pushKit(fenceMatrices, x + ox, y + height / 2, z + oz, 0.07, height, 0.07, quaternion);
+    }
+    pushKit(fenceMatrices, x, y + height - 0.05, z, length, 0.05, 0.04, quaternion);
+    pushKit(fenceMatrices, x, y + height * 0.56, z, length, 0.04, 0.035, quaternion);
+  };
+  // P2.3 white plant room: cast volume, recessed door, vent slats, pipe stub.
+  const pushPlantRoom = (prop) => {
+    if (!detailed) return;
+    const [x, y, z] = prop.pos;
+    const yaw = prop.yaw || 0;
+    const [w, h, d] = prop.size || [2.4, 1.6, 2.0];
+    const quaternion = yawQuaternion(yaw);
+    pushKit(whiteMatrices, x, y + h / 2, z, w, h, d, quaternion);
+    const door = localOffset(yaw, 0, d / 2 - 0.02);
+    pushKit(darkTrimMatrices, x + door[0], y + h * 0.42, z + door[1], 0.74, h * 0.7, 0.06, quaternion);
+    const threshold = localOffset(yaw, 0, d / 2 + 0.03);
+    pushKit(darkTrimMatrices, x + threshold[0], y + 0.05, z + threshold[1], w + 0.08, 0.1, 0.08, quaternion);
+    for (let i = 0; i < 3; i += 1) {
+      const vent = localOffset(yaw, -w * 0.26, d / 2 + 0.01);
+      pushKit(
+        darkTrimMatrices,
+        x + vent[0],
+        y + h * (0.78 + i * 0.06),
+        z + vent[1],
+        0.52,
+        0.05,
+        0.03,
+        quaternion,
+      );
+    }
+    const stub = localOffset(yaw, w / 2 + 0.07, 0);
+    pushKit(paleKitMatrices, x + stub[0], y + h * 0.48, z + stub[1], 0.1, h * 0.86, 0.1, quaternion);
+    const [fw, fd] = footprint(w, d, yaw);
+    addPropCollider(x, y + h / 2, z, fw, h, fd, 'concrete');
+  };
+  // P2.1 white ceiling / roof deck slab (top surface at pos[1]).
+  const pushCeiling = (prop) => {
+    if (!detailed) return;
+    const [x, y, z] = prop.pos;
+    const yaw = prop.yaw || 0;
+    const [w, t, d] = prop.size || [4, 0.5, 2];
+    pushKit(whiteMatrices, x, y - t / 2, z, w, t, d, yawQuaternion(yaw));
+    if (prop.collider === false) return;
+    const swap = Math.abs(Math.sin(yaw)) > 0.5;
+    addPropCollider(x, y - t / 2, z, swap ? d : w, t, swap ? w : d, 'concrete');
+  };
+  // P2.1 locker row: pale steel bodies with a dark vent line each.
+  const pushLockerRow = (prop) => {
+    if (!detailed) return;
+    const [x, y, z] = prop.pos;
+    const yaw = prop.yaw || 0;
+    const length = prop.length || 3.4;
+    const count = Math.max(1, Math.round(prop.count || length / 0.68));
+    const pitch = length / count;
+    const height = prop.height || 1.85;
+    const depth = prop.depth || 0.42;
+    const quaternion = yawQuaternion(yaw);
+    for (let i = 0; i < count; i += 1) {
+      const centre = localOffset(yaw, -length / 2 + (i + 0.5) * pitch, 0);
+      pushKit(
+        paleKitMatrices,
+        x + centre[0],
+        y + height / 2,
+        z + centre[1],
+        pitch - 0.03,
+        height,
+        depth,
+        quaternion,
+      );
+      const vent = localOffset(yaw, -length / 2 + (i + 0.5) * pitch, depth / 2 + 0.01);
+      pushKit(
+        darkTrimMatrices,
+        x + vent[0],
+        y + height * 0.84,
+        z + vent[1],
+        pitch * 0.52,
+        0.035,
+        0.03,
+        quaternion,
+      );
+    }
+    for (let i = 1; i < count; i += 1) {
+      const seam = localOffset(yaw, -length / 2 + i * pitch, depth / 2 + 0.012);
+      pushKit(
+        darkTrimMatrices,
+        x + seam[0],
+        y + height / 2,
+        z + seam[1],
+        0.02,
+        height * 0.94,
+        0.02,
+        quaternion,
+      );
+    }
+    const band = localOffset(yaw, 0, depth / 2 + 0.012);
+    pushKit(darkTrimMatrices, x + band[0], y + height - 0.08, z + band[1], length, 0.035, 0.025, quaternion);
+    const swap = Math.abs(Math.sin(yaw)) > 0.5;
+    addPropCollider(x, y + height / 2, z, swap ? depth : length, height, swap ? length : depth, 'metal');
+  };
+  // P2.1 white wall panel with a recessed service door.
+  const pushPanel = (prop) => {
+    if (!detailed) return;
+    const [x, y, z] = prop.pos;
+    const yaw = prop.yaw || 0;
+    const [w, h, t] = prop.size || [2.0, 2.6, 0.12];
+    const quaternion = yawQuaternion(yaw);
+    pushKit(whiteMatrices, x, y + h / 2, z, w, h, t, quaternion);
+    if (prop.door === false) return;
+    const door = localOffset(yaw, 0, t / 2 + 0.005);
+    pushKit(darkTrimMatrices, x + door[0], y + h * 0.44, z + door[1], w * 0.44, h * 0.64, 0.04, quaternion);
+  };
+  // P2.1 red steel service stair: solid treads on red stringers.
+  const pushStair = (prop) => {
+    if (!detailed) return;
+    const [x, y, z] = prop.pos;
+    const yaw = prop.yaw || 0;
+    const rise = prop.rise || 3;
+    const run = prop.run || 2.9;
+    const width = prop.width || 1.2;
+    const steps = Math.max(2, Math.round(prop.steps || 10));
+    const quaternion = yawQuaternion(yaw);
+    const stepRise = rise / steps;
+    const stepRun = run / steps;
+    const swap = Math.abs(Math.sin(yaw)) > 0.5;
+    for (let i = 0; i < steps; i += 1) {
+      const centre = localOffset(yaw, 0, (i + 0.5) * stepRun);
+      const height = (i + 1) * stepRise;
+      pushKit(
+        paleKitMatrices,
+        x + centre[0],
+        y + height / 2,
+        z + centre[1],
+        width,
+        height,
+        stepRun,
+        quaternion,
+      );
+      addPropCollider(
+        x + centre[0],
+        y + height / 2,
+        z + centre[1],
+        swap ? stepRun : width,
+        height,
+        swap ? width : stepRun,
+        'metal',
+      );
+    }
+    const slope = Math.atan2(rise, run);
+    const slopeLength = Math.hypot(rise, run);
+    const stringerQuaternion = propQuaternion(yaw, -slope);
+    for (const side of [-1, 1]) {
+      const edge = localOffset(yaw, side * (width / 2 + 0.02), run / 2);
+      pushKit(
+        redMatrices,
+        x + edge[0],
+        y + rise / 2,
+        z + edge[1],
+        0.07,
+        0.2,
+        slopeLength,
+        stringerQuaternion,
+      );
+    }
+    const handrail = localOffset(yaw, width / 2 + 0.04, run / 2);
+    pushKit(
+      redMatrices,
+      x + handrail[0],
+      y + rise / 2 + 0.95,
+      z + handrail[1],
+      0.06,
+      0.06,
+      slopeLength,
+      stringerQuaternion,
+    );
+  };
   for (const prop of level.props || []) {
     const group = new THREE.Group();
     group.name = `prop-${prop.id}`;
@@ -653,12 +1116,16 @@ export function buildLevel(game, level) {
       body.castShadow = true;
       body.receiveShadow = true;
       group.add(body);
-      for (let i = 0; i < 4; i += 1) {
-        const slat = new THREE.Mesh(unitBox, propSlatMat);
-        slat.scale.set(size[0] * 0.82, 0.035, 0.06);
-        slat.position.set(0, 0.18 + i * 0.16, size[2] / 2 + 0.02);
-        group.add(slat);
-      }
+      // Grilles are added in the batched pass below, once every unit is known.
+      acUnits.push({
+        x: prop.pos[0],
+        y: prop.pos[1],
+        z: prop.pos[2],
+        w: size[0],
+        h: size[1],
+        d: size[2],
+        facing: prop.facing || 'z+',
+      });
     } else if (prop.type === 'vent') {
       const radius = prop.radius || 0.3;
       const height = prop.height || 1;
@@ -688,14 +1155,33 @@ export function buildLevel(game, level) {
       light.position.y = height;
       group.add(light);
     } else if (prop.type === 'rail') {
-      const bar = new THREE.Mesh(unitBox, propMetal);
-      bar.scale.set(prop.size[0], prop.size[1], prop.size[2]);
-      group.add(bar);
-      for (const side of [-1, 1]) {
-        const post = new THREE.Mesh(unitBox, propMetal);
-        post.scale.set(0.07, 0.9, 0.07);
-        post.position.set((prop.size[0] / 2) * side, -0.45, 0);
-        group.add(post);
+      const yaw = prop.yaw || 0;
+      const size = prop.size || [3, 0.1, 0.1];
+      if (prop.material === 'red') {
+        // Red functional rails route through the batched red-steel kit.
+        if (!detailed) {
+          root.add(group);
+          continue;
+        }
+        const [x, y, z] = prop.pos;
+        const quaternion = yawQuaternion(yaw);
+        pushKit(redMatrices, x, y, z, size[0], size[1], size[2], quaternion);
+        for (const side of [-1, 1]) {
+          const [ox, oz] = localOffset(yaw, side * (size[0] / 2) * 0.94, 0);
+          pushKit(redMatrices, x + ox, y - 0.45, z + oz, 0.07, 0.9, 0.07, quaternion);
+        }
+      } else {
+        const bar = new THREE.Mesh(unitBox, propMetal);
+        bar.scale.set(size[0], size[1], size[2]);
+        bar.rotation.y = yaw;
+        group.add(bar);
+        for (const side of [-1, 1]) {
+          const post = new THREE.Mesh(unitBox, propMetal);
+          post.scale.set(0.07, 0.9, 0.07);
+          post.position.set((size[0] / 2) * side, -0.45, 0);
+          post.rotation.y = yaw;
+          group.add(post);
+        }
       }
     } else if (prop.type === 'planter') {
       const size = prop.size || [1.4, 0.6, 0.7];
@@ -715,8 +1201,96 @@ export function buildLevel(game, level) {
         tuft.position.set(side * size[0] * 0.22, size[1] / 2 + 0.34, 0);
         group.add(tuft);
       }
+    } else if (prop.type === 'solar') {
+      pushSolarArray(prop);
+    } else if (prop.type === 'skylight') {
+      pushSkylight(prop);
+    } else if (prop.type === 'redLadder') {
+      pushRedLadder(prop);
+    } else if (prop.type === 'redPipe') {
+      pushRedPipe(prop);
+    } else if (prop.type === 'fence') {
+      pushFence(prop);
+    } else if (prop.type === 'plantRoom') {
+      pushPlantRoom(prop);
+    } else if (prop.type === 'ceiling') {
+      pushCeiling(prop);
+    } else if (prop.type === 'lockerRow') {
+      pushLockerRow(prop);
+    } else if (prop.type === 'panel') {
+      pushPanel(prop);
+    } else if (prop.type === 'stair') {
+      pushStair(prop);
     }
     root.add(group);
+  }
+
+  // P1.2: circular fan grilles on the route-facing face of every condenser.
+  // A ring, a dark shroud plate, three radial blades and a hub are batched into
+  // two instanced draws (ring geometry + unit box) for the whole level.
+  if (detailed) {
+    const facingYaw = { 'x+': Math.PI / 2, 'x-': -Math.PI / 2, 'z+': 0, 'z-': Math.PI };
+    const unitZ = new THREE.Vector3(0, 0, 1);
+    for (const unit of acUnits) {
+      const yaw = facingYaw[unit.facing] ?? 0;
+      const nx = Math.sin(yaw);
+      const nz = Math.cos(yaw);
+      const rx = Math.cos(yaw);
+      const rz = -Math.sin(yaw);
+      const widthAxis = unit.facing[0] === 'x' ? unit.d : unit.w;
+      const depthAxis = unit.facing[0] === 'x' ? unit.w : unit.d;
+      const faceX = unit.x + nx * (depthAxis / 2 + 0.012);
+      const faceY = unit.y + unit.h * 0.06;
+      const faceZ = unit.z + nz * (depthAxis / 2 + 0.012);
+      const count = widthAxis >= 1.3 ? 2 : 1;
+      const radius = Math.min(widthAxis / (count * 2.3), unit.h * 0.42);
+      const spacing = widthAxis * 0.26;
+      for (let fan = 0; fan < count; fan += 1) {
+        const offset = count === 1 ? 0 : fan === 0 ? -spacing : spacing;
+        const gx = faceX + rx * offset;
+        const gz = faceZ + rz * offset;
+        pushKit(fanRingMatrices, gx, faceY, gz, radius * 2, radius * 2, 0.05, yawQuaternion(yaw));
+        // Shroud plate: a flat dark quad behind the blades, so the grille reads
+        // as a recessed opening instead of blades floating on a pale body.
+        pushKit(
+          fanBladeMatrices,
+          gx + nx * 0.006,
+          faceY,
+          gz + nz * 0.006,
+          radius * 1.62,
+          radius * 1.62,
+          1,
+          yawQuaternion(yaw),
+        );
+        for (let blade = 0; blade < 3; blade += 1) {
+          const angle = (blade / 3) * Math.PI * 2 + 0.4;
+          const bx = gx + rx * Math.cos(angle) * radius * 0.46 + nx * 0.022;
+          const by = faceY + Math.sin(angle) * radius * 0.46;
+          const bz = gz + rz * Math.cos(angle) * radius * 0.46 + nz * 0.022;
+          const bladeQuaternion = yawQuaternion(yaw).multiply(
+            new THREE.Quaternion().setFromAxisAngle(unitZ, angle),
+          );
+          pushKit(fanBladeMatrices, bx, by, bz, radius * 0.98, 0.07, 1, bladeQuaternion);
+        }
+      }
+    }
+  }
+
+  const fanRingGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 12, 1, true);
+  fanRingGeometry.rotateX(Math.PI / 2);
+  // Grilles are flat on the condenser body: no shadow pass so the level's
+  // triangle budget stays on the architecture.
+  addInstances('prop-fan-rings', fanRingGeometry, fanSteel, fanRingMatrices);
+  addInstances('prop-fan-grilles', new THREE.PlaneGeometry(1, 1), fanSteel, fanBladeMatrices);
+  addInstances('prop-solar-panels', unitBox, solarPanelMat, solarPanelMatrices, true);
+  addInstances('prop-pale-steel', unitBox, paleSteel, paleKitMatrices);
+  addInstances('prop-skylight-glass', unitBox, skylightGlassMat, skylightGlassMatrices);
+  addInstances('prop-fences', unitBox, fenceOrange, fenceMatrices);
+  addInstances('prop-red-steel', unitBox, redSteel, redMatrices);
+  addInstances('prop-white-volumes', unitBox, whiteCast, whiteMatrices, true);
+  addInstances('prop-dark-trim', unitBox, propSlatMat, darkTrimMatrices);
+  if (solarFlatMatrices.length) {
+    addInstances('platform-solar', unitBox, metalStandard(0x21333f, 0.3, 0.35), solarFlatMatrices);
   }
 
   for (const act of level.acts || []) {
@@ -770,6 +1344,16 @@ export function buildLevel(game, level) {
   gateTop.position.set(finish[0], finish[1] + 2.5, finish[2]);
   gateTop.castShadow = true;
   root.add(gateTop);
+
+  // P2.1 interior fill: the covered service block is lit only by its skylights,
+  // so a warm point light stands in for the sky bounce. It is local to the
+  // courtyard (distance 24) and only exists on the detailed tiers.
+  if (detailed) {
+    const interiorFill = new THREE.PointLight(0xfff1dc, 30, 26, 2);
+    interiorFill.name = 'court-interior-fill';
+    interiorFill.position.set(0.4, -0.4, -107.6);
+    root.add(interiorFill);
+  }
 
   scene.fog = new THREE.FogExp2(0xcfe3ef, 0.0014);
   const sunDirection = new THREE.Vector3(...SUN_DIRECTION).normalize();
