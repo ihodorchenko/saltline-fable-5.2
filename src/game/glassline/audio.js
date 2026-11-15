@@ -161,6 +161,8 @@ export function audioMotion(speed, finale = false, out = {}) {
     out.trafficGain = 0.1;
     out.clothGain = 0.04;
     out.clothFrequency = 1750;
+    out.airGain = 0.085;
+    out.airFrequency = 3000;
     out.musicGain = 0.14;
     out.musicCutoff = 300;
     out.arpGain = 0.008;
@@ -170,6 +172,10 @@ export function audioMotion(speed, finale = false, out = {}) {
   out.windFrequency = 160 + ratio * 140;
   out.windHighGain = 0.02 + ratio * 0.17;
   out.windHighFrequency = 800 + ratio * 800;
+  // High "air" band: the thin wind above 2 kHz that makes an open rooftop mix
+  // read as air instead of a low rumble. Very low gain, opens with speed.
+  out.airGain = 0.017 + ratio * 0.055;
+  out.airFrequency = 2550 + ratio * 1600;
   out.cityGain = 0.4 - ratio * 0.03;
   out.cityFrequency = 145 + ratio * 30;
   out.trafficGain = 0.135 + ratio * 0.025;
@@ -405,6 +411,7 @@ export function enclosureMix(amount, out = {}) {
   const a = clamp01(amount);
   out.windScale = 1 - 0.5 * a;
   out.windHighScale = 1 - 0.62 * a;
+  out.airScale = 1 - 0.7 * a;
   out.cityScale = 1 - 0.42 * a;
   out.trafficScale = 1 - 0.58 * a;
   out.clothScale = 1 - 0.22 * a;
@@ -637,6 +644,8 @@ export function createGlasslineAudio(options = {}) {
   /** @type {any} */ let windLowFilter = null;
   /** @type {any} */ let windHighGain = null;
   /** @type {any} */ let windHighFilter = null;
+  /** @type {any} */ let airGain = null;
+  /** @type {any} */ let airFilter = null;
   /** @type {any} */ let cityGain = null;
   /** @type {any} */ let cityFilter = null;
   /** @type {any} */ let trafficGain = null;
@@ -837,6 +846,18 @@ export function createGlasslineAudio(options = {}) {
     // Wind low band: pink noise through a high/low-pass pair, slowly gusting.
     // The high-pass keeps the rooftop wind in the 50-300 Hz body instead of a
     // subwoofer rumble that would eat all the loudness headroom.
+    // Slow gust LFO shared by the wind bands (created before the layers that
+    // connect to it so all three wind layers breathe together).
+    const gust = oscillator('sine', 0.055);
+    gust.start(now);
+    sources.push(gust);
+    const gustLow = gainNode(0.14);
+    connect(gust, gustLow);
+    const gustHigh = gainNode(0.012);
+    connect(gust, gustHigh);
+    const airGust = gainNode(0.0025);
+    connect(gust, airGust);
+
     const windLow = context.createBufferSource();
     windLow.buffer = noiseBuffer('pink');
     windLow.loop = true;
@@ -848,6 +869,7 @@ export function createGlasslineAudio(options = {}) {
     connect(windLowHighpass, windLowFilter);
     connect(windLowFilter, windLowGain);
     connect(windLowGain, worldFilter);
+    connect(gustLow, windLowGain.gain);
     windLow.start(now);
     sources.push(windLow);
 
@@ -861,20 +883,28 @@ export function createGlasslineAudio(options = {}) {
     connect(windHigh, windHighFilter);
     connect(windHighFilter, windHighGain);
     connect(windHighGain, worldFilter);
+    connect(gustHigh, windHighGain.gain);
     windHigh.start(now);
     sources.push(windHigh);
 
-    // Slow gust LFO modulates both wind bands.
-    const gust = oscillator('sine', 0.055);
-    const gustLow = gainNode(0.14);
-    connect(gust, gustLow);
-    connect(gustLow, windLowGain.gain);
-    const gustHigh = gainNode(0.012);
-    connect(gust, gustHigh);
-    connect(gustHigh, windHighGain.gain);
-    gust.start(now);
-    sources.push(gust);
-
+    // High air band: the top of the wind that the reference mix keeps audible.
+    // White noise through a high-pass + band-pass, kept at a very low level so it
+    // reads as air, not as hiss; it is inside the enclosure filter so going
+    // indoors muffles it with the rest of the outside bed.
+    const air = context.createBufferSource();
+    air.buffer = noiseBuffer('white');
+    air.loop = true;
+    air.playbackRate.value = 1.6;
+    const airHighpass = filterNode('highpass', 2000, 0.6);
+    airFilter = filterNode('bandpass', 3200, 0.55);
+    airGain = gainNode(0.008);
+    connect(air, airHighpass);
+    connect(airHighpass, airFilter);
+    connect(airFilter, airGain);
+    connect(airGain, worldFilter);
+    connect(airGust, airGain.gain);
+    air.start(now);
+    sources.push(air);
     // City bed: brown noise, low-passed, breathing very slowly.
     const city = context.createBufferSource();
     city.buffer = noiseBuffer('brown');
@@ -1628,6 +1658,8 @@ export function createGlasslineAudio(options = {}) {
     setTarget(windLowFilter?.frequency, mix.windFrequency, 0.5, now);
     setTarget(windHighGain?.gain, mix.windHighGain * enc.windHighScale, 0.4, now);
     setTarget(windHighFilter?.frequency, mix.windHighFrequency, 0.5, now);
+    setTarget(airGain?.gain, mix.airGain * enc.airScale, 0.4, now);
+    setTarget(airFilter?.frequency, mix.airFrequency, 0.5, now);
     setTarget(cityGain?.gain, mix.cityGain * enc.cityScale, 0.6, now);
     setTarget(cityFilter?.frequency, mix.cityFrequency * enc.cityCutoffScale, 0.6, now);
     setTarget(trafficGain?.gain, mix.trafficGain * enc.trafficScale, 0.6, now);

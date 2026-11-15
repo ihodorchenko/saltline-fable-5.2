@@ -355,3 +355,29 @@ describe('smoothstep', () => {
     expect(smoothstep(0, 0, 1)).toBe(1);
   });
 });
+
+describe('glassline high air band', () => {
+  it('opens with speed and lifts for the finale', () => {
+    const idle = audioMotion(0);
+    const sprint = audioMotion(12);
+    const finale = audioMotion(0, true);
+    expect(idle.airGain).toBeGreaterThan(0);
+    expect(sprint.airGain).toBeGreaterThan(idle.airGain * 2);
+    expect(finale.airGain).toBeGreaterThan(sprint.airGain);
+    expect(sprint.airFrequency).toBeGreaterThan(idle.airFrequency);
+  });
+
+  it('keeps the air band quiet relative to the wind body', () => {
+    const sprint = audioMotion(12);
+    // The air layer is colour, not loudness: it must stay well under the low wind
+    // so the rooftop still reads as wind rather than hiss.
+    expect(sprint.airGain).toBeLessThan(sprint.windGain * 0.12);
+  });
+
+  it('muffles the air band when the player goes indoors', () => {
+    const outside = enclosureMix(0);
+    const inside = enclosureMix(1);
+    expect(inside.airScale).toBeLessThan(outside.airScale);
+    expect(inside.airScale).toBeGreaterThan(0);
+  });
+});
