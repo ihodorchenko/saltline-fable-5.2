@@ -13,6 +13,7 @@ test('glassline tutorial boots with checkpoints', async ({ page }) => {
       checkpoint: tutorial.checkpoint,
       finished: tutorial.finished,
       rings: root.children.filter((child) => String(child.name).startsWith('checkpoint-')).length,
+      checkpoints: game.glassline.level.checkpoints.length,
       signs: root.children.filter((child) => String(child.name).startsWith('sign-')).length,
       props: root.children.filter((child) => String(child.name).startsWith('prop-')).length,
       windows: root.getObjectByName('city-windows')?.count || 0,
@@ -24,7 +25,8 @@ test('glassline tutorial boots with checkpoints', async ({ page }) => {
   });
   expect(scene.level).toBe('tutorial');
   expect(scene.checkpoint).toBe(0);
-  expect(scene.rings).toBe(21);
+  expect(scene.rings).toBe(scene.checkpoints);
+  expect(scene.checkpoints).toBe(21);
   expect(scene.signs).toBe(3);
   expect(scene.props).toBeGreaterThanOrEqual(7);
   expect(scene.windows).toBeGreaterThan(200);
@@ -55,7 +57,8 @@ test('glassline tutorial advances checkpoints, respawns and finishes', async ({ 
   const beforeRespawn = await page.evaluate(() => {
     const game = window.__G;
     const checkpoint = game.glassline.tutorial.checkpoint;
-    game.glassline.controller.teleport(0, -5, 0, 0, true, -10);
+    const belowTheCourse = game.glassline.level.fallY - 3;
+    game.glassline.controller.teleport(0, -5, 0, 0, true, belowTheCourse);
     return { checkpoint, respawns: game.glassline.tutorial.respawns };
   });
   await page.waitForFunction(
