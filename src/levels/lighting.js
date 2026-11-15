@@ -1,22 +1,26 @@
 // @ts-check
-// High-key lighting rig for GLASSLINE. One shadow-casting sun that follows the
-// player, so shadows exist along the whole route instead of only near the start.
+// Lighting rig for GLASSLINE. One shadow-casting sun that follows the player, so
+// shadows exist along the whole route instead of only near the start, plus a small
+// sky fill. Tuned against the reference: lit white stucco reaches near-white while
+// the shadow side stays a readable blue instead of being lifted to the lit value.
 // Look-dev values live in LIGHTING; the sun direction lives in sun.js.
 
 import { SUN_DIRECTION } from './sun.js';
 
 export const LIGHTING = {
-  hemisphere: { sky: 0xffffff, ground: 0x7d93a8, intensity: 0.85 },
+  // One key, one sky fill: the reference's sunlight/sky ratio is about 4:1, not
+  // the near-1:1 the old three-directional rig produced.
+  hemisphere: { sky: 0xbcd9ff, ground: 0x4e6274, intensity: 0.5 },
   // The engine sun already owns a fitted shadow frustum, so `distance` is only
   // used by the private fallback light.
-  key: { color: 0xfff1d6, intensity: 3.4, distance: 40 },
-  rim: { color: 0xb9e4ff, intensity: 1.0, offset: [28, 16, -48] },
-  warm: { color: 0xffd0a4, intensity: 0.5, offset: [-24, 8, -120] },
+  key: { color: 0xfff4e2, intensity: 6.2, distance: 40 },
+  rim: { color: 0xb9e4ff, intensity: 0.35, offset: [28, 16, -48] },
+  warm: { color: 0xffd0a4, intensity: 0.2, offset: [-24, 8, -120] },
   // Fallback shadow camera only. The engine's soft-shadow shader bakes its
   // frustum size and depth at renderer start-up, so the engine sun must keep
   // its own camera bounds and near/far.
   shadow: { half: 36, near: 1, far: 120, bias: -0.00012, normalBias: 0.03 },
-  exposure: 1.0,
+  exposure: 1.05,
 };
 
 /**

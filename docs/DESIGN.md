@@ -36,7 +36,9 @@ original or procedural.
 | Cyan | `#C8EDF5` | window light, cool rim |
 | Steel | `#8FA3A9` | secondary text, telemetry |
 | Signal | `#D23A39` | route, current checkpoint, primary actions |
-| Warm sun | `#FFE2B8` | key light, sun glow |
+| Warm sun | `#FFF4E2` | key light, sun glow |
+| Sky zenith | `#0A3D8F` | day-sky top |
+| Sky horizon | `#A8C9E2` | day-sky horizon |
 | Moss | `#78977D` | rooftop planting |
 
 Surfaces use near-white tops and desaturated blue-grey sides; the red route is
@@ -46,14 +48,15 @@ appear only beyond 38 m of the route; closer towers are plain white or glass.
 Both rules are enforced by `city.test.js`. In-world signs use the same ivory
 plate, ink type and red top rule as the HUD (`signs.js`).
 
-Atmosphere is tuned in one place (`atmosphere.js`): the scene fog, the engine's
-volumetric haze are thinned, AgX mix and lens dirt lowered and the contrast curve
-(`lookPower`) raised, so the air stays pale but the mid-ground reads. Global
-saturation stays at the engine default: the palette is muted at the source and a
-lower grade saturation would also mute the red route. The engine applies the haze
-and grade values live only with the live-tune fix (`render.tune` was baked at
-start-up before it). Compare in the browser
-with `?haze=0.5` (thinner), `?haze=2` (heavier) or `?atmo=off` (previous look).
+Atmosphere is tuned in one place (`atmosphere.js`): scene fog and the engine's
+volumetric haze are thinned and the glare is kept on the sun (bloom 0.05 at
+threshold 2.6, flare 0.08). Contrast now comes from the ACES-side S-curve in the
+grade rather than from `lookPower` — that key is a `#define` inside the AgX
+branch, so it is inert at `agxMix 0` (see [`VISUAL_GAP.md`](VISUAL_GAP.md) §3.9).
+Global saturation is a mild 1.3 lift: the palette is muted at the source, and most
+of the reference's saturation has to come from the sky, accents and materials,
+not from the grade. Compare in the browser with `?haze=0.5` (thinner), `?haze=2`
+(heavier) or `?atmo=off` (previous look).
 Flat roofs get scale cues without colour: per-panel tonal variation and a heavier
 joint every 4 m in the concrete texture, and a steel-grey safety stripe 0.1 m
 wide, inset 0.3 m from every platform edge (`floor.js`).
@@ -160,16 +163,21 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
   reads by value (dark jacket, pale steel pack) on ivory, not by hue. No skinned meshes or external models are
   loaded; pivot groups keep elbows, hips and knees hinged correctly.
 
-Lighting: high-key warm sun, cool blue shadows, a clean blue-to-white sky dome
-and a PMREM environment map generated from that sky for reflective glass. Light
-blue fog, a luminous abyss and a procedural sun sprite complete the palette; the
-sky sphere follows the camera so the route never approaches its edge. The palette
+Lighting: one dominant warm sun at ~56° elevation and ~50° off the route axis,
+a small blue sky fill (hemisphere 0.5 `#bcd9ff`/`#4e6274`, two weak rim/fill
+directionals, environment 0.14), cool blue shadows and a saturated-blue day-sky
+dome (`#0a3d8f` zenith → `#a8c9e2` horizon, exponent 0.32) with a sun disc in the
+shader. The PMREM environment map is generated from that sky for reflective glass;
+the sky sphere follows the camera so the route never approaches its edge. Light
+blue fog, a luminous abyss and the disc/aureole complete the palette. The palette
 stays bright and optimistic; danger is conveyed by red route language, not darkness.
 
 Bloom is part of the engine's existing HDR post chain rather than a second
-`EffectComposer`: the first bloom downsample applies a threshold of 1.8 in HDR
-space, with strength 0.09. Only the sun, sky glare and bright emissive route
-accents bloom; white roofs do not turn the whole frame into a glowing wash.
+`EffectComposer`: the first bloom downsample applies a threshold of 2.6 in HDR
+space, with strength 0.05. Only the sun, sky glare and bright emissive route
+accents bloom; white roofs do not turn the whole frame into a glowing wash. The
+old 110 m additive sun billboard is gone — the sun is a disc in the sky shader at
+the true sun direction, and lens flare stays screen-space.
 The final pass already includes FXAA; high/ultra use a 1.1 render scale for extra
 edge coverage on thin railings and cables. Wayfinding signs render FrontSide to
 avoid mirrored copy.

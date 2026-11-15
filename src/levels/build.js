@@ -552,7 +552,7 @@ export function buildLevel(game, level) {
   gateTop.castShadow = true;
   root.add(gateTop);
 
-  scene.fog = new THREE.FogExp2(0xe3f2f9, 0.0014);
+  scene.fog = new THREE.FogExp2(0xcfe3ef, 0.0014);
   const sunDirection = new THREE.Vector3(...SUN_DIRECTION).normalize();
   const lighting = createLighting(game);
   lighting.update({ x: level.spawn.x, y: level.spawn.y, z: level.spawn.z });
@@ -561,34 +561,10 @@ export function buildLevel(game, level) {
   const highSky = createHighKeySky(game, sunDirection);
   root.add(highSky.mesh);
 
-  // Original procedural sun glow: a soft utopian light source beyond the route.
-  const sunCanvas = document.createElement('canvas');
-  sunCanvas.width = 256;
-  sunCanvas.height = 256;
-  const sunContext = sunCanvas.getContext('2d');
-  const sunGradient = sunContext.createRadialGradient(128, 128, 0, 128, 128, 128);
-  sunGradient.addColorStop(0, 'rgba(255, 246, 218, 0.95)');
-  sunGradient.addColorStop(0.12, 'rgba(255, 225, 174, 0.72)');
-  sunGradient.addColorStop(0.42, 'rgba(255, 184, 122, 0.2)');
-  sunGradient.addColorStop(1, 'rgba(255, 184, 122, 0)');
-  sunContext.fillStyle = sunGradient;
-  sunContext.fillRect(0, 0, 256, 256);
-  const sunTexture = new THREE.CanvasTexture(sunCanvas);
-  sunTexture.colorSpace = THREE.SRGBColorSpace;
-  const sunSprite = new THREE.Sprite(
-    new THREE.SpriteMaterial({
-      map: sunTexture,
-      transparent: true,
-      depthWrite: false,
-      depthTest: false,
-      blending: THREE.AdditiveBlending,
-    }),
-  );
-  sunSprite.name = 'glassline-sun';
-  sunSprite.position.set(34, 58, -190);
-  sunSprite.scale.set(110, 110, 1);
-  sunSprite.renderOrder = -1;
-  root.add(sunSprite);
+  // The sun is drawn by the sky dome (disc + aureole) at the true sun direction;
+  // the old 110 m additive billboard sat up to 80 deg away from it and veiled a
+  // tenth of the frame, so it is gone.
+
   const city = buildCity(game, level, createCityPlan(level), textures);
   root.add(city.root);
   applyAtmosphere(game);

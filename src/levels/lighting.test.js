@@ -111,12 +111,19 @@ describe('createLighting', () => {
     const right = new THREE.Vector3().crossVectors(sunVector(), new THREE.Vector3(0, 1, 0)).normalize();
     const snapped = () => sun.target.position.dot(right);
 
-    rig.update({ x: 0.03, y: 0, z: 0 });
+    // Put the player 0.6 texels along the light-space right axis, whatever the
+    // sun direction is: at 2048 that snaps up to one texel, at 1024 the same
+    // world offset is 0.3 texels and snaps down to zero. The two snaps differ
+    // only if the grid was rebuilt from the new map size.
+    const texel2048 = (sun.shadow.camera.right - sun.shadow.camera.left) / 2048;
+    const offset = (0.6 * texel2048) / right.x;
+
+    rig.update({ x: offset, y: 0, z: 0 });
     const before = snapped();
     sun.shadow.mapSize.set(1024, 1024);
-    rig.update({ x: 0.03, y: 0, z: 0 });
+    rig.update({ x: offset, y: 0, z: 0 });
 
-    expect(before).toBeCloseTo((sun.shadow.camera.right - sun.shadow.camera.left) / 2048, 6);
+    expect(before).toBeCloseTo(texel2048, 6);
     expect(snapped()).toBeCloseTo(0, 6);
   });
 

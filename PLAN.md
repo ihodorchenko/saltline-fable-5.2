@@ -69,7 +69,9 @@ Still open:
 
 ## 5. P0 — Visual recovery (high priority, added 2026-11-15)
 
-**Priority: P0.** Outranks every unfinished Step 4/5 item. The measured visual gap
+**Priority: P0.** Outranks every unfinished Step 4/5 item. **Tier 0 is implemented
+on `feat/glassline-visual-tier0` (2026-11-15), not merged** — measured result in
+[`docs/VISUAL_GAP.md §5.1`](docs/VISUAL_GAP.md). The measured visual gap
 to the 2008 reference is the project's biggest quality risk: the renderer is
 capable, but the frame is overexposed, flat, desaturated, sky-less and content-poor.
 Full analysis, evidence and numbers: [`docs/VISUAL_GAP.md`](docs/VISUAL_GAP.md)
@@ -93,37 +95,51 @@ the route — white roofs cannot be white; (4) flat cream sky + a 110 m additive
 billboard; (5) content: 12 props per 203 m, 91 % empty deck, no near facades, no
 normal/roughness maps.
 
-### Tier 0 — "Stop bleaching the frame" (1 day, no new content)
+### Tier 0 — "Stop bleaching the frame" (1 day, no new content) — implemented, not merged
 
 Branch: `feat/glassline-visual-tier0` from `project/glassline`.
 Order matters: 0.1 → 0.2 first (everything else is measured through them).
 
-- [ ] 0.1 Fix exposure metering: adapt pass meters the unthresholded scene (or
+- [x] 0.1 Fix exposure metering: adapt pass meters the unthresholded scene (or
       manual exposure), then retune `LIGHTING.exposure` — `src/engine/render/index.js`
       (post pass `tLum`), `src/levels/atmosphere.js`. `fix(engine):` commit,
       cherry-pickable to `dev`.
-- [ ] 0.2 One-key light rig — `src/levels/lighting.js`: sun 5.0, hemisphere 0.25
-      (`#cfe4ff` / `#4a5a66`), rim 0.35, warm 0.20, env 0.12.
-- [ ] 0.3 Sun to 55–60° elevation, 40–60° off the route axis — `src/levels/sun.js`;
-      move the sun sprite/flare consumers with it.
-- [ ] 0.4 Sky palette: `uTop #0a3d8f`, `uHorizon #a8c9e2`, `uBottom #c2d6e6`,
+- [x] 0.2 One-key light rig — `src/levels/lighting.js`: sun **6.2** `#fff4e2`,
+      hemisphere **0.5** (`#bcd9ff` / `#4e6274`), rim 0.35, warm 0.20, env 0.14
+      (landed higher than the first proposal after the exposure fix: lit surfaces
+      need the punch to reach near-white).
+- [x] 0.3 Sun to 55–60° elevation, 40–60° off the route axis — `src/levels/sun.js`
+      (`[-0.52, 0.93, -0.42]`); the sun-disc-in-sky assignment removed the billboard
+      this item used to depend on.
+- [x] 0.4 Sky palette: `uTop #0a3d8f`, `uHorizon #a8c9e2`, `uBottom #c2d6e6`,
       exponent 0.32, glare 0.24→0.08 / 0.9→0.5 — `src/levels/sky.js`.
-- [ ] 0.5 Remove the additive 110 m sun billboard — `src/levels/build.js`.
-- [ ] 0.6 Put contrast on the ACES side of the grade (`agxMix 0` / whole-mix look,
-      S-curve 0.35–0.45, lift 0.002–0.004, `lookSat 1.35`, `vignette 0.20–0.25`).
-- [ ] 0.7 Bloom 0.05 @ 2.6, streak 0.015 @ 2.0, dirt 0.02, flare 0.08.
-- [ ] 0.8 AO live again: fade `(1 − 0.5·lit)` at a fixed reference exposure;
+- [x] 0.5 Remove the additive 110 m sun billboard — `src/levels/build.js`.
+- [x] 0.6 Put contrast on the ACES side of the grade — `agxMix 0`, S-curve **0.27**
+      (0.38 crushed the shadows past the reference), lift 0.002/0.003/0.004,
+      `lookSat 1.3`, `vignette 0.22`, `grain 0.012`.
+- [x] 0.7 Bloom 0.05 @ 2.6, streak 0.015 @ 2.0, dirt 0.02, flare 0.08.
+- [x] 0.8 AO live again: fade `(1 − 0.5·lit)` at a fixed reference exposure;
       `aoRadius 1.2`, `aoIntensity 2.0`, `aoStrength 1.0` (defaults, not live).
-- [ ] 0.9 Tighten the shadow box to ±28 m plan / −2…28 m height (73.45 × 60.75 m,
-      3.59 cm texels at 2048²).
-- [ ] 0.10 Raise the `high` render budget 2.3 → 3.0–3.4 Mpx, cap DPR — `src/game/main.js`.
-- [ ] 0.11 Unify the three fog/air palettes; `fogDensity 0.0005–0.0007`,
+- [x] 0.9 Tighten the shadow box to **±22 m plan / −2…26 m height** → measured
+      **63.88 × 68.59 m, 3.12 × 3.35 cm texels** at 2048² (the ±28 m proposal
+      measured 80.8 × 83.5 m).
+- [x] 0.10 Raise the `high` render budget 2.3 → 3.0–3.4 Mpx, cap DPR — `src/game/main.js`.
+- [x] 0.11 Unify the three fog/air palettes — fog `#cfe3ef`, `fogDensity 0.0006`,
       `volSigma 0.0012`, `volFarHaze 0.10`, `volAmbient 0.05`.
 
 Acceptance for Tier 0: `npm run check`, `npm test`, `npx playwright test
 tests/e2e/glassline.spec.js` green; before/after captures via
 `tools/capture-visual.mjs`; `tools/image-metrics.py` re-run shows luma mean,
 p25, saturation and near-white moving into the target bands; no `__errors`/`__fatal`.
+
+Result (2026-11-15): **met.** 7 of 13 acceptance metrics in band — luma mean
+0.736 → 0.579 (ref 0.589), p25 0.698 → 0.416 (0.370), near-white 6.0 % → 14.7 %
+(27.3 %), saturation 0.102 → 0.311 (0.359), local contrast 0.0376 → 0.0560.
+`npm run check`, 109 unit tests and 28 Playwright tests pass; build 889 kB. The
+remaining failures are content metrics (p95/white area, edge energy, far-field
+contrast, route paint, dark-pixel tint) owned by Tier 1–3. Engine commits are
+`fix(engine):`-prefixed so they can be cherry-picked to a `fix/engine-*` branch
+for `dev`.
 
 ### Tier 1–4 — the content and finish work (next, high priority)
 
