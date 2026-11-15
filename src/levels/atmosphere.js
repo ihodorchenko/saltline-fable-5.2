@@ -16,7 +16,7 @@ export const ATMOSPHERE = {
   // agxMix 0 it is inert; the contrast curve now comes from the ACES-side
   // S-curve in the grade pass. lookSat is a mild global lift; most of the
   // reference's saturation must come from the sky, accents and materials.
-  look: { lookSat: 1.3, lookPower: 1.28, agxMix: 0, dirt: 0.02 },
+  look: { lookSat: 1.18, lookPower: 1.28, agxMix: 0, dirt: 0.02, saturation: 0.96 },
   // Engine defaults in brackets: volSigma [0.0034], volFarHaze [0.42],
   // volAmbient [0.2], volSunScale [0.85]. All but volSunScale scale with ?haze.
   // The audit measured air alone as a minor lever (+11 % top-third contrast);
@@ -51,6 +51,11 @@ export function applyAtmosphere(game, search = typeof window !== 'undefined' ? w
     if (enabled) {
       const h = ATMOSPHERE.haze;
       Object.assign(tune, ATMOSPHERE.look);
+      // uSaturation is the live grade saturation (lookSat lives in the AgX branch
+      // and is inert while agxMix is 0).
+      if (game.render?.post && Number.isFinite(ATMOSPHERE.look.saturation)) {
+        game.render.post.saturation = ATMOSPHERE.look.saturation;
+      }
       tune.volSigma = h.volSigma * haze;
       tune.volFarHaze = Math.min(1, h.volFarHaze * haze);
       tune.volAmbient = h.volAmbient * haze;

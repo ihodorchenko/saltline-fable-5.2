@@ -74,8 +74,9 @@ into `project/glassline` (2026-11-15, `dbd3a6f`; feature branch deleted). Tier 1
 is merged into `project/glassline` (2026-11-15, `c8047db`; feature branch
 deleted). Tier 2 is merged into `project/glassline` (2026-11-15, `f25bfd4`;
 feature branch deleted). Tier 3 is merged into `project/glassline` (2026-11-15,
-`d86f5f7`; feature branch deleted)** — measured results in
-[`docs/VISUAL_GAP.md §5.1–5.4`](docs/VISUAL_GAP.md). The measured visual gap
+`d86f5f7`; feature branch deleted). Tier 4 is implemented on
+`feat/glassline-visual-tier4` (2026-11-15, merge pending)** — measured results in
+[`docs/VISUAL_GAP.md §5.1–5.5`](docs/VISUAL_GAP.md). The measured visual gap
 to the 2008 reference is the project's biggest quality risk: the renderer is
 capable, but the frame is overexposed, flat, desaturated, sky-less and content-poor.
 Full analysis, evidence and numbers: [`docs/VISUAL_GAP.md`](docs/VISUAL_GAP.md)
@@ -212,9 +213,26 @@ reverted: raising the exposure ceiling moved p95 into band but pushed p25 and
 sky-blue out — a net loss. Cost: 421 draw calls, 75.9 k triangles, 63 textures,
 906 kB build; the new density is gated to high/ultra.
 
-### Tier 4 — motion and finish (2 weeks+)
+### Tier 4 — motion and finish (2 weeks+) — implemented, merge pending
 
-- **Tier 4 (2 weeks+):** motion/character finish, final grade, golden screenshots.
+- [x] Head bob: speed-scaled (~1.2 cm vertical, 0.7 cm lateral, 0.2° roll at
+      sprint), damped in/out, grounded only, extracted as the pure `bobOffset()`
+      helper with unit tests.
+- [x] View-model legs: thigh/shin/shoe per leg on the layer-1 pass — standing they
+      hang below the frame, a slide swings them forward, a roll tucks them, and
+      they stride while running.
+- [x] Final grade: stronger/cooler split tone, cooler highlights, bluer lifted
+      blacks and a top-of-range highlight lift (clipped whites); live saturation
+      moved from the inert `lookSat` (AgX branch) to `render.post.saturation`.
+- [x] Golden harness: `npm run golden` writes ten route frames + a metrics
+      manifest to `artifacts/golden/`; `glassline-golden.spec.js` asserts the look
+      stays inside calibrated luma/p95/saturation bands.
+
+Result: **13 of 13 acceptance metrics in band** — the measured visual gap that
+opened the P0 analysis is closed on the metric set that defined it (from 0/13 at
+the baseline). p95 0.953 and dark split-tone −40.2 both entered band this tier.
+Cost: 427 draw calls, 76.9 k triangles, 63 textures, 907 kB build.
+`npm run check`, 123 unit tests and 30 Playwright tests green.
 
 Evidence rule: every tier re-runs the capture + metrics harness and records the
 before/after table in `docs/VISUAL_GAP.md`. Comparison sheets that embed reference

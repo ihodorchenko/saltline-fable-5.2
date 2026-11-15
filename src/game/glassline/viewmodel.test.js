@@ -32,6 +32,25 @@ describe('createViewmodel', () => {
     });
   });
 
+  it('includes legs that swing into view for a slide', () => {
+    const { game } = makeGame();
+    const viewmodel = createViewmodel(game);
+    viewmodel.setVisible(true);
+    const meshes = [];
+    viewmodel.root.traverse((object) => {
+      if (object.isMesh) meshes.push(object);
+    });
+    // Two arms (6 meshes each) plus two legs (2 limbs + shoe each).
+    expect(meshes.length).toBeGreaterThanOrEqual(18);
+    const [leftLeg, rightLeg] = viewmodel.root.children.slice(2);
+    expect(leftLeg.rotation.x).toBeCloseTo(0, 2);
+    for (let frame = 0; frame < 90; frame += 1) {
+      viewmodel.update(1 / 60, { speed: 6, sliding: true, onGround: true }, frame / 60);
+    }
+    expect(leftLeg.rotation.x).toBeGreaterThan(0.8);
+    expect(rightLeg.rotation.x).toBeGreaterThan(0.8);
+  });
+
   it('shows and hides with the run', () => {
     const { game } = makeGame();
     const viewmodel = createViewmodel(game);

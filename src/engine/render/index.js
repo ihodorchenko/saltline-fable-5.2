@@ -562,12 +562,16 @@ void main(){
   // ---- grade (display-linear) ----
   float l = luma(col);
   // split tone: teal shadows, warm highlights
-  vec3 sh = vec3(0.80, 1.01, 1.13), hi = vec3(1.07, 1.0, 0.90);
+  vec3 sh = vec3(0.74, 1.0, 1.20), hi = vec3(1.05, 1.0, 0.93);
   col *= mix(sh, hi, smoothstep(0.03, 0.55, l));
   // gentle S-curve
   col = mix(col, col * col * (3.0 - 2.0 * col), 0.27);
   // lifted, slightly teal blacks
-  col = col * 0.996 + vec3(0.002, 0.003, 0.004);
+  col = col * 0.996 + vec3(0.0, 0.004, 0.011);
+  // Highlight lift: the reference's sunlit white surfaces and cumulus clip, ours
+  // rolled off ~5 % short of white. Only the top of the range moves.
+  float lh = luma(col);
+  col += vec3(0.12) * smoothstep(0.80, 1.0, lh);
   // saturation (gameplay driven)
   float sat = uSaturation * (1.0 - 0.65 * uLowHealth) * (1.0 - 0.5 * uDamage);
   l = luma(col);

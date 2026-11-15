@@ -76,6 +76,12 @@ export function createViewmodel(game) {
       emissiveIntensity: 0.95,
       roughness: 0.6,
     }),
+    shoe: new THREE.MeshStandardMaterial({
+      color: 0xdfe8e6,
+      emissive: 0x2c3134,
+      emissiveIntensity: 0.5,
+      roughness: 0.6,
+    }),
     tracker: new THREE.MeshStandardMaterial({
       color: 0xd23a39,
       emissive: 0x6d1012,
@@ -142,6 +148,31 @@ export function createViewmodel(game) {
   const left = makeArm(-1);
   const right = makeArm(1);
 
+  /**
+   * One leg hanging from the camera. Standing, it sits below the frame (looking
+   * down shows your feet, which is correct); a slide swings it forward into view.
+   * @param {number} side -1 left, +1 right
+   */
+  function makeLeg(side) {
+    const leg = new THREE.Group();
+    const hip = [side * 0.13, -0.34, -0.04];
+    leg.position.set(...hip);
+    const knee = [0, -0.44, -0.02];
+    const ankle = [0, -0.86, -0.03];
+    leg.add(
+      limb(THREE, [0, 0, 0], knee, 0.062, materials.suit),
+      limb(THREE, knee, ankle, 0.048, materials.suit),
+    );
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.085, 0.27), materials.shoe);
+    shoe.position.set(0, ankle[1] - 0.03, ankle[2] - 0.09);
+    leg.add(shoe);
+    root.add(leg);
+    return leg;
+  }
+
+  const leftLeg = makeLeg(-1);
+  const rightLeg = makeLeg(1);
+
   // Layer 1 only: the engine's view-model pass draws this with the narrow-FOV
   // view camera after the world, so it never intersects the scene.
   root.traverse((object) => {
@@ -159,6 +190,7 @@ export function createViewmodel(game) {
   let phase = 0;
   let lean = 0;
   let lift = 0;
+  let slideLegs = 0;
   const target = { lean: 0, lift: 0 };
 
   /**
@@ -188,6 +220,17 @@ export function createViewmodel(game) {
     const ease = 1 - Math.exp(-9 * Math.min(dt, 0.05));
     lean += (target.lean - lean) * ease;
     lift += (target.lift - lift) * ease;
+
+    // Sliding kicks the legs forward into the lower frame; running keeps them
+    // under the camera (visible when the player looks down) with a small stride.
+    const legTarget = sliding ? 1 : state?.rolling ? 0.7 : 0;
+    slideLegs += (legTarget - slideLegs) * (1 - Math.exp(-8 * Math.min(dt, 0.05)));
+    const stride = (moving ? 0.34 : 0.04) * Math.sin(phase);
+    leftLeg.rotation.set(1.22 * slideLegs + stride * (1 - slideLegs), 0, 0.04);
+    rightLeg.rotation.set(1.22 * slideLegs - stride * (1 - slideLegs), 0, -0.04);
+    const tuck = state?.rolling ? 0.55 : 0;
+    leftLeg.rotation.x += tuck * 0.6;
+    rightLeg.rotation.x += tuck * 0.6;
 
     root.position.set(
       bounce * 0.004 * bob + sway * 0.004 * bob,
