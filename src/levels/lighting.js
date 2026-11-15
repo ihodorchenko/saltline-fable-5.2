@@ -10,7 +10,7 @@ import { SUN_DIRECTION } from './sun.js';
 export const LIGHTING = {
   // One key, one sky fill: the reference's sunlight/sky ratio is about 4:1, not
   // the near-1:1 the old three-directional rig produced.
-  hemisphere: { sky: 0xbcd9ff, ground: 0x4e6274, intensity: 0.5 },
+  hemisphere: { sky: 0xaccfff, ground: 0x4a6078, intensity: 0.58 },
   // The engine sun already owns a fitted shadow frustum, so `distance` is only
   // used by the private fallback light.
   key: { color: 0xfff4e2, intensity: 6.2, distance: 40 },

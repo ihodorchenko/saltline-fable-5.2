@@ -59,9 +59,9 @@ export function createViewmodel(game) {
   // to stay readable against white roofs without looking unlit.
   const materials = {
     suit: new THREE.MeshStandardMaterial({
-      color: 0x2b343d,
-      emissive: 0x151b21,
-      emissiveIntensity: 0.9,
+      color: 0x36424d,
+      emissive: 0x222d36,
+      emissiveIntensity: 1.0,
       roughness: 0.66,
     }),
     cuff: new THREE.MeshStandardMaterial({
