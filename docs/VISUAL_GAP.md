@@ -621,8 +621,9 @@ no `__errors`/`__fatal`.
 
 ## 5.3 Tier 2 implemented — measured result (2026-11-15)
 
-Branch `feat/glassline-visual-tier2` (merge pending). The plan's Tier 2 is a
-surface pass; all of its deliverables shipped:
+Merged into `project/glassline` as `f25bfd4` (2026-11-15) from
+`feat/glassline-visual-tier2`; the feature branch was deleted after integration.
+The plan's Tier 2 is a surface pass; all of its deliverables shipped:
 
 | Item | What landed |
 | --- | --- |

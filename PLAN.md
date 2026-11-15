@@ -72,8 +72,8 @@ Still open:
 **Priority: P0.** Outranks every unfinished Step 4/5 item. **Tier 0 is merged
 into `project/glassline` (2026-11-15, `dbd3a6f`; feature branch deleted). Tier 1
 is merged into `project/glassline` (2026-11-15, `c8047db`; feature branch
-deleted). Tier 2 is implemented on `feat/glassline-visual-tier2` (2026-11-15,
-merge pending)** — measured results in
+deleted). Tier 2 is merged into `project/glassline` (2026-11-15, `f25bfd4`;
+feature branch deleted)** — measured results in
 [`docs/VISUAL_GAP.md §5.1–5.3`](docs/VISUAL_GAP.md). The measured visual gap
 to the 2008 reference is the project's biggest quality risk: the renderer is
 capable, but the frame is overexposed, flat, desaturated, sky-less and content-poor.
@@ -165,7 +165,7 @@ Result: **9 of 13 acceptance metrics in band** (up from 7). Sky acceptance met:
 0.190 (> 0.15). `npm run check`, 118 unit tests, 29 Playwright tests green;
 build 898 kB.
 
-### Tier 2 — "Surfaces" (~1 week) — implemented, merge pending
+### Tier 2 — "Surfaces" (~1 week) — merged 2026-11-15
 
 - [x] Normal + roughness maps generated from the same procedural canvases (Sobel
       normals, shared per material family), applied to platform tops/sides, curbs,
