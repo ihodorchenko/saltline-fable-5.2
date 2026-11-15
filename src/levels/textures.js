@@ -92,6 +92,91 @@ function canvasTexture(THREE, canvas, repeat = [1, 1], colorSpace = true) {
   return texture;
 }
 
+// ---------------------------------------------------------------------------
+// Derived maps: normal and roughness, generated from the same procedural canvases
+// so surfaces catch the sun at close range and stop reading as flat painted
+// panels. The albedo canvases are the height source: dark seams become grooves,
+// bright panels become raised slabs, glass becomes a smooth reflective bay.
+// ---------------------------------------------------------------------------
+
+/**
+ * Tangent-space normal map from the luminance of a square canvas (Sobel, wrapping
+ * so the result stays tileable).
+ * @param {HTMLCanvasElement} source
+ * @param {number} [strength]
+ * @param {number} [size] output resolution (normals do not need albedo resolution)
+ * @returns {HTMLCanvasElement}
+ */
+function normalCanvas(source, strength = 2, size = 512) {
+  const sourceSize = source.width;
+  const src = source.getContext('2d').getImageData(0, 0, sourceSize, sourceSize).data;
+  const step = sourceSize / size;
+  const lum = (x, y) => {
+    const sx = Math.min(sourceSize - 1, Math.max(0, Math.round(x * step)));
+    const sy = Math.min(sourceSize - 1, Math.max(0, Math.round(y * step)));
+    const i = (sy * sourceSize + sx) * 4;
+    return (src[i] * 0.299 + src[i + 1] * 0.587 + src[i + 2] * 0.114) / 255;
+  };
+  const canvas = canvasOf(size);
+  const context = canvas.getContext('2d');
+  const image = context.createImageData(size, size);
+  const data = image.data;
+  for (let y = 0; y < size; y += 1) {
+    const ym = (y - 1 + size) % size;
+    const yp = (y + 1) % size;
+    for (let x = 0; x < size; x += 1) {
+      const xm = (x - 1 + size) % size;
+      const xp = (x + 1) % size;
+      const dx = (lum(xp, y) - lum(xm, y)) * strength;
+      const dy = (lum(x, yp) - lum(x, ym)) * strength;
+      const length = Math.sqrt(dx * dx + dy * dy + 1);
+      const index = (y * size + x) * 4;
+      data[index] = ((-dx / length) * 0.5 + 0.5) * 255;
+      data[index + 1] = ((-dy / length) * 0.5 + 0.5) * 255;
+      data[index + 2] = ((1 / length) * 0.5 + 0.5) * 255;
+      data[index + 3] = 255;
+    }
+  }
+  context.putImageData(image, 0, 0);
+  return canvas;
+}
+
+/**
+ * Roughness map from the luminance of a square canvas: bright pixels become
+ * rougher when `invert` is false (glass frames), dark pixels rougher otherwise.
+ * @param {HTMLCanvasElement} source
+ * @param {{base?: number, range?: number, invert?: boolean}} [options]
+ * @param {number} [size]
+ * @returns {HTMLCanvasElement}
+ */
+function roughnessCanvas(source, options = {}, size = 256) {
+  const { base = 0.25, range = 0.4, invert = false } = options;
+  const sourceSize = source.width;
+  const src = source.getContext('2d').getImageData(0, 0, sourceSize, sourceSize).data;
+  const step = sourceSize / size;
+  const canvas = canvasOf(size);
+  const context = canvas.getContext('2d');
+  const image = context.createImageData(size, size);
+  const data = image.data;
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const sx = Math.min(sourceSize - 1, Math.round(x * step));
+      const sy = Math.min(sourceSize - 1, Math.round(y * step));
+      const i = (sy * sourceSize + sx) * 4;
+      const l = (src[i] * 0.299 + src[i + 1] * 0.587 + src[i + 2] * 0.114) / 255;
+      const value = base + (invert ? 1 - l : l) * range;
+      const index = (y * size + x) * 4;
+      const byte = Math.max(0, Math.min(255, value * 255));
+      data[index] = byte;
+      data[index + 1] = byte;
+      data[index + 2] = byte;
+      data[index + 3] = 255;
+    }
+  }
+  context.putImageData(image, 0, 0);
+  return canvas;
+}
+
 /**
  * @param {any} game
  */
@@ -109,7 +194,7 @@ export function createTextureFactory(game) {
   const concrete = (hex, options = {}) => {
     const key = `concrete-${hex}-${options.dark ? 1 : 0}`;
     if (cache.has(key)) return cache.get(key);
-    const size = 512;
+    const size = 1024;
     const canvas = canvasOf(size);
     const context = canvas.getContext('2d');
     const random = mulberry(hex + (options.dark ? 91 : 7));
@@ -134,10 +219,10 @@ export function createTextureFactory(game) {
     return texture;
   };
 
-  const side = (hex = 0x566a72) => {
+  const side = (hex = 0x6b8092) => {
     const key = `side-${hex}`;
     if (cache.has(key)) return cache.get(key);
-    const size = 512;
+    const size = 1024;
     const canvas = canvasOf(size);
     const context = canvas.getContext('2d');
     const random = mulberry(hex + 31);
@@ -162,7 +247,7 @@ export function createTextureFactory(game) {
   const facade = (hex = 0xd8e4e4) => {
     const key = `facade-${hex}`;
     if (cache.has(key)) return cache.get(key);
-    const size = 512;
+    const size = 1024;
     const canvas = canvasOf(size);
     const context = canvas.getContext('2d');
     const random = mulberry(hex + 57);
@@ -209,7 +294,7 @@ export function createTextureFactory(game) {
   const glassFacade = () => {
     const key = 'glass-facade';
     if (cache.has(key)) return cache.get(key);
-    const size = 512;
+    const size = 1024;
     const canvas = canvasOf(size);
     const context = canvas.getContext('2d');
     const gradient = context.createLinearGradient(0, 0, 0, size);
@@ -277,7 +362,7 @@ export function createTextureFactory(game) {
 
   const metal = () => {
     if (cache.has('metal')) return cache.get('metal');
-    const size = 256;
+    const size = 512;
     const canvas = canvasOf(size);
     const context = canvas.getContext('2d');
     const random = mulberry(8221);
@@ -337,7 +422,7 @@ export function createTextureFactory(game) {
 
   const red = () => {
     if (cache.has('red')) return cache.get('red');
-    const size = 128;
+    const size = 256;
     const canvas = canvasOf(size);
     const context = canvas.getContext('2d');
     const random = mulberry(32);
@@ -353,5 +438,110 @@ export function createTextureFactory(game) {
     return texture;
   };
 
-  return { concrete, side, facade, glassFacade, roof, metal, asphalt, red };
+  // ---- derived-map bundles -------------------------------------------------
+  // One normal (and where it matters, roughness) map per material family. Those
+  // are shared across colour variants on purpose: the seam/grain pattern is the
+  // same, so memory stays bounded while every surface gains micro-shading.
+  const normalCache = new Map();
+  const roughnessCache = new Map();
+  const bundleCache = new Map();
+
+  /**
+   * @param {string} key
+   * @param {HTMLCanvasElement} canvas
+   * @param {number} strength
+   * @param {number} [size]
+   */
+  const normalFor = (key, canvas, strength, size = 512) => {
+    if (!normalCache.has(key)) {
+      const texture = canvasTexture(THREE, normalCanvas(canvas, strength, size), [1, 1], false);
+      texture.anisotropy = Math.min(8, maxAniso);
+      normalCache.set(key, texture);
+    }
+    return normalCache.get(key);
+  };
+
+  /**
+   * @param {string} key
+   * @param {HTMLCanvasElement} canvas
+   * @param {{base?: number, range?: number, invert?: boolean}} options
+   */
+  const roughnessFor = (key, canvas, options) => {
+    if (!roughnessCache.has(key)) {
+      const texture = canvasTexture(THREE, roughnessCanvas(canvas, options), [1, 1], false);
+      texture.anisotropy = Math.min(8, maxAniso);
+      roughnessCache.set(key, texture);
+    }
+    return roughnessCache.get(key);
+  };
+
+  /**
+   * @param {string} key
+   * @param {() => any} build
+   */
+  const bundle = (key, build) => {
+    if (!bundleCache.has(key)) bundleCache.set(key, build());
+    return bundleCache.get(key);
+  };
+
+  const concreteMaps = (hex, options = {}) =>
+    bundle(`concrete-maps-${hex}-${options.dark ? 1 : 0}`, () => {
+      const map = concrete(hex, options);
+      return { map, normalMap: normalFor('concrete', map.image, 2.2) };
+    });
+
+  const sideMaps = (hex = 0x566a72) =>
+    bundle(`side-maps-${hex}`, () => {
+      const map = side(hex);
+      return { map, normalMap: normalFor('side', map.image, 1.9) };
+    });
+
+  const facadeMaps = (hex = 0xd8e4e4) =>
+    bundle(`facade-maps-${hex}`, () => {
+      const map = facade(hex);
+      return { map, normalMap: normalFor('facade', map.image, 2.6) };
+    });
+
+  const glassMaps = () =>
+    bundle('glass-maps', () => {
+      const map = glassFacade();
+      return {
+        map,
+        normalMap: normalFor('glass', map.image, 3.0),
+        roughnessMap: roughnessFor('glass', map.image, { base: 0.1, range: 0.62 }),
+      };
+    });
+
+  const metalMaps = () =>
+    bundle('metal-maps', () => {
+      const map = metal();
+      return {
+        map,
+        normalMap: normalFor('metal', map.image, 1.6),
+        roughnessMap: roughnessFor('metal', map.image, { base: 0.24, range: 0.42 }),
+      };
+    });
+
+  const redMaps = () =>
+    bundle('red-maps', () => {
+      const map = red();
+      return { map, normalMap: normalFor('red', map.image, 1.1) };
+    });
+
+  return {
+    concrete,
+    concreteMaps,
+    side,
+    sideMaps,
+    facade,
+    facadeMaps,
+    glassFacade,
+    glassMaps,
+    roof,
+    metal,
+    metalMaps,
+    asphalt,
+    red,
+    redMaps,
+  };
 }
