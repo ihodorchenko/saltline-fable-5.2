@@ -70,8 +70,9 @@ Still open:
 ## 5. P0 — Visual recovery (high priority, added 2026-11-15)
 
 **Priority: P0.** Outranks every unfinished Step 4/5 item. **Tier 0 is merged
-into `project/glassline` (2026-11-15, `dbd3a6f`; feature branch deleted)** —
-measured result in [`docs/VISUAL_GAP.md §5.1`](docs/VISUAL_GAP.md). The measured visual gap
+into `project/glassline` (2026-11-15, `dbd3a6f`; feature branch deleted). Tier 1
+is implemented on `feat/glassline-visual-tier1` (2026-11-15, merge pending)** —
+measured results in [`docs/VISUAL_GAP.md §5.1–5.2`](docs/VISUAL_GAP.md). The measured visual gap
 to the 2008 reference is the project's biggest quality risk: the renderer is
 capable, but the frame is overexposed, flat, desaturated, sky-less and content-poor.
 Full analysis, evidence and numbers: [`docs/VISUAL_GAP.md`](docs/VISUAL_GAP.md)
@@ -141,11 +142,29 @@ contrast, route paint, dark-pixel tint) owned by Tier 1–3. Engine commits are
 `fix(engine):`-prefixed so they can be cherry-picked to a `fix/engine-*` branch
 for `dev`.
 
-### Tier 1–4 — the content and finish work (next, high priority)
+### Tier 1 — "Sky and body" (2–3 days) — implemented, merge pending
 
-- **Tier 1 (2–3 days):** day sky with cumulus + PMREM, first-person forearms via
-  the empty view-model pass, mentor out of the spawn camera, HUD → reticle +
-  prompt.
+- [x] Day sky with cumulus: six-octave fbm deck (`src/levels/sky.js`) with sunlit
+      tops, blue-grey bases, silver lining, sun disc and slow drift; PMREM
+      environment re-captured from the same sky. Deterministic noise, no external
+      assets.
+- [x] First-person hands on the engine's **layer-1 view-model pass**:
+      `src/game/glassline/viewmodel.js` (sleeves, forearms, cuffs, red wrist
+      trackers, hands + thumbs) with run/sprint swing, slide lean-back, wallrun
+      reach and airborne lift. The old world-space courier rig no longer draws.
+- [x] Mentor out of the spawn camera: ~7 m ahead on the first gap roof, adult
+      scale, jacket hem/neck/shoulder caps, hair cap instead of a ball, and it now
+      casts a shadow.
+- [x] Minimal in-run HUD: 6 px reticle + one contextual prompt = **0.62 % of a
+      1080p frame** (was 4.93 %); TIME/BEST/CHECKPOINT moved to the pause menu.
+
+Result: **9 of 13 acceptance metrics in band** (up from 7). Sky acceptance met:
+`sky_blue_frac` 44 % (> 35 %), `sky_sat_mean` 0.297 (> 0.25), `sky_luma_std`
+0.190 (> 0.15). `npm run check`, 118 unit tests, 29 Playwright tests green;
+build 898 kB.
+
+### Tier 2–4 — the content and finish work (next, high priority)
+
 - **Tier 2 (~1 week):** normal/roughness maps, 1024–2048 atlas, parapets/copings/
   joints/drains, facade window depth.
 - **Tier 3 (1–2 weeks):** prop density ×6–10, city canyon (corridor 6–9 m, near

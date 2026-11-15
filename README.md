@@ -47,6 +47,7 @@ The title screen separates **Continue / Start over**, **Settings**, **Controls**
 - `tools/capture-visual.mjs` — deterministic viewpoint captures for look-dev and diffs.
 - `tools/lookdev-probe.mjs` — live tuning presets (no source change) for look-dev.
 - `tools/image-metrics.py` — reference-vs-build image metrics and comparison sheets.
+- `tools/measure-hud-area.mjs` — share of the frame covered by the persistent HUD.
 - `docs/VISUAL_GAP.md` — measured visual gap against the 2008 reference, with the prioritised roadmap.
 - `docs/DESIGN.md` — high-key city concept, materials, HUD and procedural characters.
 - `docs/AUDIO.md` — procedural wind, city bed, synth, parkour SFX and radio dispatch.

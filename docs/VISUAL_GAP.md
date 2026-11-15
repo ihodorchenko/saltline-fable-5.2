@@ -16,6 +16,7 @@ Companion files (in `docs/visual-gap/`):
 | [`docs/visual-gap/03-content-audit.md`](visual-gap/03-content-audit.md) | Level/prop/city/character/HUD inventory and missing content families |
 | [`docs/visual-gap/metrics.json`](visual-gap/metrics.json) | Raw per-image numbers and set aggregates for the baseline (pre-Tier-0) build |
 | [`docs/visual-gap/metrics-tier0.json`](visual-gap/metrics-tier0.json) | The same run against the Tier-0 build (`metrics.json` without `--out-json` overwrites the baseline; keep both) |
+| [`docs/visual-gap/metrics-tier1.json`](visual-gap/metrics-tier1.json) | The same run against the Tier-1 build (cumulus sky, view model, minimal HUD) |
 | `docs/visual-gap/shots/` | Reference frames, current captures, comparison and proof sheets — **local only, git-ignored**: several sheets embed frames of the owner-provided reference video and must not be committed or redistributed. Regenerate with the tools below. |
 
 ---
@@ -57,11 +58,14 @@ Companion files (in `docs/visual-gap/`):
    facades 3–10 m from the route, and white architecture that clips to near-white
    while its shadow side sits at 0.25–0.40 in strong blue. See §3.6–§3.8 and the
    content audit.
-7. **Tier 0 is implemented** on `feat/glassline-visual-tier0` (2026-11-15) — same
-   measurement harness, before/after: luma mean 0.736 → **0.579** (reference
-   0.589), p25 0.698 → **0.416** (0.370), near-white 6.0 % → **14.7 %** (27.3 %),
-   saturation 0.102 → **0.311** (0.359), sky blue 1.2 % → **67.8 %** (53 %).
-   See §5.1. The remaining gaps are content (Tier 1–3).
+7. **Tier 0 and Tier 1 are implemented** (2026-11-15; Tier 1 pending merge) —
+   same measurement harness, before/after: luma mean 0.736 → **0.574**
+   (reference 0.589), p25 0.698 → **0.372** (0.370), near-white 6.0 % → **12.7 %**
+   (27.3 %), saturation 0.102 → **0.296** (0.359), sky blue 1.2 % → **44 %**
+   (53 %) on a procedural cumulus day sky, **9 of 13** acceptance metrics now in
+   band. Tier 1 adds the cloud deck (sky luma std 0.10 → 0.19), first-person
+   hands, the mentor out of the spawn camera and a 0.62 %-of-frame HUD.
+   See §5.1 and §5.2. The remaining gaps are material/prop content (Tier 2–3).
 8. **Realistic goal.** A convincing "2008 AAA read" in WebGL is reachable for
    tone, value structure and composition (Tier 0–1, ~3–4 days) and for surface
    and prop density (Tier 2–3, ~2–3 weeks). Photogrammetric photorealism is not
@@ -564,6 +568,53 @@ composition item.
 
 ---
 
+## 5.2 Tier 1 implemented — measured result (2026-11-15)
+
+Branch `feat/glassline-visual-tier1` (merge pending). Four deliverables from the
+plan, all shipped:
+
+| Item | What landed |
+| --- | --- |
+| Day sky with cumulus | `src/levels/sky.js` is now a real sky shader: blue gradient (`#0a3d8f` → `#a8c9e2`, exponent 0.32), six-octave fbm cumulus deck with sunlit tops, blue-grey bases, silver lining and a clear gap around the sun, a sun disc, and slow drift. Deterministic 256² noise texture, no external assets. The PMREM environment is re-captured from the same sky, so glass reflects the clouds. Clouds fade out above ~65° (planar projection singularity) and below ~7° (horizon compression). |
+| First-person hands | `src/game/glassline/viewmodel.js`: two procedural arms (sleeve, forearm, cuff, red wrist tracker, hand + thumb) on the engine's **layer-1 view-model pass** (narrow-FOV camera, compressed depth range). Idle/run/sprint swing, slide lean-back, wallrun reach, airborne lift. The old world-space courier rig keeps animating but is no longer drawn, so there is only one pair of hands. |
+| Mentor out of the spawn camera | Moved from 2.9 m to ~7 m ahead (first gap roof), adult scale, jacket hem/neck/shoulder caps and a hair cap instead of a ball, and it now **casts a shadow** (the only character that does). |
+| Minimal HUD | In-run HUD is a 6 px dot reticle + one contextual prompt (0.62 % of a 1080p frame, measured with `tools/measure-hud-area.mjs`; was 4.93 %). Act/stage/timer/best/split/progress stay in the DOM but are hidden while running, and the pause menu now renders TIME / BEST / CHECKPOINT so nothing is lost. |
+
+Official before/after numbers (`metrics-tier0.json` → `metrics-tier1.json`, same
+11 captures, same harness):
+
+| Metric | Tier 0 | Tier 1 | Reference | Status |
+| --- | ---: | ---: | ---: | --- |
+| luma mean | 0.579 | **0.574** | 0.589 | ✅ |
+| luma std | 0.253 | **0.259** | 0.272 | ✅ |
+| luma p25 | 0.416 | **0.372** | 0.370 | ✅ newly in band |
+| luma p95 | 0.930 | 0.922 | 0.979 | ❌ (content: white area) |
+| near-white | 14.7 % | **12.7 %** | 27.3 % | ✅ (just inside) |
+| deep shadow | 5.5 % | **5.6 %** | 3.0 % | ✅ |
+| saturation mean | 0.311 | **0.296** | 0.359 | ✅ |
+| local contrast | 0.0560 | **0.0565** | 0.0713 | ✅ |
+| edge energy | 0.0215 | 0.0213 | 0.0341 | ❌ (3 % under band; content) |
+| contrast, top third | 0.0303 | **0.0409** | 0.0585 | ❌ improved 35 %, still short |
+| sky blue area | 67.8 % | **44.1 %** | 53.1 % | ✅ newly in band |
+| sky saturation | 0.384 | **0.297** | 0.398 | ✅ (target > 0.25) |
+| sky luma std (clouds) | 0.148 | **0.190** | 0.217 | ✅ (target > 0.15) |
+| split-tone dark R−B | −26.6 | −25.6 | −48.6 | ❌ dark metal, not blue shadow |
+| red accent coverage | 1.32 % | **1.62 %** | 4.2 % | ✅ newly in band |
+
+Verdict: **9 of 13 acceptance metrics in band** (up from 7). Tier 1's own
+acceptance criteria are met with margin: `sky_blue_frac` 44 % (> 35 %),
+`sky_sat_mean` 0.297 (> 0.25), `sky_luma_std` 0.190 (> 0.15), persistent HUD
+0.62 % (< 2 %). Every remaining miss is a Tier 2–3 content item: white surface
+area and near-field detail (p95, edge energy, top-third contrast), material
+palette (dark split-tone), and route paint area (red coverage improved but the
+reference has 2.6× more).
+
+Gates: `npm run check`, `npm test` (118), `npx playwright test` (29, including a
+new view-model layer test and minimal-HUD/pause-stats assertions), build 898 kB,
+no `__errors`/`__fatal`.
+
+---
+
 ## 6. Roadmap
 
 Effort is for one experienced developer; "acceptance" is a metric from §7 that the
@@ -658,21 +709,21 @@ and ≈ +12 draw calls.
 Re-run `tools/image-metrics.py` against a fresh capture pass after each tier. The
 build is "visually in the reference's family" when the primary set lands in:
 
-| Metric | Target band | Baseline | After Tier 0 |
-| --- | --- | ---: | ---: |
-| luma mean | 0.48 – 0.62 | 0.736 | **0.579 ✅** |
-| luma std | 0.23 – 0.31 | 0.166 | **0.253 ✅** |
-| luma p25 | 0.30 – 0.42 | 0.698 | **0.416 ✅** |
-| luma p95 | 0.95 – 1.00 | 0.904 | 0.930 ❌ |
-| near-white | 12 % – 30 % | 6.0 % | **14.7 % ✅** |
-| deep shadow | 1.5 % – 6 % | 0.18 % | **5.5 % ✅** |
-| saturation mean | 0.22 – 0.34 | 0.102 | **0.311 ✅** |
-| local contrast | 0.055 – 0.075 | 0.0376 | **0.0560 ✅** |
-| edge energy | 0.022 – 0.035 | 0.0154 | 0.0215 ❌ |
-| sky blue fraction | 35 % – 60 % | 1.2 % | 67.8 % ⚠️ (more sky in frame) |
-| contrast, top third (far field) | 0.045 – 0.065 | 0.0188 | 0.0303 ❌ |
-| split-tone dark R−B | −60 – −35 | −17.1 | −26.6 ❌ |
-| red accent coverage | 1.5 % – 4 % | 1.05 % | 1.32 % ❌ |
+| Metric | Target band | Baseline | After Tier 0 | After Tier 1 |
+| --- | --- | ---: | ---: | ---: |
+| luma mean | 0.48 – 0.62 | 0.736 | **0.579 ✅** | **0.574 ✅** |
+| luma std | 0.23 – 0.31 | 0.166 | **0.253 ✅** | **0.259 ✅** |
+| luma p25 | 0.30 – 0.42 | 0.698 | **0.416 ✅** | **0.372 ✅** |
+| luma p95 | 0.95 – 1.00 | 0.904 | 0.930 ❌ | 0.922 ❌ |
+| near-white | 12 % – 30 % | 6.0 % | **14.7 % ✅** | **12.7 % ✅** |
+| deep shadow | 1.5 % – 6 % | 0.18 % | **5.5 % ✅** | **5.6 % ✅** |
+| saturation mean | 0.22 – 0.34 | 0.102 | **0.311 ✅** | **0.296 ✅** |
+| local contrast | 0.055 – 0.075 | 0.0376 | **0.0560 ✅** | **0.0565 ✅** |
+| edge energy | 0.022 – 0.035 | 0.0154 | 0.0215 ❌ | 0.0213 ❌ |
+| sky blue fraction | 35 % – 60 % | 1.2 % | 67.8 % ⚠️ | **44.1 % ✅** |
+| contrast, top third (far field) | 0.045 – 0.065 | 0.0188 | 0.0303 ❌ | 0.0409 ❌ |
+| split-tone dark R−B | −60 – −35 | −17.1 | −26.6 ❌ | −25.6 ❌ |
+| red accent coverage | 1.5 % – 4 % | 1.05 % | 1.32 % ❌ | **1.62 % ✅** |
 
 These are bands around the reference aggregate, not pixel-matching; they are
 deliberately defined on the same metric set so a regression cannot hide behind
@@ -719,7 +770,8 @@ deliberately defined on the same metric set so a regression cannot hide behind
   material/instancing findings, and a costed addition list (≈82 h for the top 8).
 - Tooling: `tools/capture-visual.mjs` (deterministic viewpoint captures),
   `tools/lookdev-probe.mjs` (live tuning presets), `tools/image-metrics.py`
-  (metrics + comparison sheets).
+  (metrics + comparison sheets), `tools/measure-hud-area.mjs` (persistent HUD
+  screen share).
 
 ## Appendix — shot index (`docs/visual-gap/shots/`)
 
@@ -732,5 +784,7 @@ deliberately defined on the same metric set so a regression cannot hide behind
 | `hud-01-start.png` | Same viewpoint with the shipped HUD |
 | `lookdev-{A,B,C,D,E}-{start,wallrun,act2}.png` | The probe presets |
 | `tier0-01..11-*.png` | The same 11 viewpoints after Tier 0 (compare with `current-*.png`) |
+| `tier1-01..11-*.png` | The same 11 viewpoints after Tier 1 |
+| `proof-tier1.png` | Tier 0 vs Tier 1 on three beats |
 | `lowq-*.png` | `q=low` (bloom off → correct metering) evidence for §3.1 |
 | `compare-01..03.png` | Metrics-generated reference-vs-current sheets |
