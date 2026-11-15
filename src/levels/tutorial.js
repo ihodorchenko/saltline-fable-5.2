@@ -13,6 +13,21 @@ export const tutorialLevel = {
   pacing: { targetMinutes: [10, 20] },
   palette: [0xf2eee3, 0xe1eaea, 0xd2e1e4],
   city: { seed: 731, streetY: -18, corridor: 9 },
+  // Acoustic zones for src/game/glassline/audio.js. The act II service courtyard
+  // is walled on all sides (x = ±6.4, z = -102…-114.5, floor y = -5.9), so the
+  // outside wind/city bed drops, the reverb return rises and the city bed is
+  // low-passed while the runner is inside. The zone also covers the walled
+  // service shaft and climb-out roof; the fade crossfades at the rim above and
+  // at the wall-run gap out of the shaft (z ≈ -133).
+  audioZones: [
+    {
+      id: 'service-courtyard',
+      min: [-7.3, -13.5, -133],
+      max: [7.3, 4.4, -101.8],
+      enclosure: 1,
+      fade: 3,
+    },
+  ],
   acts: [
     { id: 'act1', title: 'ACT I — ASCENT', pos: [0, 5, 8] },
     { id: 'act2', title: 'ACT II — DESCENT', pos: [1.5, 8.6, -99] },
@@ -58,7 +73,7 @@ export const tutorialLevel = {
     { id: 'lower-roof', pos: [2.5, 7.75, -94], size: [8.5, 0.5, 6], material: 'concrete' },
     { id: 'courtyard-rim', pos: [1.5, 3.95, -100], size: [9, 0.5, 5], material: 'concrete' },
     { id: 'north-shelf', pos: [0, 0.35, -104.6], size: [12, 0.5, 4.8], material: 'concrete' },
-    { id: 'east-shelf', pos: [4.2, -3.15, -108.75], size: [3.6, 0.5, 4.5], material: 'concrete' },
+    { id: 'east-shelf', pos: [4.2, -3.15, -108.75], size: [3.6, 0.5, 4.5], material: 'metal' },
     { id: 'courtyard-floor', pos: [0, -6.15, -108.5], size: [12, 0.5, 11], material: 'concrete' },
     { id: 'outside-landing', pos: [-3.75, -6.15, -117.4], size: [3.5, 0.5, 5.2], material: 'concrete' },
     { id: 'climb-ledge-1', pos: [-4.2, -4.9, -119.3], size: [2.6, 1.5, 3], material: 'concrete' },
@@ -70,7 +85,7 @@ export const tutorialLevel = {
     { id: 'final-a-roof', pos: [0, -2.65, -157], size: [8, 0.5, 6], material: 'concrete' },
     { id: 'branch-high-1', pos: [-3.5, -1.35, -162.5], size: [3.2, 1.4, 4], material: 'concrete' },
     { id: 'branch-high-2', pos: [-2, 0.4, -167.5], size: [3.2, 1.4, 4], material: 'concrete' },
-    { id: 'branch-high-walk', pos: [-1, 0.85, -176.3], size: [1.6, 0.5, 14.4], material: 'concrete' },
+    { id: 'branch-high-walk', pos: [-1, 0.85, -176.3], size: [1.6, 0.5, 14.4], material: 'metal' },
     { id: 'branch-low-1', pos: [0, -6.05, -160], size: [7, 0.5, 4], material: 'concrete' },
     { id: 'branch-low-2', pos: [-2.5, -6.05, -166], size: [7, 0.5, 4], material: 'concrete' },
     { id: 'branch-low-3', pos: [-1, -4.75, -171.1], size: [3.2, 1.4, 4], material: 'concrete' },
@@ -84,7 +99,14 @@ export const tutorialLevel = {
     { id: 'vault-block-1', pos: [-2, 0.4, -13.5], size: [2.4, 0.8, 0.8], color: 0xe6e8e6 },
     { id: 'wallrun-wall', pos: [2.7, -0.4, -34.5], size: [3.2, 10.4, 19], color: 0xe6e8e6 },
     { id: 'wallclimb-wall-1', pos: [0.3, 1, -43.35], size: [8, 5.6, 0.4], color: 0xe6e8e6 },
-    { id: 'balance-beam-1', pos: [2, 2.95, -54.15], size: [0.6, 0.3, 7.7], color: 0xb51f2a, tag: 'balance' },
+    {
+      id: 'balance-beam-1',
+      pos: [2, 2.95, -54.15],
+      size: [0.6, 0.3, 7.7],
+      color: 0xb51f2a,
+      material: 'metal',
+      tag: 'balance',
+    },
     { id: 'court-wall-west', pos: [-6.4, -0.65, -108.25], size: [0.8, 11.7, 12.5], color: 0xe6e8e6 },
     { id: 'court-wall-east', pos: [6.4, -0.65, -108.25], size: [0.8, 11.7, 12.5], color: 0xe6e8e6 },
     { id: 'court-wall-south-west', pos: [-6.15, -0.65, -114.4], size: [1.3, 11.7, 0.8], color: 0xe6e8e6 },
@@ -99,6 +121,7 @@ export const tutorialLevel = {
       pos: [-2, 0.45, -146.85],
       size: [0.6, 0.3, 6.7],
       color: 0xb51f2a,
+      material: 'metal',
       tag: 'balance',
     },
     { id: 'wallclimb-wall-2', pos: [-1.5, -0.5, -184.7], size: [8, 5, 0.4], color: 0xe6e8e6 },

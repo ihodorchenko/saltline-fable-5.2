@@ -8,7 +8,11 @@ import { keyHint, keycapHtml } from './hud.js';
 import { createBeacon } from '../../levels/guides.js';
 import { createPlayerController } from './player.js';
 import { createTutorialMenu } from './menu.js';
-import { createGlasslineAudio } from './audio.js';
+import {
+  createGlasslineAudio,
+  cuePan,
+  enclosureAmount,
+} from './audio.js';
 import { loadBindings } from './bindings.js';
 import { createPerfHud } from './perf.js';
 import { createCourierRig, createMentorCharacter } from './characters.js';
@@ -332,6 +336,12 @@ export async function showcaseTutorial(game) {
   function respawn(auto = false) {
     if (progress.finished) return;
     const checkpoint = level.checkpoints[progress.checkpoint];
+    const before = controller.getState();
+    const cue = cuePan(checkpoint.pos, {
+      x: before.pos.x,
+      z: before.pos.z,
+      yaw: before.yaw,
+    });
     controller.teleport(
       checkpoint.pos[0],
       checkpoint.pos[2],
@@ -352,7 +362,11 @@ export async function showcaseTutorial(game) {
     stuckPrompted = false;
     lastPosition = null;
     try {
-      game.events?.emit('glassline:respawn', { auto });
+      game.events?.emit('glassline:respawn', {
+        auto,
+        pan: cue.pan,
+        attenuation: cue.attenuation,
+      });
     } catch {
       /* events are optional */
     }
@@ -413,6 +427,29 @@ export async function showcaseTutorial(game) {
     game.params?.autostart === '1' || game.params?.shot === '1';
   const audio = createGlasslineAudio();
   audio.bind(game.events);
+  // Reused every frame: updateState only writes AudioParams, it never allocates
+  // nodes or per-frame objects.
+  const audioState = {
+    speed: 0,
+    finale: false,
+    enclosure: 0,
+    sliding: false,
+    wallrunning: false,
+    sprinting: false,
+    grounded: false,
+  };
+  // When the game pauses the update loop stops calling updateState; settle the
+  // wind and the continuous slide/wall-run loops back to rest so a pause during
+  // a sprint or a slide does not leave the mix stuck.
+  function settleAudio() {
+    audioState.speed = 0;
+    audioState.finale = false;
+    audioState.sliding = false;
+    audioState.wallrunning = false;
+    audioState.sprinting = false;
+    audioState.grounded = true;
+    audio.updateState(audioState, true);
+  }
   const hasRunProgress = progress.started === true;
   const resumeLabel =
     progress.checkpoint > 0
@@ -627,6 +664,7 @@ export async function showcaseTutorial(game) {
 
   function revealMenu() {
     hideHud();
+    settleAudio();
     if (progress.finished) {
       paused = true;
       started = false;
@@ -691,6 +729,7 @@ export async function showcaseTutorial(game) {
       paused = true;
       hideHud();
       controller.setEnabled(false);
+      settleAudio();
       menu?.showPause(pauseStats());
     }
   }
@@ -744,7 +783,14 @@ export async function showcaseTutorial(game) {
       courier.update(game.camera, state, game.time?.t || elapsed, dt);
       viewmodel.update(dt, state, game.time?.t || elapsed);
       mentor.update(dt, state.pos.z);
-      audio.updateMotion(state.speed, state.pos.z < -174);
+      audioState.speed = state.speed;
+      audioState.finale = state.pos.z < -174;
+      audioState.sliding = state.sliding;
+      audioState.wallrunning = state.wallrunning;
+      audioState.sprinting = state.sprinting;
+      audioState.grounded = state.onGround;
+      audioState.enclosure = enclosureAmount(state.pos, level.audioZones);
+      audio.updateState(audioState);
 
       if (state.pos.y < level.fallY) {
         respawn();
@@ -798,11 +844,18 @@ export async function showcaseTutorial(game) {
             split,
             total: elapsed,
           });
+          const cue = cuePan(checkpoint.pos, {
+            x: state.pos.x,
+            z: state.pos.z,
+            yaw: state.yaw,
+          });
           try {
             game.events?.emit('glassline:checkpoint', {
               index: i,
               split,
               total: elapsed,
+              pan: cue.pan,
+              attenuation: cue.attenuation,
             });
           } catch {
             /* events are optional */
@@ -840,8 +893,17 @@ export async function showcaseTutorial(game) {
           game.camera.updateProjectionMatrix();
         }
         audio.updateMotion(0, true);
+        const cue = cuePan(finish.pos, {
+          x: state.pos.x,
+          z: state.pos.z,
+          yaw: state.yaw,
+        });
         try {
-          game.events?.emit('glassline:finish', { time: elapsed });
+          game.events?.emit('glassline:finish', {
+            time: elapsed,
+            pan: cue.pan,
+            attenuation: cue.attenuation,
+          });
         } catch {
           /* events are optional */
         }
