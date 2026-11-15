@@ -28,6 +28,56 @@ export function buildLevel(game, level) {
   root.name = `glassline-level-${level.id}`;
 
   const textures = createTextureFactory(game);
+
+  // World-space UVs for a box: the platform tops used to be textured by cloning
+  // a texture per roof and setting a repeat, which created 26 near-identical
+  // materials with slightly different tiling. Scaling the UV attribute instead
+  // means one 4 m tile density everywhere and shared materials.
+  const worldUv = (geometry, [w, h, d], tile = 4) => {
+    const uv = geometry.attributes.uv;
+    const faces = [
+      [d, h],
+      [d, h],
+      [w, d],
+      [w, d],
+      [w, h],
+      [w, h],
+    ];
+    for (let face = 0; face < 6; face += 1) {
+      const [uw, uh] = faces[face];
+      for (let vertex = 0; vertex < 4; vertex += 1) {
+        const index = face * 4 + vertex;
+        uv.setXY(index, uv.getX(index) * (uw / tile), uv.getY(index) * (uh / tile));
+      }
+    }
+    uv.needsUpdate = true;
+  };
+
+  // Material pools: most flat colours were created per object, which is how the
+  // probe reached 155 materials. Sharing by (colour, roughness, maps) is free
+  // quality and fewer state changes.
+  const materialPool = new Map();
+  const poolMaterial = (key, build) => {
+    if (!materialPool.has(key)) materialPool.set(key, build());
+    return materialPool.get(key);
+  };
+  const flatMaterial = (color, rough = 0.8) =>
+    poolMaterial(
+      `flat:${color}:${rough}`,
+      () => new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: 0.04 }),
+    );
+  const topMaterialFor = (color) =>
+    poolMaterial(`top:${color}`, () => {
+      const maps = textures.concreteMaps(color);
+      return new THREE.MeshStandardMaterial({
+        map: maps.map,
+        normalMap: maps.normalMap,
+        normalScale: new THREE.Vector2(0.9, 0.9),
+        roughness: 0.84,
+        metalness: 0.04,
+      });
+    });
+
   const standard = (color, rough = 0.8, map = null) =>
     new THREE.MeshStandardMaterial({
       color,
@@ -126,32 +176,10 @@ export function buildLevel(game, level) {
 
   for (const [index, platform] of level.platforms.entries()) {
     const color = platform.color || palette[index % palette.length];
-    const topMaps = textures.concreteMaps(color);
-    const topRepeat = [
-      Math.max(1, Math.round(platform.size[0] / 4)),
-      Math.max(1, Math.round(platform.size[2] / 4)),
-    ];
-    const topTexture = topMaps.map.clone();
-    topTexture.repeat.set(topRepeat[0], topRepeat[1]);
-    topTexture.needsUpdate = true;
-    const topNormal = topMaps.normalMap.clone();
-    topNormal.repeat.set(topRepeat[0], topRepeat[1]);
-    topNormal.needsUpdate = true;
-    const topMat = new THREE.MeshStandardMaterial({
-      map: topTexture,
-      normalMap: topNormal,
-      normalScale: new THREE.Vector2(0.9, 0.9),
-      roughness: 0.84,
-      metalness: 0.04,
-    });
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...platform.size), [
-      sideMat,
-      sideMat,
-      topMat,
-      sideMat,
-      sideMat,
-      sideMat,
-    ]);
+    const topMat = topMaterialFor(color);
+    const platformGeometry = new THREE.BoxGeometry(...platform.size);
+    worldUv(platformGeometry, platform.size);
+    const mesh = new THREE.Mesh(platformGeometry, [sideMat, sideMat, topMat, sideMat, sideMat, sideMat]);
     mesh.name = `platform-${platform.id}`;
     mesh.position.fromArray(platform.pos);
     mesh.receiveShadow = true;
@@ -516,16 +544,22 @@ export function buildLevel(game, level) {
   }
 
   for (const obstacle of level.obstacles || []) {
-    const surfaceMaps =
-      obstacle.material === 'metal'
-        ? textures.metalMaps()
-        : textures.concreteMaps(obstacle.color || 0xe6e8e6);
-    const surfaceMaterial = standard(obstacle.color || 0xffffff, 0.84, surfaceMaps.map);
-    if (surfaceMaps.normalMap) {
-      surfaceMaterial.normalMap = surfaceMaps.normalMap;
-      surfaceMaterial.normalScale.set(0.9, 0.9);
-    }
-    if (surfaceMaps.roughnessMap) surfaceMaterial.roughnessMap = surfaceMaps.roughnessMap;
+    const surfaceMaterial = poolMaterial(
+      `obstacle:${obstacle.material || 'concrete'}:${obstacle.color || 0xe6e8e6}`,
+      () => {
+        const maps =
+          obstacle.material === 'metal'
+            ? textures.metalMaps()
+            : textures.concreteMaps(obstacle.color || 0xe6e8e6);
+        const material = standard(obstacle.color || 0xffffff, 0.84, maps.map);
+        if (maps.normalMap) {
+          material.normalMap = maps.normalMap;
+          material.normalScale.set(0.9, 0.9);
+        }
+        if (maps.roughnessMap) material.roughnessMap = maps.roughnessMap;
+        return material;
+      },
+    );
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(...obstacle.size), surfaceMaterial);
     mesh.name = `obstacle-${obstacle.id}`;
     mesh.position.fromArray(obstacle.pos);
@@ -545,7 +579,7 @@ export function buildLevel(game, level) {
   for (const scenery of level.scenery || []) {
     const mesh = new THREE.Mesh(
       new THREE.BoxGeometry(...scenery.size),
-      standard(scenery.color || 0x7a858b, 0.95),
+      flatMaterial(scenery.color || 0x7a858b, 0.95),
     );
     mesh.name = 'scenery';
     mesh.position.fromArray(scenery.pos);
