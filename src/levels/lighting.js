@@ -1,13 +1,9 @@
 // @ts-check
 // High-key lighting rig for GLASSLINE. One shadow-casting sun that follows the
 // player, so shadows exist along the whole route instead of only near the start.
-// Look-dev values live in LIGHTING; the sun direction is shared with the sky.
+// Look-dev values live in LIGHTING; the sun direction lives in sun.js.
 
-/**
- * Direction *toward* the visible sun. Shared with the high-key sky so the sun
- * disc and the shadows agree.
- */
-export const SUN_DIRECTION = Object.freeze([0.3, 0.45, -0.85]);
+import { SUN_DIRECTION } from './sun.js';
 
 export const LIGHTING = {
   hemisphere: { sky: 0xffffff, ground: 0x7d93a8, intensity: 0.85 },

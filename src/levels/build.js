@@ -6,7 +6,8 @@ import { validateLevel } from './validate.js';
 import { buildCity, createCityPlan } from './city.js';
 import { createTextureFactory } from './textures.js';
 import { createHighKeySky } from './sky.js';
-import { createLighting, SUN_DIRECTION } from './lighting.js';
+import { createLighting } from './lighting.js';
+import { SUN_DIRECTION } from './sun.js';
 import { CONTACT, buildContactShadows, contactFootprint } from './contact.js';
 import { createFinishGeometry, createRingGeometry } from './guides.js';
 

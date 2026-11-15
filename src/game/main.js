@@ -9,7 +9,7 @@ import { createTime, advanceTime } from '../engine/core/time.js';
 import { glasslineMode } from './glassline/index.js';
 import { glasslineTutorialMode } from './glassline/tutorial.js';
 import { glasslineEditorMode } from './glassline/editor.js';
-import { SUN_DIRECTION } from '../levels/lighting.js';
+import { SUN_DIRECTION } from '../levels/sun.js';
 
 const SHOWCASES = {
   glassline: glasslineMode,
