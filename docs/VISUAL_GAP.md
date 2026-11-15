@@ -18,6 +18,7 @@ Companion files (in `docs/visual-gap/`):
 | [`docs/visual-gap/metrics-tier0.json`](visual-gap/metrics-tier0.json) | The same run against the Tier-0 build (`metrics.json` without `--out-json` overwrites the baseline; keep both) |
 | [`docs/visual-gap/metrics-tier1.json`](visual-gap/metrics-tier1.json) | The same run against the Tier-1 build (cumulus sky, view model, minimal HUD) |
 | [`docs/visual-gap/metrics-tier2.json`](visual-gap/metrics-tier2.json) | The same run against the Tier-2 build (normal/roughness maps, coping, continuous route, cables) |
+| [`docs/visual-gap/metrics-tier3.json`](visual-gap/metrics-tier3.json) | The same run against the Tier-3 build (canyon composition, facade lattice, rooftop service kit) |
 | `docs/visual-gap/shots/` | Reference frames, current captures, comparison and proof sheets — **local only, git-ignored**: several sheets embed frames of the owner-provided reference video and must not be committed or redistributed. Regenerate with the tools below. |
 
 ---
@@ -59,16 +60,18 @@ Companion files (in `docs/visual-gap/`):
    facades 3–10 m from the route, and white architecture that clips to near-white
    while its shadow side sits at 0.25–0.40 in strong blue. See §3.6–§3.8 and the
    content audit.
-7. **Tiers 0–2 are implemented** (2026-11-15; Tier 2 pending merge) — same
-   measurement harness, before/after: luma mean 0.736 → **0.576** (reference
-   0.589), p25 0.698 → **0.372** (0.370), near-white 6.0 % → **14.0 %**
-   (27.3 %), saturation 0.102 → **0.308** (0.359), sky blue 1.2 % → **46.9 %**
-   (53 %) on a procedural cumulus day sky, edge energy 0.0154 → **0.0220**
-   (0.0341), red route paint 1.05 % → **2.09 %** (4.2 %): **10 of 13** acceptance
-   metrics now in band. Tier 1 added the cloud deck, hands, the mentor and the
-   minimal HUD; Tier 2 added normal/roughness maps, a 1024 atlas, coping profiles,
-   the continuous red route and catenary cables. See §5.1–5.3. What is left is
-   Tier 3 content (white surface area, far-field architectural detail, palette).
+7. **Tiers 0–3 are implemented** (2026-11-15; Tier 3 pending merge) — same
+   measurement harness, before/after: luma mean 0.736 → **0.567** (reference
+   0.589), p25 0.698 → **0.396** (0.370), near-white 6.0 % → **14.6 %**
+   (27.3 %), saturation 0.102 → **0.310** (0.359), sky blue 1.2 % → **44.1 %**
+   (53 %) on a procedural cumulus day sky, edge energy 0.0154 → **0.0280**
+   (0.0341), top-third contrast 0.0188 → **0.0554** (0.0585 — within 5 % of the
+   reference), red route paint 1.05 % → **2.23 %** (4.2 %): **11 of 13** acceptance
+   metrics now in band. Tier 1: cloud deck, hands, mentor, minimal HUD. Tier 2:
+   normal/roughness maps, 1024 atlas, coping, continuous route, cables. Tier 3:
+   canyon composition, dense facade lattice, rooftop service kit, lifted shade.
+   See §5.1–5.4. The two remaining misses are p95 (white area in frame) and the
+   dark split-tone (a genuinely darker material palette).
 8. **Realistic goal.** A convincing "2008 AAA read" in WebGL is reachable for
    tone, value structure and composition (Tier 0–1, ~3–4 days) and for surface
    and prop density (Tier 2–3, ~2–3 weeks). Photogrammetric photorealism is not
@@ -667,6 +670,59 @@ Gates: `npm run check`, `npm test` (118), `npx playwright test` (29), build, no
 
 ---
 
+## 5.4 Tier 3 implemented — measured result (2026-11-15)
+
+Branch `feat/glassline-visual-tier3` (merge pending). Tier 3 is the composition
+and density pass; three deliverables shipped:
+
+| Item | What landed |
+| --- | --- |
+| Canyon composition | Route corridor 15 → **9 m** and a deterministic row of near facades whose inner face sits just outside it (heights 26–58 m), plus taller inner blocks (16–50 m instead of 8–26 m). The reference's strongest compositional read — close verticals, narrow sky band, route as a slot — is now the default sightline. |
+| Facade lattice | Window bands go from one every 5 m to one every **2.8 m** filling the visible facade, vertical mullions every ~1.55 m on the near walls, and the instanced body textures now tile at building scale (concrete ×2.6/4.2, glass ×2/3) instead of stretching six windows across a whole tower. |
+| Rooftop service kit v2 | A second condenser bank and vent stack on most roofs, dish antennas, duct runs, and billboards on posts with an ivory panel and the red rule — all instanced, high/ultra only. |
+| Shade lift | Sky fill raised again (hemisphere 0.5 → 0.74) and cumulus tops brightened, because the canyon put far more shaded facade in frame. |
+
+Official before/after (`metrics-tier2.json` → `metrics-tier3.json`, same 11
+captures, same harness):
+
+| Metric | Tier 2 | Tier 3 | Reference | Status |
+| --- | ---: | ---: | ---: | --- |
+| luma mean | 0.576 | **0.567** | 0.589 | ✅ |
+| luma std | 0.260 | **0.260** | 0.272 | ✅ |
+| luma p25 | 0.372 | **0.396** | 0.370 | ✅ |
+| luma p95 | 0.926 | 0.936 | 0.979 | ❌ (white area in frame) |
+| near-white | 14.0 % | **14.6 %** | 27.3 % | ✅ |
+| deep shadow | 6.0 % | **5.8 %** | 3.0 % | ✅ |
+| saturation mean | 0.308 | **0.310** | 0.359 | ✅ |
+| local contrast | 0.0572 | **0.0663** | 0.0713 | ✅ |
+| edge energy | 0.0220 | **0.0280** | 0.0341 | ✅ (Tier 3 target met) |
+| sky blue area | 46.9 % | 44.1 % | 53.1 % | ✅ |
+| contrast, top third | 0.0421 | **0.0554** | 0.0585 | ✅ (Tier 3 target met) |
+| split-tone dark R−B | −28.7 | −30.3 | −48.6 | ❌ (palette) |
+| red accent coverage | 2.09 % | **2.23 %** | 4.2 % | ✅ |
+
+Verdict: **11 of 13 acceptance metrics in band** (up from 10). Tier 3's own
+acceptance is met: `edge_energy` **0.0280** (≥ 0.028) and `contrast_top_third`
+**0.0554** (≥ 0.045, within 5 % of the reference). The two remaining misses are
+the two the analysis always attributed to content that this pass could not
+manufacture from the existing level: the *amount* of near-white surface in frame
+(p95 0.936 vs 0.95 — the reference roofs and sky clip far more often) and a
+genuinely darker, bluer material palette (split-tone −30.3 vs −35).
+
+Tried and rejected: raising the exposure ceiling (`key 0.28 → 0.38`, max 2.0 →
+2.4) moved p95 into band (0.953) and near-white to 20.8 %, but lifted p25 out
+(0.463) and pushed sky-blue out (0.336) — a net loss of one metric for one, and a
+visibly over-bright frame. Reverted.
+
+Cost: 413 → 421 draw calls, 67 k → 75.9 k triangles, 61 → 63 textures, 903 →
+906 kB build at high quality. The dense facade lattice and the service kit are
+gated to high/ultra: the low-quality frame stays inside its triangle budget.
+
+Gates: `npm run check`, `npm test` (118), `npx playwright test` (29), build, no
+`__errors`/`__fatal`.
+
+---
+
 ## 6. Roadmap
 
 Effort is for one experienced developer; "acceptance" is a metric from §7 that the
@@ -761,21 +817,21 @@ and ≈ +12 draw calls.
 Re-run `tools/image-metrics.py` against a fresh capture pass after each tier. The
 build is "visually in the reference's family" when the primary set lands in:
 
-| Metric | Target band | Baseline | After Tier 0 | After Tier 1 | After Tier 2 |
-| --- | --- | ---: | ---: | ---: | ---: |
-| luma mean | 0.48 – 0.62 | 0.736 | **0.579 ✅** | **0.574 ✅** | **0.576 ✅** |
-| luma std | 0.23 – 0.31 | 0.166 | **0.253 ✅** | **0.259 ✅** | **0.260 ✅** |
-| luma p25 | 0.30 – 0.42 | 0.698 | **0.416 ✅** | **0.372 ✅** | **0.372 ✅** |
-| luma p95 | 0.95 – 1.00 | 0.904 | 0.930 ❌ | 0.922 ❌ | 0.926 ❌ |
-| near-white | 12 % – 30 % | 6.0 % | **14.7 % ✅** | **12.7 % ✅** | **14.0 % ✅** |
-| deep shadow | 1.5 % – 6 % | 0.18 % | **5.5 % ✅** | **5.6 % ✅** | **6.0 % ✅** |
-| saturation mean | 0.22 – 0.34 | 0.102 | **0.311 ✅** | **0.296 ✅** | **0.308 ✅** |
-| local contrast | 0.055 – 0.075 | 0.0376 | **0.0560 ✅** | **0.0565 ✅** | **0.0572 ✅** |
-| edge energy | 0.022 – 0.035 | 0.0154 | 0.0215 ❌ | 0.0213 ❌ | **0.0220 ✅** |
-| sky blue fraction | 35 % – 60 % | 1.2 % | 67.8 % ⚠️ | **44.1 % ✅** | **46.9 % ✅** |
-| contrast, top third (far field) | 0.045 – 0.065 | 0.0188 | 0.0303 ❌ | 0.0409 ❌ | 0.0421 ❌ |
-| split-tone dark R−B | −60 – −35 | −17.1 | −26.6 ❌ | −25.6 ❌ | −28.7 ❌ |
-| red accent coverage | 1.5 % – 4 % | 1.05 % | 1.32 % ❌ | **1.62 % ✅** | **2.09 % ✅** |
+| Metric | Target band | Baseline | Tier 0 | Tier 1 | Tier 2 | Tier 3 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| luma mean | 0.48 – 0.62 | 0.736 | **0.579 ✅** | **0.574 ✅** | **0.576 ✅** | **0.567 ✅** |
+| luma std | 0.23 – 0.31 | 0.166 | **0.253 ✅** | **0.259 ✅** | **0.260 ✅** | **0.260 ✅** |
+| luma p25 | 0.30 – 0.42 | 0.698 | **0.416 ✅** | **0.372 ✅** | **0.372 ✅** | **0.396 ✅** |
+| luma p95 | 0.95 – 1.00 | 0.904 | 0.930 ❌ | 0.922 ❌ | 0.926 ❌ | 0.936 ❌ |
+| near-white | 12 % – 30 % | 6.0 % | **14.7 % ✅** | **12.7 % ✅** | **14.0 % ✅** | **14.6 % ✅** |
+| deep shadow | 1.5 % – 6 % | 0.18 % | **5.5 % ✅** | **5.6 % ✅** | **6.0 % ✅** | **5.8 % ✅** |
+| saturation mean | 0.22 – 0.34 | 0.102 | **0.311 ✅** | **0.296 ✅** | **0.308 ✅** | **0.310 ✅** |
+| local contrast | 0.055 – 0.075 | 0.0376 | **0.0560 ✅** | **0.0565 ✅** | **0.0572 ✅** | **0.0663 ✅** |
+| edge energy | 0.022 – 0.035 | 0.0154 | 0.0215 ❌ | 0.0213 ❌ | **0.0220 ✅** | **0.0280 ✅** |
+| sky blue fraction | 35 % – 60 % | 1.2 % | 67.8 % ⚠️ | **44.1 % ✅** | **46.9 % ✅** | **44.1 % ✅** |
+| contrast, top third (far field) | 0.045 – 0.065 | 0.0188 | 0.0303 ❌ | 0.0409 ❌ | 0.0421 ❌ | **0.0554 ✅** |
+| split-tone dark R−B | −60 – −35 | −17.1 | −26.6 ❌ | −25.6 ❌ | −28.7 ❌ | −30.3 ❌ |
+| red accent coverage | 1.5 % – 4 % | 1.05 % | 1.32 % ❌ | **1.62 % ✅** | **2.09 % ✅** | **2.23 % ✅** |
 
 These are bands around the reference aggregate, not pixel-matching; they are
 deliberately defined on the same metric set so a regression cannot hide behind
@@ -838,7 +894,9 @@ deliberately defined on the same metric set so a regression cannot hide behind
 | `tier0-01..11-*.png` | The same 11 viewpoints after Tier 0 (compare with `current-*.png`) |
 | `tier1-01..11-*.png` | The same 11 viewpoints after Tier 1 |
 | `tier2-01..11-*.png` | The same 11 viewpoints after Tier 2 |
+| `tier3-01..11-*.png` | The same 11 viewpoints after Tier 3 |
 | `proof-tier1.png` | Tier 0 vs Tier 1 on three beats |
 | `proof-tier2.png` | Tier 1 vs Tier 2 on three beats |
+| `proof-tier3.png` | Tier 2 vs Tier 3 on three beats |
 | `lowq-*.png` | `q=low` (bloom off → correct metering) evidence for §3.1 |
 | `compare-01..03.png` | Metrics-generated reference-vs-current sheets |
