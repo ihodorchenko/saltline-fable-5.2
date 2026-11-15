@@ -111,6 +111,19 @@ html[data-show="glassline"] .boot-mark::after {
 .gl-hud--plate .gl-hud__left, .gl-hud--plate .gl-hud__right {
   padding: 14px 16px 15px; background: var(--plate); box-shadow: var(--plate-edge); text-shadow: none;
 }
+.gl-hud__reticle {
+  position: absolute; left: 50%; top: 50%; width: 6px; height: 6px;
+  margin: -3px 0 0 -3px; border-radius: 50%;
+  background: rgba(11, 15, 18, .78);
+  box-shadow: 0 0 0 1.5px rgba(242, 238, 227, .75), 0 0 8px rgba(242, 238, 227, .4);
+}
+/* Minimal in-run HUD: dot + one prompt. Act/stage/timer/progress still update in
+   the DOM and are surfaced by the pause and complete menus, so removing the
+   plates never hides information from the player. */
+.gl-hud--minimal .gl-hud__left,
+.gl-hud--minimal .gl-hud__right,
+.gl-hud--minimal .gl-hud__help { display: none; }
+.gl-hud--minimal .gl-hud__prompt { bottom: 46px; }
 .gl-hud__prompt {
   position: absolute; left: 50%; bottom: 64px; transform: translateX(-50%);
   max-width: min(620px, 84vw); padding: 9px 16px; text-align: center;
@@ -137,7 +150,20 @@ html[data-show="glassline"] .boot-mark::after {
   .gl-hud__left { width: min(250px, 52vw); }
   .gl-hud__right { min-width: 120px; }
   .gl-hud__time { font-size: 22px; }
-  .gl-hud__prompt { bottom: 54px; }
+  .gl-hud__reticle {
+  position: absolute; left: 50%; top: 50%; width: 6px; height: 6px;
+  margin: -3px 0 0 -3px; border-radius: 50%;
+  background: rgba(11, 15, 18, .78);
+  box-shadow: 0 0 0 1.5px rgba(242, 238, 227, .75), 0 0 8px rgba(242, 238, 227, .4);
+}
+/* Minimal in-run HUD: dot + one prompt. Act/stage/timer/progress still update in
+   the DOM and are surfaced by the pause and complete menus, so removing the
+   plates never hides information from the player. */
+.gl-hud--minimal .gl-hud__left,
+.gl-hud--minimal .gl-hud__right,
+.gl-hud--minimal .gl-hud__help { display: none; }
+.gl-hud--minimal .gl-hud__prompt { bottom: 46px; }
+.gl-hud__prompt { bottom: 54px; }
 }
 .gl-hud__act { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gl-dispatch {

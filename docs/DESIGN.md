@@ -165,9 +165,11 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
 
 Lighting: one dominant warm sun at ~56° elevation and ~50° off the route axis,
 a small blue sky fill (hemisphere 0.5 `#bcd9ff`/`#4e6274`, two weak rim/fill
-directionals, environment 0.14), cool blue shadows and a saturated-blue day-sky
-dome (`#0a3d8f` zenith → `#a8c9e2` horizon, exponent 0.32) with a sun disc in the
-shader. The PMREM environment map is generated from that sky for reflective glass;
+directionals, environment 0.14), cool blue shadows and a procedural day sky
+(`#0a3d8f` zenith → `#a8c9e2` horizon, exponent 0.32) with a **fbm cumulus deck**
+— sunlit white tops, blue-grey bases, silver lining toward the sun, a sun disc and
+slow drift (`src/levels/sky.js`). The PMREM environment is captured from that same
+sky, so glass reflects the weather. The PMREM environment map is generated from that sky for reflective glass;
 the sky sphere follows the camera so the route never approaches its edge. Light
 blue fog, a luminous abyss and the disc/aureole complete the palette. The palette
 stays bright and optimistic; danger is conveyed by red route language, not darkness.

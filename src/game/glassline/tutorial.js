@@ -12,6 +12,7 @@ import { createGlasslineAudio } from './audio.js';
 import { loadBindings } from './bindings.js';
 import { createPerfHud } from './perf.js';
 import { createCourierRig, createMentorCharacter } from './characters.js';
+import { createViewmodel } from './viewmodel.js';
 import {
   checkpointSplit,
   formatTime,
@@ -33,7 +34,12 @@ function createHud() {
   if (new URLSearchParams(window.location.search).get('hud') !== 'ink') {
     hud.classList.add('gl-hud--plate');
   }
+  // The reference tutorial is near HUD-free while running: a dot reticle and one
+  // contextual prompt. Persistent readouts stay in the DOM (and in the pause
+  // menu) but the minimal class hides them, which is what the frame wants.
+  hud.classList.add('gl-hud--minimal');
   hud.innerHTML =
+    '<div class="gl-hud__reticle"></div>' +
     '<div class="gl-hud__left">' +
     '<div class="gl-hud__brand"><span class="gl-hud__mark">GLASSLINE</span><span class="gl-hud__sub">ROOFTOP INDUCTION</span></div>' +
     '<div class="gl-hud__act" id="gl-act">ACT I / III</div>' +
@@ -187,14 +193,20 @@ export async function showcaseTutorial(game) {
   const courier = createCourierRig(game);
   const mentor = createMentorCharacter(game);
   built.root.add(mentor.root);
+  // The visible first-person body is the layer-1 view model (arms + hands); the
+  // world-space courier rig keeps animating as the authoring/debug pose but is no
+  // longer drawn, so there is only ever one pair of hands in frame.
+  const viewmodel = createViewmodel(game);
   function showHud() {
     hud.style.display = 'block';
-    courier.setVisible(true);
+    courier.setVisible(false);
+    viewmodel.setVisible(true);
     if (mentor.active) mentor.root.visible = true;
   }
   function hideHud() {
     hud.style.display = 'none';
     courier.setVisible(false);
+    viewmodel.setVisible(false);
     mentor.root.visible = false;
   }
   let elapsed = 0;
@@ -604,6 +616,15 @@ export async function showcaseTutorial(game) {
   setHud();
   saveProgress(progress);
 
+  function pauseStats() {
+    return {
+      time: formatTime(elapsed),
+      best: best ? formatTime(best) : '--:--',
+      thirdLabel: 'CHECKPOINT',
+      thirdValue: `${progress.checkpoint} / ${level.checkpoints.length - 1}`,
+    };
+  }
+
   function revealMenu() {
     hideHud();
     if (progress.finished) {
@@ -670,7 +691,7 @@ export async function showcaseTutorial(game) {
       paused = true;
       hideHud();
       controller.setEnabled(false);
-      menu?.showPause();
+      menu?.showPause(pauseStats());
     }
   }
   document.addEventListener('pointerlockchange', onPointerLockChange);
@@ -688,7 +709,7 @@ export async function showcaseTutorial(game) {
     bindings,
     perf,
     bench,
-    characters: { courier, mentor },
+    characters: { courier, mentor, viewmodel },
   };
 
   return {
@@ -698,7 +719,10 @@ export async function showcaseTutorial(game) {
         return;
       }
       perf.update(dt);
-      if (built.sky) built.sky.position.copy(game.camera.position);
+      if (built.sky) {
+        built.sky.position.copy(game.camera.position);
+        built.sky.userData.update?.(game.time?.t || elapsed);
+      }
       if (built.lighting) built.lighting.update(game.camera.position);
       if (beacon.visible) beacon.rotation.y += dt * 1.2;
       if (paused) return;
@@ -718,6 +742,7 @@ export async function showcaseTutorial(game) {
       controller.update(dt);
       const state = controller.getState();
       courier.update(game.camera, state, game.time?.t || elapsed, dt);
+      viewmodel.update(dt, state, game.time?.t || elapsed);
       mentor.update(dt, state.pos.z);
       audio.updateMotion(state.speed, state.pos.z < -174);
 

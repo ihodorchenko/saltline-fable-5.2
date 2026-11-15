@@ -48,11 +48,11 @@ function createLimb(THREE, radius, length, material) {
   return pivot;
 }
 
-function markRigObject(root) {
+function markRigObject(root, { castShadow = false } = {}) {
   root.traverse((object) => {
     if (object.isMesh) {
       object.frustumCulled = false;
-      object.castShadow = false;
+      object.castShadow = !!castShadow;
       object.receiveShadow = false;
     }
   });
@@ -224,16 +224,42 @@ export function createMentorCharacter(game) {
     mats.mentorJacket,
   );
   torso.position.y = 1.18;
-  const head = new THREE.Mesh(
-    geometry(THREE, 'mentor-head', () => new THREE.SphereGeometry(0.11, 12, 10)),
+  // Jacket hem, neck and shoulder caps break the "capsule with a ball" read at
+  // the distance the mentor is actually seen from.
+  const hem = new THREE.Mesh(
+    geometry(THREE, 'mentor-hem', () => new THREE.CylinderGeometry(0.15, 0.185, 0.16, 10)),
+    mats.mentorJacket,
+  );
+  hem.position.y = 0.95;
+  const neck = new THREE.Mesh(
+    geometry(THREE, 'mentor-neck', () => new THREE.CylinderGeometry(0.048, 0.052, 0.09, 8)),
     mats.skin,
   );
-  head.position.y = 1.56;
+  neck.position.y = 1.45;
+  const leftPad = new THREE.Mesh(
+    geometry(THREE, 'mentor-shoulder', () => new THREE.SphereGeometry(0.075, 10, 8)),
+    mats.mentorJacket,
+  );
+  leftPad.position.set(-0.19, 1.4, 0);
+  const rightPad = leftPad.clone();
+  rightPad.position.x = 0.19;
+  const head = new THREE.Mesh(
+    geometry(THREE, 'mentor-head', () => new THREE.SphereGeometry(0.105, 12, 10)),
+    mats.skin,
+  );
+  head.position.y = 1.55;
+  head.scale.set(1, 1.14, 1.04);
+  // Hair as a cap over the top and back: a full sphere reads as a black ball.
   const hair = new THREE.Mesh(
-    geometry(THREE, 'mentor-hair', () => new THREE.SphereGeometry(0.12, 12, 8)),
+    geometry(
+      THREE,
+      'mentor-hair',
+      () => new THREE.SphereGeometry(0.116, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.62),
+    ),
     mats.mentorDark,
   );
-  hair.position.set(0, 1.58, 0.02);
+  hair.position.set(0, 1.56, 0.012);
+  hair.rotation.x = -0.18;
   const pack = new THREE.Mesh(
     geometry(THREE, 'mentor-pack', () => new THREE.BoxGeometry(0.24, 0.3, 0.1)),
     mats.mentorPack,
@@ -274,11 +300,24 @@ export function createMentorCharacter(game) {
   rightShoe.position.set(0, -0.39, -0.05);
   rightKnee.add(rightShoe);
 
-  root.add(torso, head, hair, pack, leftShoulder, rightShoulder, leftHip, rightHip);
-  markRigObject(root);
+  root.add(
+    torso,
+    hem,
+    neck,
+    head,
+    hair,
+    pack,
+    leftPad,
+    rightPad,
+    leftShoulder,
+    rightShoulder,
+    leftHip,
+    rightHip,
+  );
+  markRigObject(root, { castShadow: true });
 
-  const start = new THREE.Vector3(1.5, 0, 7.1);
-  root.scale.set(0.94, 0.94, 0.94);
+  const start = new THREE.Vector3(1.1, 0, 3.1);
+  root.scale.set(1, 1, 1);
   root.position.copy(start);
   const character = {
     root,

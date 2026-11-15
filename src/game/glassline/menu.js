@@ -115,7 +115,9 @@ export function createTutorialMenu(options) {
   };
 
   const statsMarkup = (stats = {}) =>
-    `<div class="glm-stats"><div><span>TIME</span><b>${stats.time || '--:--'}</b></div><div><span>BEST</span><b>${stats.best || '--:--'}</b></div><div><span>RESPAWNS</span><b>${stats.respawns ?? 0}</b></div></div>`;
+    `<div class="glm-stats"><div><span>TIME</span><b>${stats.time || '--:--'}</b></div><div><span>BEST</span><b>${stats.best || '--:--'}</b></div><div><span>${
+      stats.thirdLabel || 'RESPAWNS'
+    }</span><b>${stats.thirdValue ?? stats.respawns ?? 0}</b></div></div>`;
 
   function sensitivityMarkup() {
     return (
@@ -221,7 +223,7 @@ export function createTutorialMenu(options) {
       ? '<div class="glm-premise">A rooftop courier’s first ascent through the vertical city. Keep your flow, read the route, and do not look down.</div>' +
         `<div class="glm-meta">${level.acts.length} ACTS · ${level.checkpoints.length} CHECKPOINTS · ${level.pacing.targetMinutes[0]}–${level.pacing.targetMinutes[1]} MIN TARGET</div>`
       : isPause
-        ? ''
+        ? statsMarkup(stats)
         : isComplete
           ? statsMarkup(stats)
           : isSettings
@@ -357,9 +359,9 @@ export function createTutorialMenu(options) {
     current = 'start';
     render();
   }
-  function showPause() {
+  function showPause(stats) {
     current = 'pause';
-    render();
+    render(stats);
   }
   function showComplete(stats) {
     current = 'complete';

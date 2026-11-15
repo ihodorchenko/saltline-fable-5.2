@@ -47,3 +47,52 @@ test('procedural courier and mentor rigs animate without external models', async
     animations: 'disabled',
   });
 });
+
+test('first-person hands render on the engine view-model layer', async ({ page }) => {
+  await boot(page, '?show=glassline-tutorial&q=low&autostart=1');
+  await page.waitForTimeout(400);
+  const state = await page.evaluate(() => {
+    const game = window.__G;
+    const viewmodel = game.glassline.characters.viewmodel;
+    const viewCamera = game.render.viewCamera;
+    let meshes = 0;
+    let onViewLayer = 0;
+    let unculled = 0;
+    viewmodel.root.traverse((object) => {
+      if (!object.isMesh) return;
+      meshes += 1;
+      if (object.layers.mask === 1 << 1) onViewLayer += 1;
+      if (object.frustumCulled === false) unculled += 1;
+    });
+    let mentorCasts = false;
+    game.scene.getObjectByName('mentor-character')?.traverse((object) => {
+      if (object.isMesh && object.castShadow) mentorCasts = true;
+    });
+    return {
+      exists: !!viewmodel.root,
+      visible: viewmodel.root.visible,
+      parented: viewmodel.root.parent === viewCamera,
+      cameraInScene: viewCamera.parent === game.scene,
+      meshes,
+      onViewLayer,
+      unculled,
+      mentorCasts,
+      mentorFar: game.glassline.characters.mentor.start.z < 5,
+      errors: game.__errors || [],
+    };
+  });
+  expect(state.exists).toBe(true);
+  expect(state.visible).toBe(true);
+  expect(state.parented).toBe(true);
+  expect(state.cameraInScene).toBe(true);
+  expect(state.meshes).toBeGreaterThanOrEqual(10);
+  expect(state.onViewLayer).toBe(state.meshes);
+  expect(state.unculled).toBe(state.meshes);
+  expect(state.mentorCasts).toBe(true);
+  expect(state.mentorFar).toBe(true);
+  expect(state.errors).toEqual([]);
+  await page.screenshot({
+    path: 'artifacts/glassline-viewmodel.png',
+    animations: 'disabled',
+  });
+});
