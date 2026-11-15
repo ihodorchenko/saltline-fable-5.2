@@ -1008,6 +1008,9 @@ and ≈ +12 draw calls.
 
 ## 7. Reference-driven content pass: P1 props, P2 structure, P3 life (2026-11-16)
 
+Merged into `project/glassline` as `e788d0c` (2026-11-16) from
+`feat/reference-prologue-kit`; the feature branch was deleted after integration.
+
 The backlog distilled from the prologue walkthrough
 ([`docs/reference/PROLOGUE-BACKLOG.md`](../reference/PROLOGUE-BACKLOG.md)) was
 implemented: a new prop vocabulary, a covered service block, orange safety

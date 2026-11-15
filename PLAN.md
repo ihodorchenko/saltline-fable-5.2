@@ -233,7 +233,8 @@ concrete backlog with specs, files and acceptance checks in
 - **P3 life and finish** — distant helicopter, opening fly-in, audio "air" band
   (our ambience is 98.6 % below 500 Hz vs the reference's more open top end).
 
-Status: **implemented** on `feat/reference-prologue-kit` (merge pending) — P1 props
+Status: **merged** into `project/glassline` (2026-11-16, `e788d0c`; feature branch
+deleted) — P1 props
 (solar PV, AC fan grilles, glass skylights, red ladders/pipes/rails), P2 structure
 (covered service block with skylights/lockers/red stair, orange fencing, white
 plant rooms), P3 life (helicopter, opening fly-in, audio air band). Measured in
