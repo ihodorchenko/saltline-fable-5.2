@@ -4,6 +4,7 @@
 
 import { tutorialLevel } from '../../levels/tutorial.js';
 import { buildLevel } from '../../levels/build.js';
+import { keyHint, keycapHtml } from './hud.js';
 import { createPlayerController } from './player.js';
 import { createTutorialMenu } from './menu.js';
 import { createGlasslineAudio } from './audio.js';
@@ -27,6 +28,10 @@ function createHud() {
   const hud = document.createElement('div');
   hud.id = 'glassline-tutorial';
   hud.className = 'gl-hud';
+  // Plates are the default; ?hud=ink opts out for the frameless variant.
+  if (new URLSearchParams(window.location.search).get('hud') !== 'ink') {
+    hud.classList.add('gl-hud--plate');
+  }
   hud.innerHTML =
     '<div class="gl-hud__left">' +
     '<div class="gl-hud__brand"><span class="gl-hud__mark">GLASSLINE</span><span class="gl-hud__sub">ROOFTOP INDUCTION</span></div>' +
@@ -169,7 +174,11 @@ export async function showcaseTutorial(game) {
   }
   const hintEl = document.querySelector('#glassline-hint');
   if (helpEl) {
-    helpEl.textContent = `${bindings.label('retry')} retry · ${bindings.label('restart')} restart · click view to look`;
+    helpEl.innerHTML = [
+      keyHint(bindings.label('retry'), 'retry'),
+      keyHint(bindings.label('restart'), 'restart'),
+      'click view to look',
+    ].join(' · ');
   }
   // The stage HUD owns the tutorial's on-screen copy. Keep the controller's
   // generic hint out of the scene; the title screen explains pointer lock.
@@ -275,9 +284,11 @@ export async function showcaseTutorial(game) {
         : `${String(progress.checkpoint + 1).padStart(2, '0')} / 21 · ${checkpoint.stage}`;
     }
     if (promptEl) {
-      promptEl.textContent = progress.finished
-        ? 'Rooftop induction complete. Backspace restarts.'
-        : progress.message || checkpoint.prompt;
+      promptEl.innerHTML = keycapHtml(
+        progress.finished
+          ? 'Rooftop induction complete. Backspace restarts.'
+          : progress.message || checkpoint.prompt,
+      );
     }
     if (countEl) {
       countEl.textContent =
