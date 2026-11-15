@@ -980,6 +980,79 @@ export function buildCity(game, level, plan, textures = null) {
   distantMesh.computeBoundingSphere();
   root.add(distantMesh);
 
+  // A distant patrol helicopter: a slow silhouette that keeps the sky alive and
+  // gives the skyline a sense of scale. Original geometry, one blinking light,
+  // no shadow, no collider. Animated from the level update hook.
+  const helicopter = new THREE.Group();
+  helicopter.name = 'city-helicopter';
+  const heliBody = new THREE.MeshStandardMaterial({
+    color: 0x222a31,
+    roughness: 0.55,
+    metalness: 0.55,
+    fog: true,
+  });
+  const heliRotor = new THREE.MeshBasicMaterial({
+    color: 0x1a2026,
+    transparent: true,
+    opacity: 0.16,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    fog: true,
+  });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.15, 3.1), heliBody);
+  body.position.y = 0.1;
+  helicopter.add(body);
+  const cockpit = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.75, 1.1), heliBody);
+  cockpit.position.set(0, 0.5, -1.15);
+  helicopter.add(cockpit);
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.28, 3.4), heliBody);
+  tail.position.set(0, 0.28, 3.1);
+  helicopter.add(tail);
+  const fin = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.95, 0.5), heliBody);
+  fin.position.set(0, 0.72, 4.55);
+  helicopter.add(fin);
+  const skid = new THREE.BoxGeometry(0.09, 0.09, 2.2);
+  for (const side of [-1, 1]) {
+    const strut = new THREE.Mesh(skid, heliBody);
+    strut.position.set(side * 0.62, -0.62, 0.1);
+    helicopter.add(strut);
+  }
+  const rotor = new THREE.Mesh(new THREE.CircleGeometry(2.55, 24), heliRotor);
+  rotor.rotation.x = -Math.PI / 2;
+  rotor.position.y = 1.02;
+  helicopter.add(rotor);
+  const beacon = new THREE.Mesh(
+    new THREE.SphereGeometry(0.14, 6, 5),
+    new THREE.MeshBasicMaterial({ color: 0xff2a2a, fog: true }),
+  );
+  beacon.position.set(0, 0.4, 2.6);
+  helicopter.add(beacon);
+  helicopter.scale.setScalar(1.15);
+  root.add(helicopter);
+
+  const heliState = { angle: -1.0, radius: 186, height: 66, centerZ: -96, speed: 0.045 };
+  /**
+   * @param {number} time
+   */
+  const updateHelicopter = (time) => {
+    const t = Number(time) || 0;
+    const angle = heliState.angle + t * heliState.speed;
+    helicopter.position.set(
+      Math.cos(angle) * heliState.radius,
+      heliState.height + Math.sin(t * 0.13) * 1.6,
+      heliState.centerZ + Math.sin(angle) * heliState.radius,
+    );
+    // Face the direction of travel (tangent to the circle).
+    helicopter.rotation.y = -angle - Math.PI / 2;
+    rotor.rotation.z = t * 9;
+    heliRotor.opacity = 0.13 + 0.04 * Math.sin(t * 37.0);
+    beacon.visible = Math.sin(t * 3.1) > 0.15;
+  };
+  updateHelicopter(0);
+  // The level update loop already drives the sky; share the same hook for the
+  // one animated city detail instead of adding another per-frame callback.
+  root.userData.update = updateHelicopter;
+
   return {
     root,
     stats: {

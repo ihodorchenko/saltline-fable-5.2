@@ -147,8 +147,13 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
   pale raised mullions) with a dielectric material and **scene reflection probes**
   (`src/levels/reflections.js` captures two CubeCamera views of the city at route
   height and PMREMs them into the glass/metal env maps).
-  Platform edges get metal fascia, shallow curbs, structural legs, service AC,
-  vents, huts, pipes, guard rails, solar arrays and access doors.
+  Platform edges get metal fascia, shallow curbs, structural legs, service AC
+  (with circular fan grilles), vents, huts, pipes, guard rails, solar PV arrays
+  with a procedural cell grid, glass skylights lit by the scene probes, white
+  plant-room volumes, red ladders and conduit runs, and safety-orange fencing on
+  drop edges. The act II courtyard has a covered white service block over its
+  north half: ceiling deck, skylight lanterns, lockers, red pipes and a red steel
+  stair, so it reads as a lit service room rather than an open well.
 - **Route** is a continuous red strip spanning each roof (not dashes); current
   checkpoint ring and next-checkpoint diamond are red. Sparse catenary cables
   cross the gaps outside the route corridor, connecting the rooftops into a circuit.
@@ -182,6 +187,10 @@ Complete: time, best, respawns, Run Again, Settings, Controls, Inspector.
   still draws paint strips per platform, so lateral legs read as offset dashes.
 - **Acts**: ascent → descent/second pass → final sprint. Act labels are in-world
   canvas signs; the HUD names the act.
+- **Sky life and opening**: a patrol helicopter orbits the district at 66 m
+  (animated silhouette, blinking beacon, no shadow or collider), and a run started
+  from the menu opens with a 2.2 s camera settle from above the spawn — any input
+  cancels it and the controller never stops accepting input.
 - **Finish** is a red gate and ring on the final roof.
 - **Characters** are procedural capsule rigs: a first-person courier with a
   signal-red wrist tracker and shoes, plus an original mentor in a dark steel-blue jacket

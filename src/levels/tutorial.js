@@ -33,17 +33,94 @@ export const tutorialLevel = {
     { id: 'act2', title: 'ACT II — DESCENT', pos: [1.5, 8.6, -99] },
     { id: 'act3', title: 'ACT III — FINAL RUN', pos: [0, 2.8, -157] },
   ],
+  // Authored props. Beyond the original archetypes (ac/vent/antenna/rail/planter)
+  // the reference vocabulary adds photovoltaic arrays, roof lights, red ladders,
+  // red conduit, safety fences, white plant rooms and the covered service-block
+  // kit. All of it is batched by material family in build.js. Route-critical
+  // surfaces stay clear: array footprints, colliders and door recesses sit off
+  // the red thread and off every checkpoint ring.
   props: [
-    { id: 'ac-start', type: 'ac', pos: [-4.1, 0.65, 8.4], size: [1.8, 1.3, 2.2], color: 0x68747b },
-    { id: 'planter-start', type: 'planter', pos: [-3.8, 0.3, 7.2], size: [1.6, 0.6, 0.8], color: 0x78977d },
-    { id: 'vent-jump', type: 'vent', pos: [-3, 0.55, 2], radius: 0.35, height: 1.1, color: 0x7d888e },
+    // ---- start roof / first jumps ----
+    { id: 'ac-start', type: 'ac', pos: [-3.8, 0.8, 8.3], size: [2.4, 1.6, 1.8], facing: 'x+' },
+    { id: 'planter-start', type: 'planter', pos: [3.9, 0.3, 8.7], size: [1.6, 0.6, 0.8], color: 0x78977d },
     { id: 'antenna-start', type: 'antenna', pos: [-4.4, 0, 10.3], height: 4.6, color: 0x9aa4a8 },
-    { id: 'ac-wallrun', type: 'ac', pos: [-4.6, 2.35, -26.5], size: [1.4, 1.3, 1.6], color: 0x68747b },
+    { id: 'skylight-start', type: 'skylight', pos: [-1.5, 0, 8.1], size: [2, 1.6] },
+    { id: 'solar-start', type: 'solar', pos: [3.3, 0, 11.3], size: [2.6, 2.2], panels: [3, 2] },
+    { id: 'vent-jump', type: 'vent', pos: [-3, 0.55, 2], radius: 0.35, height: 1.1, color: 0x7d888e },
+    { id: 'solar-jump', type: 'solar', pos: [-4.3, 0, 3.6], size: [2.2, 1.6], panels: [3, 2] },
+    { id: 'plant-slide', type: 'plantRoom', pos: [-0.9, 0, -3.4], size: [2.4, 1.8, 2.0], yaw: 0.18 },
+
+    // ---- wall-run and first wall-climb ----
+    { id: 'ac-wallrun', type: 'ac', pos: [-2.2, 2.35, -25.6], size: [1.4, 1.3, 1.6], facing: 'x+' },
+    { id: 'fence-wallrun', type: 'fence', pos: [-3.78, 1.7, -27.5], length: 4.6, yaw: 1.5708 },
+    { id: 'plant-wallrun', type: 'plantRoom', pos: [-1.8, 1.2, -41.9], size: [2.4, 1.8, 2.0], yaw: 0.18 },
+    { id: 'solar-wallrun', type: 'solar', pos: [-1.9, 1.2, -38.5], size: [2.2, 1.8], panels: [3, 2] },
+    { id: 'skylight-wallrun', type: 'skylight', pos: [3.4, 1.2, -38.4], size: [1.8, 1.6] },
+    { id: 'ladder-climb', type: 'redLadder', pos: [0.8, 1.2, -42.6], height: 2.6 },
+
+    // ---- tower climb / summit ----
     { id: 'vent-climb', type: 'vent', pos: [5.6, 3.7, -49], radius: 0.32, height: 1.1, color: 0x7d888e },
+    { id: 'ac-summit-big', type: 'ac', pos: [1.2, 12.65, -83.4], size: [2, 1.6, 1.8], facing: 'z+' },
+    { id: 'plant-summit', type: 'plantRoom', pos: [5.7, 11.85, -85], size: [2.4, 1.8, 2.0], yaw: 0.2 },
+    { id: 'solar-summit', type: 'solar', pos: [0.1, 11.85, -85.4], size: [2.2, 1.6], panels: [3, 2] },
     { id: 'antenna-summit', type: 'antenna', pos: [6.2, 11.85, -86.5], height: 5.5, color: 0x9aa4a8 },
-    { id: 'ac-rim', type: 'ac', pos: [4.8, 4.85, -100.8], size: [1.6, 1.2, 2], color: 0x68747b },
-    { id: 'planter-rim', type: 'planter', pos: [-2.2, 4.2, -99.2], size: [1.4, 0.6, 0.7], color: 0x78977d },
-    { id: 'vent-court', type: 'vent', pos: [4.6, -5.35, -104], radius: 0.32, height: 1.1, color: 0x7d888e },
+
+    // ---- act II: courtyard rim ----
+    { id: 'solar-rim', type: 'solar', pos: [-1.4, 4.2, -101.3], size: [2.4, 2], panels: [3, 2] },
+    { id: 'plant-rim', type: 'plantRoom', pos: [4.4, 4.2, -100.8], size: [2.4, 1.8, 2.0], yaw: 0.22 },
+    { id: 'planter-rim', type: 'planter', pos: [1.9, 4.2, -98.2], size: [1.2, 0.6, 0.6], color: 0x78977d },
+
+    // ---- act II: covered service block (P2.1) ----
+    // White ceiling deck over the north half at y = 0.62, leaving the 1.4 m drop
+    // slot at z = -107…-108.4 open for the descent onto the east shelf. The deck
+    // is split around the courtyard core and around two skylight openings.
+    { id: 'court-ceiling-w-n', type: 'ceiling', pos: [-3.59, 0.62, -108.5], size: [4.74, 0.5, 0.2] },
+    { id: 'court-ceiling-w-s', type: 'ceiling', pos: [-3.59, 0.62, -109.9], size: [4.74, 0.5, 0.2] },
+    { id: 'court-ceiling-w-w', type: 'ceiling', pos: [-5.16, 0.62, -109.2], size: [1.6, 0.5, 1.2] },
+    { id: 'court-ceiling-w-e', type: 'ceiling', pos: [-2.04, 0.62, -109.2], size: [1.64, 0.5, 1.2] },
+    { id: 'court-ceiling-e-n', type: 'ceiling', pos: [4.09, 0.62, -108.5], size: [3.74, 0.5, 0.2] },
+    { id: 'court-ceiling-e-s', type: 'ceiling', pos: [4.09, 0.62, -109.9], size: [3.74, 0.5, 0.2] },
+    { id: 'court-ceiling-e-w', type: 'ceiling', pos: [2.79, 0.62, -109.2], size: [1.14, 0.5, 1.2] },
+    { id: 'court-ceiling-e-e', type: 'ceiling', pos: [5.4, 0.62, -109.2], size: [1.12, 0.5, 1.2] },
+    {
+      id: 'court-ceiling-inner',
+      type: 'ceiling',
+      pos: [0, 0.09, -104.6],
+      size: [11.6, 0.06, 4.8],
+      collider: false,
+    },
+    {
+      id: 'skylight-ceiling-w',
+      type: 'skylight',
+      pos: [-3.6, 0.62, -109.2],
+      size: [1.5, 1.2],
+      raise: 0.7,
+      collider: true,
+    },
+    {
+      id: 'skylight-ceiling-e',
+      type: 'skylight',
+      pos: [4.1, 0.62, -109.2],
+      size: [1.5, 1.2],
+      raise: 0.7,
+      collider: true,
+    },
+    { id: 'fence-court-w', type: 'fence', pos: [-3.6, 0.62, -108.52], length: 4.6 },
+    { id: 'fence-court-e', type: 'fence', pos: [4.1, 0.62, -108.52], length: 3.6 },
+    {
+      id: 'lockers-court',
+      type: 'lockerRow',
+      pos: [-5.78, -5.9, -105.5],
+      length: 3.2,
+      count: 5,
+      yaw: 1.5708,
+    },
+    { id: 'panel-court-w', type: 'panel', pos: [-5.93, -5.9, -109.3], size: [1.8, 2.6, 0.14], yaw: 1.5708 },
+    { id: 'panel-court-e', type: 'panel', pos: [5.93, -5.9, -106], size: [1.8, 2.6, 0.14], yaw: -1.5708 },
+    { id: 'panel-court-s1', type: 'panel', pos: [-1, -5.9, -113.93], size: [2.4, 2.6, 0.14] },
+    { id: 'panel-court-s2', type: 'panel', pos: [2.4, -5.9, -113.93], size: [2.2, 2.6, 0.14] },
+    { id: 'ac-court', type: 'ac', pos: [4, -5.55, -105.5], size: [1.6, 1.2, 2], facing: 'x-' },
+    { id: 'vent-court', type: 'vent', pos: [4.6, -5.35, -103.4], radius: 0.32, height: 1.1, color: 0x7d888e },
     {
       id: 'planter-court',
       type: 'planter',
@@ -51,9 +128,34 @@ export const tutorialLevel = {
       size: [1.4, 0.6, 0.7],
       color: 0x78977d,
     },
-    { id: 'ac-final', type: 'ac', pos: [3.8, 4.55, -194], size: [1.6, 1.2, 2], color: 0x68747b },
+    { id: 'pipe-court-w1', type: 'redPipe', pos: [-5.9, -3.4, -106], length: 5.0, yaw: 1.5708 },
+    { id: 'pipe-court-w2', type: 'redPipe', pos: [-5.9, -3.0, -110], length: 3.6, yaw: 1.5708 },
+    { id: 'pipe-court-e', type: 'redPipe', pos: [5.9, -3.6, -107.5], length: 4.6, yaw: 1.5708 },
+    { id: 'pipe-court-ceiling', type: 'redPipe', pos: [-2.6, -0.06, -104.8], length: 6.4 },
+    { id: 'stair-court', type: 'stair', pos: [5.3, -5.9, -113.9], rise: 3, run: 2.9, width: 1.2, steps: 10 },
+
+    // ---- final run ----
+    { id: 'ac-final', type: 'ac', pos: [3.8, 4.55, -194], size: [1.6, 1.2, 2], facing: 'x+' },
     { id: 'antenna-final', type: 'antenna', pos: [-4.5, 3.9, -190], height: 5, color: 0x9aa4a8 },
-    { id: 'rail-final', type: 'rail', pos: [-3.4, 4.75, -196.5], size: [4.5, 0.12, 0.12], color: 0x9aa4a8 },
+    { id: 'plant-final', type: 'plantRoom', pos: [2.2, 3.9, -201.2], size: [2.4, 1.8, 1.6], yaw: 0.2 },
+    { id: 'solar-final', type: 'solar', pos: [-3.8, 3.9, -199.4], size: [2.4, 2], panels: [3, 2] },
+    { id: 'skylight-final', type: 'skylight', pos: [2, 3.9, -199], size: [1.6, 1.6] },
+    { id: 'fence-finish-west', type: 'fence', pos: [-4.5, 3.9, -201.4], length: 2.0 },
+    { id: 'fence-finish-east', type: 'fence', pos: [4.5, 3.9, -201.4], length: 2.0 },
+    { id: 'rail-final', type: 'rail', material: 'red', pos: [-3.4, 4.8, -197.4], size: [4.5, 0.12, 0.12] },
+    {
+      id: 'rail-finish-east',
+      type: 'rail',
+      material: 'red',
+      pos: [3.4, 4.8, -198.6],
+      size: [3.6, 0.12, 0.12],
+    },
+
+    // ---- final wall-climb and branch ----
+    { id: 'ladder-final', type: 'redLadder', pos: [0.9, -0.4, -183.97], height: 2.6 },
+    { id: 'pipe-final-1', type: 'redPipe', pos: [0, -0.2, -184.42], length: 6 },
+    { id: 'pipe-final-2', type: 'redPipe', pos: [0, 0.8, -190.32], length: 7 },
+    { id: 'solar-branch', type: 'solar', pos: [2.4, -5.8, -159.4], size: [2.2, 1.8], panels: [3, 2] },
   ],
   platforms: [
     { id: 'start-roof', pos: [0, -0.25, 10], size: [10, 0.5, 6], material: 'concrete' },
@@ -71,7 +173,14 @@ export const tutorialLevel = {
     { id: 'tower-ledge-4', pos: [3.2, 9.4, -79.4], size: [3.2, 1.4, 3.8], material: 'concrete' },
     { id: 'summit-roof', pos: [3.25, 11.1, -86.2], size: [8.5, 1.5, 8], material: 'concrete' },
     { id: 'lower-roof', pos: [2.5, 7.75, -94], size: [8.5, 0.5, 6], material: 'concrete' },
-    { id: 'courtyard-rim', pos: [1.5, 3.95, -100], size: [9, 0.5, 5], material: 'concrete' },
+    {
+      id: 'courtyard-rim',
+      pos: [1.5, 3.95, -100],
+      size: [9, 0.5, 5],
+      material: 'concrete',
+      fence: true,
+      serviceKit: false,
+    },
     { id: 'north-shelf', pos: [0, 0.35, -104.6], size: [12, 0.5, 4.8], material: 'concrete' },
     { id: 'east-shelf', pos: [4.2, -3.15, -108.75], size: [3.6, 0.5, 4.5], material: 'metal' },
     { id: 'courtyard-floor', pos: [0, -6.15, -108.5], size: [12, 0.5, 11], material: 'concrete' },

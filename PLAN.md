@@ -217,6 +217,31 @@ reverted: raising the exposure ceiling moved p95 into band but pushed p25 and
 sky-blue out — a net loss. Cost: 421 draw calls, 75.9 k triangles, 63 textures,
 906 kB build; the new density is gated to high/ultra.
 
+### Reference-driven content backlog (P1–P3) — from the prologue walkthrough (2026-11-16)
+
+The second reference video (full prologue + training, see
+[`docs/reference/PROLOGUE-ANALYSIS.md`](docs/reference/PROLOGUE-ANALYSIS.md)) yields a
+concrete backlog with specs, files and acceptance checks in
+[`docs/reference/PROLOGUE-BACKLOG.md`](docs/reference/PROLOGUE-BACKLOG.md):
+
+- **P1 props** — solar PV arrays, AC units with circular fan grilles, glass
+  skylights with scene reflections, red functional props (ladders, pipes, rails).
+  Closes the two consistent reference gaps: near-white area (12.6 % vs 24–27 %) and
+  red accent area (2.1 % vs 2.9–4.2 %).
+- **P2 level structure** — covered service block with skylights/lockers/red stair in
+  the act II courtyard, orange safety fencing, white plant-room volumes.
+- **P3 life and finish** — distant helicopter, opening fly-in, audio "air" band
+  (our ambience is 98.6 % below 500 Hz vs the reference's more open top end).
+
+Status: **implemented** on `feat/reference-prologue-kit` (merge pending) — P1 props
+(solar PV, AC fan grilles, glass skylights, red ladders/pipes/rails), P2 structure
+(covered service block with skylights/lockers/red stair, orange fencing, white
+plant rooms), P3 life (helicopter, opening fly-in, audio air band). Measured in
+[`docs/VISUAL_GAP.md §7`](docs/VISUAL_GAP.md): 13/13 acceptance metrics still in
+band, red accent 2.07 → 2.21 %, but near-white did not rise (12.6 → 12.4 %): the
+new white volumes face the camera shaded, so closing that gap needs a
+lighting/exposure or white-facade pass, not more props.
+
 ### Audio pass — mix, space, surfaces and score (2026-11-16) — merged 2026-11-16
 
 Merged into `project/glassline` as `72f4c36` (2026-11-16) from

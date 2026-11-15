@@ -15,6 +15,8 @@ filtered noise plus a handful of discrete early reflections.
 The mix is not "a background loop with beeps". It is a small dynamic mix:
 
 - a parkour run opens the wind, adds cloth/gear rustle and brightens the score;
+- a third high "air" band (2–6 kHz, very low level) keeps the rooftop mix open
+  instead of rumbling: idle ambience ~1.7 % of energy above 2 kHz, sprint ~9 %;
 - footsteps and landings know the surface under the capsule;
 - slides and wall-runs are continuous controller-driven loops, not one-shots;
 - the walled act II courtyard crossfades to a muffled, wetter mix;

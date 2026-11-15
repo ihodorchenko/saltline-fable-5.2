@@ -22,6 +22,8 @@ Companion files (in `docs/visual-gap/`):
 | [`docs/visual-gap/metrics-tier4.json`](visual-gap/metrics-tier4.json) | The same run against the Tier-4 build (motion finish, view-model legs, final grade) |
 | [`docs/visual-gap/metrics-tier5.json`](visual-gap/metrics-tier5.json) | The same run against the Tier-5 build (white canyon architecture, material pooling) |
 | [`docs/visual-gap/metrics-content.json`](visual-gap/metrics-content.json) | The run against the owner content pass (plaster/glass/metal materials, scene reflection probes, multi-level route) |
+| [`docs/visual-gap/metrics-reference-props.json`](visual-gap/metrics-reference-props.json) | The run against the reference-driven content pass (P1 props, P2 covered service block/fences/plant rooms, P3 life and audio air band) |
+| [`docs/visual-gap/metrics-prologue.json`](visual-gap/metrics-prologue.json) | A **second** reference profile: the owner-provided "Prologue + Training" walkthrough, measured with the same 37-metric harness (27 gameplay frames) and compared against the current build |
 | `docs/visual-gap/shots/` | Reference frames, current captures, comparison and proof sheets — **local only, git-ignored**: several sheets embed frames of the owner-provided reference video and must not be committed or redistributed. Regenerate with the tools below. |
 
 ---
@@ -1004,6 +1006,62 @@ and ≈ +12 draw calls.
 
 ---
 
+## 7. Reference-driven content pass: P1 props, P2 structure, P3 life (2026-11-16)
+
+The backlog distilled from the prologue walkthrough
+([`docs/reference/PROLOGUE-BACKLOG.md`](../reference/PROLOGUE-BACKLOG.md)) was
+implemented: a new prop vocabulary, a covered service block, orange safety
+fencing, white plant rooms, a distant helicopter, an opening fly-in and an audio
+"air" band. All original geometry and procedural materials — the reference supplied
+the vocabulary, not assets.
+
+| Item | What landed |
+| --- | --- |
+| P1.1 Solar PV | Tilted 3×2 / 3×3 PV arrays with a procedural cell-grid texture (blue-black cells, pale grid, dull glass) on pale frame rails; 7 authored arrays (start, jump, wall-run landing, summit, courtyard rim, final roof, branch-low). Low quality keeps the old two-slab silhouette for the triangle budget. |
+| P1.2 AC fan grilles | Every AC unit (54 faces) now has an instanced ring + dark shroud + three radial blades on the route-facing face; large units at the start roof and the summit. AC props are also cheaper than before (1 draw call instead of 5). |
+| P1.3 Skylights | Glass panels with pale kerbs and `userData.reflections = 'glass'`, so the scene cube probes light them: start roof, wall-run landing, final roof, plus two roof lanterns in the covered block. |
+| P1.4 Red functional props | Two leaning red ladders at the wall-climb walls, six red conduit runs with collar brackets (courtyard walls/ceiling, both final facades), red rails at the finish. |
+| P2.1 Covered service block | White ceiling deck over the north half of the act II courtyard with a 1.4 m drop slot on the descent path, two skylight lanterns, wall panels with recessed service doors, a five-locker row, red pipe runs, an open-tread red steel stair, ceiling cladding under the north shelf and a warm local light at detailed tiers. The courtyard now reads as a lit service room instead of an open well. |
+| P2.2 Orange fencing | Instanced 2 m fence modules (posts + two rails, safety orange) on seven roof edges: wall-run edge, both courtyard-rim edges, both covered-block edges, both finish-roof flanks. No colliders. |
+| P2.3 White plant rooms | Cast volumes 2.4×1.8×2.0 with a recessed door, vent slats and a pipe stub; five placements in the forward view of major checkpoints, slightly yawed so the sunlit face shows. |
+| P3.1 Helicopter | A slow patrol silhouette (body, tail, fin, skids, rotor disc, blinking beacon) on a 186 m orbit at 66 m; ~480 triangles, one draw call per material, animated from the level update hook. |
+| P3.2 Opening fly-in | A 2.2 s cinematic settle from above/behind the spawn onto the eye position, only when a run starts from the menu; any input cancels it and the controller is never disabled, so the first input both skips and starts moving. Autostart/shot/bench paths keep the exact spawn camera. |
+| P3.3 Audio air band | A third wind layer (high-pass 2 kHz + band-pass ~3.2 kHz, gust-modulated, muffled by the enclosure filter). Idle ambience energy above 2 kHz rose from **0.2 % to 1.7 %**, sprint reaches ~9.6 %; loudness unchanged (−21.6 LUFS idle / −18.9 sprint), no clipping, 58 audio nodes. |
+
+### Measured result on the 11-pose capture set
+
+| Metric | Content pass | **Reference pass** | Reference (tutorial video) | Status |
+| --- | ---: | ---: | ---: | --- |
+| luma mean | 0.558 | **0.560** | 0.589 | ✅ |
+| luma std | 0.253 | **0.253** | 0.272 | ✅ |
+| luma p25 | 0.370 | **0.374** | 0.370 | ✅ |
+| luma p95 | 0.954 | **0.951** | 0.979 | ✅ |
+| near-white | 12.58 % | **12.36 %** | 27.3 % | ✅ band, goal missed |
+| deep shadow | 3.66 % | **4.18 %** | 3.0 % | ✅ |
+| saturation | 0.327 | **0.323** | 0.359 | ✅ |
+| local contrast | 0.0643 | **0.0635** | 0.0713 | ✅ |
+| edge energy | 0.0273 | **0.0272** | 0.0341 | ✅ |
+| sky-blue area | 43.4 % | **41.8 %** | 53.1 % | ✅ |
+| top-third contrast | 0.0597 | **0.0592** | 0.0585 | ✅ |
+| split-tone dark | −45.0 | **−42.0** | −48.6 | ✅ |
+| red accent | 2.07 % | **2.21 %** | 4.20 % | ✅ (rising) |
+
+**13 of 13 acceptance metrics still in band.** Cost: 100 materials (+3),
+330 draw calls (+1), 89.5 k triangles (+6.6 %), 71 textures, 950 kB build at high;
+low quality actually improved (252 calls, 39 438 triangles, 110 geometries) thanks
+to the instanced prop batching.
+
+**Honest result on the two content goals:** red accent moved in the right
+direction (2.07 → 2.21 %, reference 2.9–4.2 %), but `near-white` did **not** rise
+(12.58 → 12.36 %, target was ≥16 %, references 24–27 %). The new white volumes
+mostly present *shaded* faces to the camera — the sun sits ahead-left, so every
+player-facing surface is backlit — and the covered courtyard removes some sky from
+the act II frames. Closing the white-area gap is a lighting/exposure or
+white-facade-content question, not a prop-count question; it is recorded as the
+next content lever in the backlog.
+
+---
+
 ## 8. Acceptance targets ("close enough" definition)
 
 Re-run `tools/image-metrics.py` against a fresh capture pass after each tier. The
@@ -1057,6 +1115,11 @@ deliberately defined on the same metric set so a regression cannot hide behind
 ## 10. Where the detail lives
 
 - **Reflections** — `src/levels/reflections.js` captures two scene cube probes at route height and PMREMs them into glass/metal env maps at level build (see §6.1).
+- **Second reference video** — [`docs/reference/PROLOGUE-ANALYSIS.md`](../reference/PROLOGUE-ANALYSIS.md):
+  chapter map, movement-training breakdown, prop/palette vocabulary, metrics profile
+  (`metrics-prologue.json`) and audio profile of the full prologue mission recording;
+  the reference library and the repeatable kit live in [`docs/reference/`](../reference/README.md)
+  (imagery stays local, never committed).
 - **Render audit** — [`docs/visual-gap/01-renderer-audit.md`](visual-gap/01-renderer-audit.md):
   the 16-stage pass inventory with resolutions, all 27 `render.tune` keys and
   whether they are live, the shadow setup (96.85 × 69.36 m, 4.7 cm texels, 52
@@ -1099,5 +1162,7 @@ deliberately defined on the same metric set so a regression cannot hide behind
 | `content-01..11-*.png` | The same 11 viewpoints after the owner content pass (materials + route) |
 | `proof-content.png` | Old route/materials vs new, four beats |
 | `proof-materials.png` | Reference | previous | new material crops (glass + concrete) |
+| `props-01..11-*.png` | The same 11 viewpoints after the reference content pass |
+| `proof-reference-pass.png` | Before/after on six beats (props, structure, life) |
 | `lowq-*.png` | `q=low` (bloom off → correct metering) evidence for §3.1 |
 | `compare-01..03.png` | Metrics-generated reference-vs-current sheets |
