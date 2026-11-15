@@ -2,8 +2,10 @@
 
 **Codename:** GLASSLINE  
 **Branch:** `project/glassline` (long-lived, separate from Saltline)  
-**Status:** decisions confirmed; **reference analyzed 2026-11-14**. Implementation
-has not started; Step 0 begins on the owner's go.
+**Status:** decisions confirmed; **reference analyzed 2026-11-14**. Steps 0–5 are
+implemented on `project/glassline`. **P0 visual recovery opened 2026-11-15** after
+the measured visual-gap analysis ([`docs/VISUAL_GAP.md`](docs/VISUAL_GAP.md));
+it now outranks the remaining Step 4/5 acceptance work.
 
 GLASSLINE is a new first-person parkour project built on the Phase 1 engine. It
 does not preserve Saltline gameplay and does not merge back into `dev`.
@@ -65,7 +67,80 @@ Still open:
 - Every step has tests, a smoke path and a rollback point.
 - The combat/disarm tutorial in the reference is **out of scope** for the first parkour slice; no weapons or copied combat.
 
-## 5. Step-by-step plan
+## 5. P0 — Visual recovery (high priority, added 2026-11-15)
+
+**Priority: P0.** Outranks every unfinished Step 4/5 item. The measured visual gap
+to the 2008 reference is the project's biggest quality risk: the renderer is
+capable, but the frame is overexposed, flat, desaturated, sky-less and content-poor.
+Full analysis, evidence and numbers: [`docs/VISUAL_GAP.md`](docs/VISUAL_GAP.md)
+(companions: `docs/visual-gap/01-renderer-audit.md`, `02-metrics.md`,
+`03-content-audit.md`).
+
+Why P0 (measured reference vs build, 37 metrics, full separation on three):
+
+| Metric                       |       Reference |     Build today |                Target |
+| ---------------------------- | --------------: | --------------: | --------------------: |
+| luma mean / p25              |   0.589 / 0.370 |   0.736 / 0.698 | 0.48–0.62 / 0.30–0.42 |
+| near-white / deep shadow     |  27.3 % / 3.0 % |  6.0 % / 0.18 % |     12–30 % / 1.5–6 % |
+| saturation mean              |           0.359 |           0.102 |             0.22–0.34 |
+| sky blue area (top 40 %)     |            53 % |           1.2 % |               35–60 % |
+| edge energy / local contrast | 0.0341 / 0.0713 | 0.0154 / 0.0376 |       0.022+ / 0.055+ |
+
+Root causes (ordered by impact per hour): (1) auto-exposure meters the
+_thresholded_ bloom mip and pins exposure at 2× on medium/high/ultra; (2) four
+lights, no key/fill ratio, so shadows never read; (3) sun at 26.5° straight down
+the route — white roofs cannot be white; (4) flat cream sky + a 110 m additive sun
+billboard; (5) content: 12 props per 203 m, 91 % empty deck, no near facades, no
+normal/roughness maps.
+
+### Tier 0 — "Stop bleaching the frame" (1 day, no new content)
+
+Branch: `feat/glassline-visual-tier0` from `project/glassline`.
+Order matters: 0.1 → 0.2 first (everything else is measured through them).
+
+- [ ] 0.1 Fix exposure metering: adapt pass meters the unthresholded scene (or
+      manual exposure), then retune `LIGHTING.exposure` — `src/engine/render/index.js`
+      (post pass `tLum`), `src/levels/atmosphere.js`. `fix(engine):` commit,
+      cherry-pickable to `dev`.
+- [ ] 0.2 One-key light rig — `src/levels/lighting.js`: sun 5.0, hemisphere 0.25
+      (`#cfe4ff` / `#4a5a66`), rim 0.35, warm 0.20, env 0.12.
+- [ ] 0.3 Sun to 55–60° elevation, 40–60° off the route axis — `src/levels/sun.js`;
+      move the sun sprite/flare consumers with it.
+- [ ] 0.4 Sky palette: `uTop #0a3d8f`, `uHorizon #a8c9e2`, `uBottom #c2d6e6`,
+      exponent 0.32, glare 0.24→0.08 / 0.9→0.5 — `src/levels/sky.js`.
+- [ ] 0.5 Remove the additive 110 m sun billboard — `src/levels/build.js`.
+- [ ] 0.6 Put contrast on the ACES side of the grade (`agxMix 0` / whole-mix look,
+      S-curve 0.35–0.45, lift 0.002–0.004, `lookSat 1.35`, `vignette 0.20–0.25`).
+- [ ] 0.7 Bloom 0.05 @ 2.6, streak 0.015 @ 2.0, dirt 0.02, flare 0.08.
+- [ ] 0.8 AO live again: fade `(1 − 0.5·lit)` at a fixed reference exposure;
+      `aoRadius 1.2`, `aoIntensity 2.0`, `aoStrength 1.0` (defaults, not live).
+- [ ] 0.9 Tighten the shadow box to ±28 m plan / −2…28 m height (73.45 × 60.75 m,
+      3.59 cm texels at 2048²).
+- [ ] 0.10 Raise the `high` render budget 2.3 → 3.0–3.4 Mpx, cap DPR — `src/game/main.js`.
+- [ ] 0.11 Unify the three fog/air palettes; `fogDensity 0.0005–0.0007`,
+      `volSigma 0.0012`, `volFarHaze 0.10`, `volAmbient 0.05`.
+
+Acceptance for Tier 0: `npm run check`, `npm test`, `npx playwright test
+tests/e2e/glassline.spec.js` green; before/after captures via
+`tools/capture-visual.mjs`; `tools/image-metrics.py` re-run shows luma mean,
+p25, saturation and near-white moving into the target bands; no `__errors`/`__fatal`.
+
+### Tier 1–4 — the content and finish work (next, high priority)
+
+- **Tier 1 (2–3 days):** day sky with cumulus + PMREM, first-person forearms via
+  the empty view-model pass, mentor out of the spawn camera, HUD → reticle +
+  prompt.
+- **Tier 2 (~1 week):** normal/roughness maps, 1024–2048 atlas, parapets/copings/
+  joints/drains, facade window depth.
+- **Tier 3 (1–2 weeks):** prop density ×6–10, city canyon (corridor 6–9 m, near
+  facades, street below), material consolidation.
+- **Tier 4 (2 weeks+):** motion/character finish, final grade, golden screenshots.
+
+Evidence rule: every tier re-runs the capture + metrics harness and records the
+before/after table in `docs/VISUAL_GAP.md`. Comparison sheets that embed reference
+frames stay local (`docs/visual-gap/shots/` is git-ignored) — no copied IP.
+
+## 6. Step-by-step plan
 
 ### Step 0 — Bootstrap and guardrails
 
@@ -241,7 +316,7 @@ Branch: `feat/glassline-release`
 Acceptance: vertical slice is playable start-to-finish, documented, tested and
 packaged as one HTML file.
 
-## 6. Branch workflow
+## 7. Branch workflow
 
 ```text
 dev (Phase 1 history)
@@ -261,7 +336,7 @@ dev (Phase 1 history)
 - **Delete every merged feature branch immediately after integration — local and
   origin.** This is mandatory; do not leave merged branches behind.
 
-## 7. Definition of done
+## 8. Definition of done
 
 - [ ] reference video analyzed and `docs/REFERENCE.md` written;
 - [ ] all chosen mechanics implemented and tunable;
@@ -271,16 +346,18 @@ dev (Phase 1 history)
 - [ ] boot/respawn/restart have no `__errors`/`__fatal`;
 - [ ] target FPS measured on the chosen platform;
 - [ ] `dist/index.html` builds and is served over HTTP;
+- [ ] visual gap to the reference measured and Tier 0–2 acceptance metrics met
+      (`docs/VISUAL_GAP.md` targets, `tools/image-metrics.py` evidence);
 - [ ] `project/glassline` contains the plan, observations and release notes.
 
-## 8. Reference documents
+## 9. Reference documents
 
 - [`docs/REFERENCE.md`](docs/REFERENCE.md) — timestamped observations and starting targets;
 - [`docs/MOVEMENT.md`](docs/MOVEMENT.md) — movement/capsule/state-machine spec;
 - [`docs/CAMERA.md`](docs/CAMERA.md) — camera, FOV, roll, landing and accessibility spec;
 - [`docs/REFERENCE.md`](docs/REFERENCE.md) notes the video is local and untracked.
 
-## 9. Timeline
+## 10. Timeline
 
 | Step                 | Estimate      |
 | -------------------- | ------------- |

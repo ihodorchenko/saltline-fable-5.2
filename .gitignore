@@ -23,3 +23,9 @@ test-results/
 # owner-provided reference videos (large, third-party, not redistributed)
 docs/reference/*.mp4
 docs/reference/*.mov
+
+# visual-gap evidence: screenshots and comparison sheets are regenerated locally
+# with tools/capture-visual.mjs + tools/image-metrics.py. Some sheets embed frames
+# of the owner-provided reference video, so this folder is never committed or
+# redistributed (see docs/VISUAL_GAP.md and AGENT.md "no copied IP").
+docs/visual-gap/shots/
