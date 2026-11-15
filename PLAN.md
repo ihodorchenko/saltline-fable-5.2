@@ -217,6 +217,50 @@ reverted: raising the exposure ceiling moved p95 into band but pushed p25 and
 sky-blue out — a net loss. Cost: 421 draw calls, 75.9 k triangles, 63 textures,
 906 kB build; the new density is gated to high/ultra.
 
+### Audio pass — mix, space, surfaces and score (2026-11-16) — implemented, merge pending
+
+Owner: "доводим звук до ума" (bring the procedural audio up to a good level),
+in the reference's spirit (wind, distant city, cloth/gear, crisp footsteps, a
+sparse ambient score, spacious rooftop reverb) — all original synthesis, no
+samples.
+
+- [x] Mix bus: layer buses → gentle compressor → limiter → master volume, a
+      **procedurally synthesized stereo convolution reverb** on a send, and
+      ducking of ambience + music under dispatch/checkpoint/finish/respawn
+      stingers (the stinger itself is never ducked).
+- [x] Ambience v2: two-band wind with slow gusts and speed response, city bed plus
+      a distant-traffic chatter band, cloth/gear rustle tied to speed, and a real
+      **score**: original Am9 → Fmaj7 → Cmaj7 → G6 loop (3.5 s/chord, four detuned
+      pad voices, quiet sub and arpeggio) whose filter opens with speed and closes
+      for the finale.
+- [x] Continuous motion loops: slide friction and wall-run scuff driven by the
+      controller state, instead of one-shots only.
+- [x] Surfaces: `surfaceResponse()` + per-surface footsteps/landings keyed off the
+      physics collider surface; the level now tags the red balance beams, the
+      service shelf and the act III gangway as `metal` so those variants are heard
+      in normal play. Heel/toe variation, alternating-foot pan and deterministic
+      jitter.
+- [x] Spatial cues: checkpoint/finish/respawn cues panned toward the target from
+      the camera yaw, with distance attenuation.
+- [x] Enclosure: `audioZones` on the level; inside the act II courtyard the wind
+      and city drop, the city is low-passed and the reverb opens up.
+- [x] Testability and evidence: 33 new pure-helper unit tests (mix math, surfaces,
+      enclosure, pan, ducking, music, cadence); `tools/audio-render.mjs` renders
+      the real graph through an `OfflineAudioContext` into
+      `artifacts/audio/` (24-bit WAV + manifest: K-weighted LUFS, true peak, RMS,
+      spectral centroid, band energies) and fails on clipping/silence. A
+      `demo.wav` (36.8 s) is the listening artefact.
+
+Measured: ambience idle −21.6 LUFS / sprint −19.0 / courtyard −23.4 (darker,
+613 Hz centroid vs 1171 outside); SFX peaks −8.8 dBFS, no clipping; 98 % of the
+ambience energy below 500 Hz; footsteps 74 % in 800–4000 Hz; dispatch duck
+−8.4 dB; chord centroid moves 256 → 234 Hz across the progression; graph is
+54 persistent nodes and `updateState` allocates none.
+
+Open: the owner's ears decide musical taste, gust depth, wind-vs-music balance and
+reverb density — these are the remaining knobs, with the measured renders as the
+reference point. CPU cost of the audio graph in-game was not measured.
+
 ### Owner content pass — materials and route (2026-11-15) — merged 2026-11-16
 
 Owner feedback after Tier 5: materials still read plastic and the glass did not
