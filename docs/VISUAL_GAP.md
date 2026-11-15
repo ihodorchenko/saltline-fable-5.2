@@ -726,8 +726,9 @@ Gates: `npm run check`, `npm test` (118), `npx playwright test` (29), build, no
 
 ## 5.5 Tier 4 implemented — measured result (2026-11-15)
 
-Branch `feat/glassline-visual-tier4` (merge pending). Tier 4 is the motion and
-finish pass:
+Merged into `project/glassline` as `ae453b7` (2026-11-15) from
+`feat/glassline-visual-tier4`; the feature branch was deleted after integration.
+Tier 4 is the motion and finish pass:
 
 | Item | What landed |
 | --- | --- |

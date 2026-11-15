@@ -74,8 +74,9 @@ into `project/glassline` (2026-11-15, `dbd3a6f`; feature branch deleted). Tier 1
 is merged into `project/glassline` (2026-11-15, `c8047db`; feature branch
 deleted). Tier 2 is merged into `project/glassline` (2026-11-15, `f25bfd4`;
 feature branch deleted). Tier 3 is merged into `project/glassline` (2026-11-15,
-`d86f5f7`; feature branch deleted). Tier 4 is implemented on
-`feat/glassline-visual-tier4` (2026-11-15, merge pending)** — measured results in
+`d86f5f7`; feature branch deleted). Tier 4 is merged into `project/glassline`
+(2026-11-15, `ae453b7`; feature branch deleted) — **the P0 visual block is
+closed**; measured results in
 [`docs/VISUAL_GAP.md §5.1–5.5`](docs/VISUAL_GAP.md). The measured visual gap
 to the 2008 reference is the project's biggest quality risk: the renderer is
 capable, but the frame is overexposed, flat, desaturated, sky-less and content-poor.
@@ -213,7 +214,7 @@ reverted: raising the exposure ceiling moved p95 into band but pushed p25 and
 sky-blue out — a net loss. Cost: 421 draw calls, 75.9 k triangles, 63 textures,
 906 kB build; the new density is gated to high/ultra.
 
-### Tier 4 — motion and finish (2 weeks+) — implemented, merge pending
+### Tier 4 — motion and finish (2 weeks+) — merged 2026-11-15 (P0 closed)
 
 - [x] Head bob: speed-scaled (~1.2 cm vertical, 0.7 cm lateral, 0.2° roll at
       sprint), damped in/out, grounded only, extracted as the pure `bobOffset()`
