@@ -76,8 +76,9 @@ deleted). Tier 2 is merged into `project/glassline` (2026-11-15, `f25bfd4`;
 feature branch deleted). Tier 3 is merged into `project/glassline` (2026-11-15,
 `d86f5f7`; feature branch deleted). Tier 4 is merged into `project/glassline`
 (2026-11-15, `ae453b7`; feature branch deleted) — **the P0 visual block is
-closed**; measured results in
-[`docs/VISUAL_GAP.md §5.1–5.5`](docs/VISUAL_GAP.md). The measured visual gap
+closed**. A follow-up content pass (Tier 5) is implemented on
+`feat/glassline-visual-tier5` (2026-11-15, merge pending); measured results in
+[`docs/VISUAL_GAP.md §5.1–5.6`](docs/VISUAL_GAP.md). The measured visual gap
 to the 2008 reference is the project's biggest quality risk: the renderer is
 capable, but the frame is overexposed, flat, desaturated, sky-less and content-poor.
 Full analysis, evidence and numbers: [`docs/VISUAL_GAP.md`](docs/VISUAL_GAP.md)
@@ -213,6 +214,23 @@ near-white surface in frame) and dark split-tone (material palette). Tried and
 reverted: raising the exposure ceiling moved p95 into band but pushed p25 and
 sky-blue out — a net loss. Cost: 421 draw calls, 75.9 k triangles, 63 textures,
 906 kB build; the new density is gated to high/ultra.
+
+### Tier 5 — content pass (follow-up) — implemented, merge pending
+
+- [x] White architecture in frame: white parapet caps on every near canyon facade,
+      white setback terraces at two heights per facade, denser balcony bands and a
+      higher white-facade share on the canyon walls; cloud cover up slightly.
+- [x] Material consolidation: platform tops share one material per palette colour
+      via world-space UVs (26 → 3 materials), obstacles/scenery/flat props pooled,
+      city white geometry instanced. **155 → 123 materials.**
+- [x] All 13 acceptance metrics hold; top-third contrast now within 1 % of the
+      reference (0.0580 vs 0.0585) and local contrast within 5 %.
+
+Open item carried forward: `near-white` 15.4 % vs 27.3 % is a **level-content**
+property (the reference spends most of its time on open sunlit white roofs; our
+route threads a canyon with shaded walls) — closing it means redesigning the
+route toward open white roofs, not adding props. Material count below ~120 needs
+texture-family atlasing rather than palette work.
 
 ### Tier 4 — motion and finish (2 weeks+) — merged 2026-11-15 (P0 closed)
 

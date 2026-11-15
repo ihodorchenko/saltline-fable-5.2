@@ -117,7 +117,7 @@ export function createCityPlan(level) {
         roofUnit: height > 34,
         landmark: false,
         nearFacade: true,
-        style: rng() < 0.62 ? 1 : 0,
+        style: rng() < 0.72 ? 1 : 0,
       };
       if (!overlaps(candidate)) {
         buildings.push(candidate);
@@ -481,6 +481,75 @@ export function buildCity(game, level, plan, textures = null) {
       });
     }
   }
+  // White parapet caps on the near canyon facades. Horizontal white surfaces are
+  // the cheapest way to raise near-white area in frame: their top faces catch the
+  // high sun and read as the reference's white architecture, not grey card.
+  const caps = [];
+  for (const building of allBuildings) {
+    if (!detailCity) break;
+    const near = building.nearFacade || Math.abs(building.x) < 30;
+    if (!near) continue;
+    const side = building.x > 0 ? -1 : 1;
+    caps.push({
+      x: building.x + side * (building.w / 2 + 0.12),
+      y: building.top + 0.24,
+      z: building.z,
+      w: 0.3,
+      h: 0.48,
+      d: building.d + 0.24,
+    });
+  }
+  const capMesh = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshStandardMaterial({ color: 0xf7f4ea, roughness: 0.78 }),
+    Math.max(1, caps.length),
+  );
+  capMesh.name = 'city-parapet-caps';
+  caps.forEach((cap, index) => {
+    position.set(cap.x, cap.y, cap.z);
+    scale.set(cap.w, cap.h, cap.d);
+    matrix.compose(position, quaternion.identity(), scale);
+    capMesh.setMatrixAt(index, matrix);
+  });
+  capMesh.instanceMatrix.needsUpdate = true;
+  capMesh.computeBoundingSphere();
+  root.add(capMesh);
+
+  // White setback terraces on the near canyon walls: two stepped slabs per facade.
+  // Their top faces catch the high sun and give the canyon the reference's big
+  // white horizontal planes instead of only vertical grey card.
+  const terraces = [];
+  for (const building of allBuildings) {
+    if (!detailCity) break;
+    const near = building.nearFacade || Math.abs(building.x) < 34;
+    if (!near) continue;
+    for (const level of [0.52, 0.8]) {
+      terraces.push({
+        x: building.x,
+        y: building.streetY + building.h * level,
+        z: building.z,
+        w: building.w + 0.6,
+        h: 0.26,
+        d: building.d + 0.6,
+      });
+    }
+  }
+  const terraceMesh = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshStandardMaterial({ color: 0xfaf7ee, roughness: 0.8 }),
+    Math.max(1, terraces.length),
+  );
+  terraceMesh.name = 'city-terraces';
+  terraces.forEach((terrace, index) => {
+    position.set(terrace.x, terrace.y, terrace.z);
+    scale.set(terrace.w, terrace.h, terrace.d);
+    matrix.compose(position, quaternion.identity(), scale);
+    terraceMesh.setMatrixAt(index, matrix);
+  });
+  terraceMesh.instanceMatrix.needsUpdate = true;
+  terraceMesh.computeBoundingSphere();
+  root.add(terraceMesh);
+
   const windowMesh = new THREE.InstancedMesh(
     new THREE.PlaneGeometry(1, 1),
     new THREE.MeshBasicMaterial({
@@ -546,7 +615,8 @@ export function buildCity(game, level, plan, textures = null) {
   for (const building of allBuildings) {
     const side = building.x > 0 ? -1 : 1;
     const faceX = building.x + side * (building.w / 2 + 0.2);
-    for (let floor = 2; floor <= building.floors; floor += 3) {
+    const near = building.nearFacade || Math.abs(building.x) < 30;
+    for (let floor = 2; floor <= building.floors; floor += near ? 2 : 3) {
       balconies.push({
         x: faceX,
         y: building.top - floor * 5,
@@ -560,10 +630,10 @@ export function buildCity(game, level, plan, textures = null) {
   const balconyMesh = new THREE.InstancedMesh(
     new THREE.BoxGeometry(1, 1, 1),
     new THREE.MeshStandardMaterial({
-      color: 0xf0ece1,
-      roughness: 0.86,
+      color: 0xf6f2e6,
+      roughness: 0.82,
     }),
-    balconies.length,
+    Math.max(1, balconies.length),
   );
   balconyMesh.name = 'city-balconies';
   balconies.forEach((balcony, index) => {
