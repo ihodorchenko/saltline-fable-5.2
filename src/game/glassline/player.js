@@ -934,6 +934,7 @@ export function createPlayerController(game, options = {}) {
         emit('land', {
           impact: -fallSpeed,
           speed: Math.hypot(vel.x, vel.z),
+          surface: result.surface,
         });
       }
       if (
@@ -957,7 +958,7 @@ export function createPlayerController(game, options = {}) {
         stepAccum += Math.hypot(pos.x - prevX, pos.z - prevZ);
         if (stepAccum >= (sprinting ? 1.75 : 1.35)) {
           stepAccum = 0;
-          emit('step');
+          emit('step', { surface: result.surface });
         }
       }
     } else {
