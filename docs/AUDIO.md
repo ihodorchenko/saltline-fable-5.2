@@ -1,5 +1,12 @@
 # GLASSLINE — procedural audio
 
+Merged into `project/glassline` as `72f4c36` (2026-11-16); the
+feature branch `feat/glassline-audio-pass` was deleted after integration.
+The listening renders are in `artifacts/audio/` (git-ignored):
+`demo.wav`, `ambience-idle.wav`, `ambience-sprint.wav`, `courtyard.wav`,
+`motion-loops.wav`, `sfx-montage.wav`; re-render with `node tools/audio-render.mjs`
+while the dev server is running.
+
 All GLASSLINE audio is synthesized at runtime with Web Audio. No samples, no
 recordings, no third-party music: oscillators and seeded noise only. That
 includes the convolution reverb — its stereo impulse response is generated from

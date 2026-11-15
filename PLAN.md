@@ -217,7 +217,10 @@ reverted: raising the exposure ceiling moved p95 into band but pushed p25 and
 sky-blue out — a net loss. Cost: 421 draw calls, 75.9 k triangles, 63 textures,
 906 kB build; the new density is gated to high/ultra.
 
-### Audio pass — mix, space, surfaces and score (2026-11-16) — implemented, merge pending
+### Audio pass — mix, space, surfaces and score (2026-11-16) — merged 2026-11-16
+
+Merged into `project/glassline` as `72f4c36` (2026-11-16) from
+`feat/glassline-audio-pass`; the feature branch was deleted after integration.
 
 Owner: "доводим звук до ума" (bring the procedural audio up to a good level),
 in the reference's spirit (wind, distant city, cloth/gear, crisp footsteps, a
