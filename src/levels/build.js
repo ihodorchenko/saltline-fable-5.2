@@ -96,6 +96,13 @@ export function buildLevel(game, level) {
   const curbMatrices = [];
   const copingMatrices = [];
   const cableMatrices = [];
+  const dishPoleMatrices = [];
+  const dishPlateMatrices = [];
+  const ductMatrices = [];
+  const billboardFrameMatrices = [];
+  const billboardPanelMatrices = [];
+  const billboardPostMatrices = [];
+  const billboardRuleMatrices = [];
   const columnMatrices = [];
   const acMatrices = [];
   const ventMatrices = [];
@@ -275,6 +282,43 @@ export function buildLevel(game, level) {
       }
     }
 
+    // Service kit v2: a second condenser bank, extra vent stack, dishes, duct
+    // runs and billboards. The authored prop list is deliberately sparse (12
+    // props / 203 m), so the generated kit carries the near-field density that
+    // makes a roof read as working infrastructure.
+    if (detailed && pw > 4.0 && pd > 3.0) {
+      pushBox(acMatrices, 0.92, 0.6, 0.72, px + pw / 2 - 1.2, topY + 0.3, pz - pd / 2 + 1.6);
+      pushContact(0.92, 0.72, px + pw / 2 - 1.2, pz - pd / 2 + 1.6);
+      pushBox(ventMatrices, 0.26, 1.3, 0.26, px - pw / 2 + 1.55, topY + 0.65, pz + pd / 2 - 1.55);
+    }
+    if (detailed && pw > 5.2 && pd > 3.8 && index % 2 === 1) {
+      const poleX = px - pw / 2 + 1.05;
+      const poleZ = pz - pd / 2 + 1.25;
+      pushBox(dishPoleMatrices, 0.09, 1.7, 0.09, poleX, topY + 0.85, poleZ);
+      dishPlateMatrices.push(
+        new THREE.Matrix4().compose(
+          new THREE.Vector3(poleX, topY + 1.78, poleZ + 0.1),
+          new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -0.45),
+          new THREE.Vector3(0.95, 0.06, 0.72),
+        ),
+      );
+    }
+    if (detailed && pw > 6 && pd > 4.2 && index % 3 === 1) {
+      pushBox(ductMatrices, 2.6, 0.52, 0.56, px + pw / 2 - 2.2, topY + 0.3, pz - pd / 2 + 1.9);
+      pushBox(ductMatrices, 0.56, 0.52, 1.15, px + pw / 2 - 0.9, topY + 0.3, pz - pd / 2 + 1.6);
+    }
+    if (detailed && pw > 4.6 && (index % 5 === 1 || index === 3)) {
+      const side = index % 2 === 0 ? -1 : 1;
+      const boardX = px + side * (pw / 2 - 0.45);
+      const boardY = topY + 2.35;
+      pushBox(billboardFrameMatrices, 0.12, 1.85, 3.3, boardX, boardY, pz);
+      pushBox(billboardPanelMatrices, 0.06, 1.5, 2.95, boardX - side * 0.04, boardY, pz);
+      pushBox(billboardRuleMatrices, 0.07, 0.22, 2.95, boardX - side * 0.05, boardY + 0.82, pz);
+      for (const postSide of [-1, 1]) {
+        pushBox(billboardPostMatrices, 0.12, 3.1, 0.12, boardX, topY + 1.55, pz + postSide * 1.25);
+      }
+    }
+
     // Access huts need a door, not just a textured box.
     if (index % 5 === 2 || index === 0) {
       doorMatrices.push(
@@ -431,6 +475,45 @@ export function buildLevel(game, level) {
   addInstances('platform-solar', new THREE.BoxGeometry(1, 1, 1), metalStandard(0x21333f, 0.3), solarMatrices);
   addInstances('platform-doors', new THREE.BoxGeometry(1, 1, 1), metalStandard(0x3d4e5a, 0.62), doorMatrices);
   addInstances('route-cables', new THREE.BoxGeometry(1, 1, 1), metalStandard(0x3a4854, 0.42), cableMatrices);
+  addInstances(
+    'platform-dish-poles',
+    new THREE.BoxGeometry(1, 1, 1),
+    metalStandard(0x6b7c88, 0.55),
+    dishPoleMatrices,
+  );
+  addInstances(
+    'platform-dishes',
+    new THREE.BoxGeometry(1, 1, 1),
+    metalStandard(0xd8e4e8, 0.45),
+    dishPlateMatrices,
+  );
+  addInstances('platform-ducts', new THREE.BoxGeometry(1, 1, 1), metalStandard(0xc2d0d6, 0.5), ductMatrices);
+  addInstances(
+    'platform-billboard-frames',
+    new THREE.BoxGeometry(1, 1, 1),
+    metalStandard(0x3a4854, 0.55),
+    billboardFrameMatrices,
+  );
+  addInstances(
+    'platform-billboard-panels',
+    new THREE.BoxGeometry(1, 1, 1),
+    metalStandard(0xe9e6dc, 0.72),
+    billboardPanelMatrices,
+  );
+  addInstances(
+    'platform-billboard-posts',
+    new THREE.BoxGeometry(1, 1, 1),
+    metalStandard(0x54646f, 0.6),
+    billboardPostMatrices,
+  );
+  if (billboardRuleMatrices.length) {
+    const rules = new THREE.InstancedMesh(stripGeometry, routeMat, billboardRuleMatrices.length);
+    rules.name = 'platform-billboard-rules';
+    billboardRuleMatrices.forEach((matrix, index) => rules.setMatrixAt(index, matrix));
+    rules.instanceMatrix.needsUpdate = true;
+    rules.computeBoundingSphere();
+    root.add(rules);
+  }
 
   for (const obstacle of level.obstacles || []) {
     const surfaceMaps =
