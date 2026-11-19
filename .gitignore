@@ -13,6 +13,8 @@ coverage/
 playwright-report/
 test-results/
 *.log
+docs/reference/
+docs/visual-gap/
 
 # environment
 .env
